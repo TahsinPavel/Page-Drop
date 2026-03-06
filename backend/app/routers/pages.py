@@ -5,9 +5,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import func, select
+
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
+from app.models.business_page import BusinessPage
 from app.schemas.business_page import (
     PageCreate,
     PageResponse,
@@ -30,6 +33,19 @@ async def create_page(
     db: AsyncSession = Depends(get_db),
 ) -> PageResponse:
     """Create a new business page and auto-generate AI content."""
+    # ── Free-plan limit: 1 active page ──
+    count_query = select(func.count()).where(
+        BusinessPage.user_id == current_user.id,
+        BusinessPage.is_active == True,  # noqa: E712
+    )
+    result = await db.execute(count_query)
+    active_count = result.scalar() or 0
+    if active_count >= 1:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Free plan allows only 1 page. Upgrade to Pro for more pages.",
+        )
+
     page = await page_service.create_page(db, body, current_user.id)
 
     # Trigger AI generation in the background-ish (still awaited for this request)
