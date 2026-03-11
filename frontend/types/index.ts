@@ -1,0 +1,191 @@
+/* ── Types for PageDrop frontend ── */
+
+export interface User {
+    id: string;
+    email: string;
+    full_name: string | null;
+    is_active: boolean;
+    plan?: "free" | "pro" | "business";
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Product {
+    name: string;
+    price: string;
+    description?: string | null;
+}
+
+export interface BusinessPage {
+    id: string;
+    user_id: string;
+    slug: string;
+    business_name: string;
+    category: string;
+    whatsapp_number: string;
+    location: string | null;
+    logo_url: string | null;
+    products: Product[] | null;
+    ai_headline: string | null;
+    ai_subheadline: string | null;
+    ai_about: string | null;
+    ai_cta_text: string | null;
+    ai_products: Product[] | null;
+    seo_title: string | null;
+    seo_description: string | null;
+    theme: "default" | "dark" | "minimal" | "vibrant";
+    is_active: boolean;
+    is_ai_generated: boolean;
+    page_views: number;
+    whatsapp_clicks: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PublicPage {
+    id: string;
+    slug: string;
+    business_name: string;
+    category: string;
+    whatsapp_number: string;
+    location: string | null;
+    logo_url: string | null;
+    products: Product[] | null;
+    ai_headline: string | null;
+    ai_subheadline: string | null;
+    ai_about: string | null;
+    ai_cta_text: string | null;
+    ai_products: Product[] | null;
+    seo_title: string | null;
+    seo_description: string | null;
+    theme: "default" | "dark" | "minimal" | "vibrant";
+    page_views: number;
+    whatsapp_clicks: number;
+    created_at: string;
+}
+
+export interface AIContent {
+    headline: string;
+    subheadline: string;
+    about: string;
+    cta_text: string;
+    products: Product[] | null;
+    seo_title: string;
+    seo_description: string;
+}
+
+export interface CreatePageInput {
+    business_name: string;
+    category: string;
+    whatsapp_number: string;
+    location?: string;
+    products?: Product[];
+    theme: string;
+}
+
+export interface UpdatePageInput {
+    business_name?: string;
+    category?: string;
+    whatsapp_number?: string;
+    location?: string;
+    products?: Product[];
+    theme?: string;
+    logo_url?: string;
+}
+
+export interface LoginInput {
+    email: string;
+    password: string;
+}
+
+export interface RegisterInput {
+    email: string;
+    password: string;
+    full_name?: string;
+}
+
+export interface AuthResponse {
+    access_token: string;
+    token_type: string;
+    user: User;
+}
+
+export interface APIError {
+    detail: string;
+    status_code?: number;
+}
+
+/* ── Analytics Types ── */
+
+export interface DayAnalytics {
+    date: string;
+    views: number;
+    clicks: number;
+}
+
+export interface ReferrerAnalytics {
+    referrer: string;
+    count: number;
+}
+
+export interface BestDay {
+    date: string;
+    views: number;
+}
+
+export interface PageAnalyticsData {
+    total_views: number;
+    total_whatsapp_clicks: number;
+    total_product_clicks: number;
+    click_through_rate: number;
+    views_by_day: DayAnalytics[];
+    top_referrers: ReferrerAnalytics[];
+    views_last_7_days: number;
+    views_last_30_days: number;
+    best_day: BestDay | null;
+}
+
+export interface BestPerformingPage {
+    slug: string;
+    business_name: string;
+    views: number;
+}
+
+export interface DashboardSummary {
+    total_pages: number;
+    total_views_all_time: number;
+    total_whatsapp_clicks_all_time: number;
+    total_views_last_30_days: number;
+    best_performing_page: BestPerformingPage | null;
+}
+
+/* ── Payment Types ── */
+
+export interface SubscriptionStatus {
+    plan: 'free' | 'pro' | 'business';
+    status: 'active' | 'cancelled' | 'expired';
+    payment_provider: 'gumroad' | 'nowpayments' | 'manual' | null;
+    current_period_end: string | null;
+    cancelled_at: string | null;
+    is_pro: boolean;
+}
+
+export interface NOWPaymentsInvoice {
+    payment_id: string;
+    payment_url: string;
+    pay_address: string;
+    pay_amount: number;
+    price_amount: number;
+    pay_currency: string;
+    order_id: string;
+    expiration_estimate_date: string;
+}
+
+export interface NOWPaymentsStatus {
+    payment_id: string;
+    payment_status: string;
+    price_amount: number;
+    pay_amount: number;
+    actually_paid: number;
+    pay_currency: string;
+}
