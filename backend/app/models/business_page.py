@@ -58,5 +58,8 @@ class BusinessPage(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    # Relationship
+    # Relationships
     owner = relationship("User", back_populates="pages")
+    analytics = relationship(
+        "PageAnalytic", back_populates="page", cascade="all, delete-orphan"
+    )

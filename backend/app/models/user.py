@@ -21,6 +21,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     full_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    plan: Mapped[str] = mapped_column(String(20), default="free", server_default="free")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -33,3 +34,15 @@ class User(Base):
 
     # Relationship
     pages = relationship("BusinessPage", back_populates="owner", cascade="all, delete-orphan")
+    subscription = relationship(
+        "Subscription",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    payment_events = relationship(
+        "PaymentEvent",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+

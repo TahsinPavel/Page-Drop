@@ -1,5 +1,11 @@
 """Alembic environment configuration — async-aware."""
 
+import sys
+from pathlib import Path
+
+# Ensure the backend directory is on sys.path so 'app' package resolves
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 import asyncio
 from logging.config import fileConfig
 
@@ -11,7 +17,7 @@ from app.config import settings
 from app.database import Base
 
 # Import all models so Alembic's autogenerate can detect them
-from app.models import User, BusinessPage  # noqa: F401
+from app.models import User, BusinessPage, PageAnalytic, Waitlist, Subscription, PaymentEvent  # noqa: F401
 
 # Alembic Config object
 config = context.config

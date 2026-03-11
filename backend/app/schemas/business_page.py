@@ -138,3 +138,52 @@ class UploadResponse(BaseModel):
     """Response after uploading a logo image."""
 
     logo_url: str
+
+
+# ---------- Analytics ----------
+
+
+class DayAnalytics(BaseModel):
+    """Daily views and clicks for a page."""
+
+    date: str
+    views: int
+    clicks: int
+
+
+class ReferrerAnalytics(BaseModel):
+    """A single referrer entry."""
+
+    referrer: str
+    count: int
+
+
+class BestDay(BaseModel):
+    """The day with the highest page views."""
+
+    date: str
+    views: int
+
+
+class PageAnalyticsResponse(BaseModel):
+    """Full analytics breakdown for a single page."""
+
+    total_views: int
+    total_whatsapp_clicks: int
+    total_product_clicks: int
+    click_through_rate: float
+    views_by_day: list[DayAnalytics]
+    top_referrers: list[ReferrerAnalytics]
+    views_last_7_days: int
+    views_last_30_days: int
+    best_day: BestDay | None
+
+
+class DashboardSummaryResponse(BaseModel):
+    """Aggregated analytics across all of a user's pages."""
+
+    total_pages: int
+    total_views_all_time: int
+    total_whatsapp_clicks_all_time: int
+    total_views_last_30_days: int
+    best_performing_page: dict | None

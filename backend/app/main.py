@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.routers import ai, auth, pages
+from app.routers import ai, auth, pages, waitlist, webhooks, payments
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -38,6 +38,9 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(pages.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
+app.include_router(waitlist.router, prefix="/api/v1/waitlist")
+app.include_router(webhooks.router, prefix="/api/v1/webhooks", tags=["Webhooks"])
+app.include_router(payments.router, prefix="/api/v1/payments", tags=["Payments"])
 
 # ──────────────────────── Exception handlers ────────────────────────
 

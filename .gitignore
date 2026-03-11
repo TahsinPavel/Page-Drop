@@ -78,4 +78,4 @@ htmlcov/
 .mypy_cache/
 
 # ──────────────── Agents ──────────────────────────────
-.agents/
+.agent/

@@ -2,8 +2,9 @@
 
 import uuid
 from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 # ---------- Request schemas ----------
@@ -39,6 +40,7 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     full_name: str | None
+    plan: str = "free"
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -52,3 +54,20 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class SubscriptionStatus(BaseModel):
+    """Subscription details for the current user."""
+
+    plan: str
+    status: str
+    payment_provider: Optional[str] = None
+    current_period_end: Optional[datetime] = None
+    cancelled_at: Optional[datetime] = None
+    is_pro: bool = False
+
+    @model_validator(mode="after")
+    def compute_is_pro(self) -> "SubscriptionStatus":
+        """Set ``is_pro`` based on plan value."""
+        self.is_pro = self.plan in ("pro", "business")
+        return self
