@@ -1,10 +1,11 @@
 """Pydantic schemas for business page requests and responses."""
 
+import re
 import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ---------- Shared ----------
@@ -16,6 +17,27 @@ class ProductItem(BaseModel):
     name: str
     price: str
     description: str | None = None
+    image_url: str | None = None
+
+
+class BusinessHoursDay(BaseModel):
+    """A single day's opening hours."""
+
+    open: str | None = "00:00"
+    close: str | None = "00:00"
+    closed: bool = False
+
+
+class BusinessHours(BaseModel):
+    """Weekly business-hours map."""
+
+    monday: BusinessHoursDay | None = None
+    tuesday: BusinessHoursDay | None = None
+    wednesday: BusinessHoursDay | None = None
+    thursday: BusinessHoursDay | None = None
+    friday: BusinessHoursDay | None = None
+    saturday: BusinessHoursDay | None = None
+    sunday: BusinessHoursDay | None = None
 
 
 # ---------- Request schemas ----------
@@ -28,8 +50,54 @@ class PageCreate(BaseModel):
     category: str = Field(..., min_length=1, max_length=100)
     whatsapp_number: str = Field(..., min_length=6, max_length=20)
     location: str | None = None
+    banner_image_url: str | None = None
+    phone_number: str | None = None
+    business_hours: dict[str, Any] | None = None
+    is_online_only: bool = True
     products: list[ProductItem] | None = None
     theme: str = Field(default="default")
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        cleaned = value.replace(" ", "").replace("-", "")
+        if not re.match(r"^\+\d{7,15}$", cleaned):
+            raise ValueError(
+                "Phone number must be in international format e.g. +8801712345678"
+            )
+        return cleaned
+
+    @field_validator("business_hours")
+    @classmethod
+    def validate_hours(cls, value: dict[str, Any] | None) -> dict[str, Any] | None:
+        if value is None:
+            return value
+
+        days = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
+
+        for day in days:
+            if day in value:
+                day_data = value[day]
+                if not isinstance(day_data, dict):
+                    raise ValueError(f"{day} must be a dict")
+                if "closed" not in day_data:
+                    raise ValueError(f"{day} must have closed field")
+                if not day_data.get("closed", False):
+                    if "open" not in day_data or "close" not in day_data:
+                        raise ValueError(
+                            f"{day} must have open and close times when not closed"
+                        )
+        return value
 
 
 class PageUpdate(BaseModel):
@@ -39,6 +107,10 @@ class PageUpdate(BaseModel):
     category: str | None = None
     whatsapp_number: str | None = None
     location: str | None = None
+    banner_image_url: str | None = None
+    phone_number: str | None = None
+    business_hours: dict[str, Any] | None = None
+    is_online_only: bool | None = None
     products: list[ProductItem] | None = None
     theme: str | None = None
     logo_url: str | None = None
@@ -49,6 +121,48 @@ class PageUpdate(BaseModel):
     ai_products: list[dict[str, Any]] | None = None
     seo_title: str | None = None
     seo_description: str | None = None
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        cleaned = value.replace(" ", "").replace("-", "")
+        if not re.match(r"^\+\d{7,15}$", cleaned):
+            raise ValueError(
+                "Phone number must be in international format e.g. +8801712345678"
+            )
+        return cleaned
+
+    @field_validator("business_hours")
+    @classmethod
+    def validate_hours(cls, value: dict[str, Any] | None) -> dict[str, Any] | None:
+        if value is None:
+            return value
+
+        days = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
+
+        for day in days:
+            if day in value:
+                day_data = value[day]
+                if not isinstance(day_data, dict):
+                    raise ValueError(f"{day} must be a dict")
+                if "closed" not in day_data:
+                    raise ValueError(f"{day} must have closed field")
+                if not day_data.get("closed", False):
+                    if "open" not in day_data or "close" not in day_data:
+                        raise ValueError(
+                            f"{day} must have open and close times when not closed"
+                        )
+        return value
 
 
 # ---------- AI ----------
@@ -89,6 +203,10 @@ class PageResponse(BaseModel):
     whatsapp_number: str
     location: str | None
     logo_url: str | None
+    banner_image_url: str | None = None
+    phone_number: str | None = None
+    business_hours: dict[str, Any] | None = None
+    is_online_only: bool = True
     products: Any | None
     ai_headline: str | None
     ai_subheadline: str | None

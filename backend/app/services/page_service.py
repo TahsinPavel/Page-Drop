@@ -65,6 +65,10 @@ async def create_page(
         category=page_data.category,
         whatsapp_number=page_data.whatsapp_number,
         location=page_data.location,
+        banner_image_url=page_data.banner_image_url,
+        phone_number=page_data.phone_number,
+        business_hours=page_data.business_hours,
+        is_online_only=page_data.is_online_only,
         products=[p.model_dump() for p in page_data.products] if page_data.products else None,
         theme=page_data.theme,
     )
@@ -129,6 +133,19 @@ async def update_page(
             p.model_dump() if hasattr(p, "model_dump") else p
             for p in update_dict["products"]
         ]
+
+    if page_data.banner_image_url is not None:
+        page.banner_image_url = page_data.banner_image_url
+        update_dict.pop("banner_image_url", None)
+    if page_data.phone_number is not None:
+        page.phone_number = page_data.phone_number
+        update_dict.pop("phone_number", None)
+    if page_data.business_hours is not None:
+        page.business_hours = page_data.business_hours
+        update_dict.pop("business_hours", None)
+    if page_data.is_online_only is not None:
+        page.is_online_only = page_data.is_online_only
+        update_dict.pop("is_online_only", None)
 
     for field, value in update_dict.items():
         setattr(page, field, value)

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import PublicPageClient from "./PublicPageClient";
+import PremiumPage from "@/components/public-page/PremiumPage";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -23,17 +23,18 @@ async function fetchPage(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const page = await fetchPage(slug);
-    if (!page) return { title: "Page Not Found" };
+    if (!page) return { title: "PageDrop" };
+
+    const imageUrl = page.banner_image_url || page.logo_url || null;
 
     return {
-        title: page.seo_title || `${page.business_name} — PageDrop`,
-        description:
-            page.seo_description ||
-            `${page.business_name} — contact us on WhatsApp.`,
+        title: page.seo_title || page.business_name,
+        description: page.seo_description || page.ai_subheadline || `${page.business_name} — contact us on WhatsApp.`,
         openGraph: {
-            title: page.seo_title || page.business_name,
-            description: page.seo_description || page.ai_subheadline || "",
+            title: page.business_name,
+            description: page.ai_subheadline || page.seo_description || "",
             type: "website",
+            images: imageUrl ? [{ url: imageUrl }] : [],
         },
     };
 }
@@ -43,5 +44,5 @@ export default async function PublicPageRoute({ params }: Props) {
     const page = await fetchPage(slug);
     if (!page) notFound();
 
-    return <PublicPageClient page={page} />;
+    return <PremiumPage page={page} />;
 }

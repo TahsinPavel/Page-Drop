@@ -5,15 +5,11 @@ import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import {
-  Zap,
   Sparkles,
   ClipboardList,
   Share2,
   ArrowRight,
   MessageCircle,
-  Smartphone,
-  BarChart3,
-  Palette,
   MapPin,
   Store,
   Check,

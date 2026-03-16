@@ -1,8 +1,9 @@
 """Pages router — CRUD, public access, analytics, regeneration, and logo upload."""
 
 import uuid
+from copy import deepcopy
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import func, select
@@ -62,6 +63,9 @@ async def create_page(
         category=body.category,
         products=products,
         location=body.location,
+        phone_number=body.phone_number,
+        business_hours=body.business_hours,
+        is_online_only=body.is_online_only,
     )
     page = await page_service.apply_ai_content(db, page, ai_data)
 
@@ -118,6 +122,9 @@ async def update_my_page(
             category=page.category,
             products=products,
             location=page.location,
+            phone_number=page.phone_number,
+            business_hours=page.business_hours,
+            is_online_only=page.is_online_only,
         )
         page = await page_service.apply_ai_content(db, page, ai_data)
 
@@ -155,6 +162,9 @@ async def regenerate_ai(
         category=page.category,
         products=products,
         location=page.location,
+        phone_number=page.phone_number,
+        business_hours=page.business_hours,
+        is_online_only=page.is_online_only,
     )
     page = await page_service.apply_ai_content(db, page, ai_data)
     return PageResponse.model_validate(page)
@@ -238,3 +248,96 @@ async def upload_logo(
     """Upload a business logo image to Cloudinary."""
     url = await upload_service.upload_logo(file)
     return UploadResponse(logo_url=url)
+
+
+@router.post("/upload/banner")
+async def upload_banner(
+    file: UploadFile = File(...),
+    slug: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, str]:
+    """Upload and save a banner image for an owned page."""
+    page_query = select(BusinessPage).where(
+        BusinessPage.slug == slug,
+        BusinessPage.user_id == current_user.id,
+    )
+    result = await db.execute(page_query)
+    page = result.scalars().first()
+    if page is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Page not found or not owned by current user.",
+        )
+
+    banner_url = await upload_service.upload_banner_image(file, slug)
+    page.banner_image_url = banner_url
+    await db.commit()
+    await db.refresh(page)
+
+    return {
+        "banner_url": banner_url,
+        "message": "Banner uploaded successfully",
+    }
+
+
+@router.post("/upload/product-image")
+async def upload_product_image(
+    file: UploadFile = File(...),
+    page_id: str = Form(...),
+    product_index: int = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, str | int]:
+    """Upload and set an image for a product entry in products JSONB."""
+    if product_index < 0 or product_index > 9:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="product_index must be between 0 and 9",
+        )
+
+    try:
+        parsed_page_id = uuid.UUID(page_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="page_id must be a valid UUID",
+        ) from exc
+
+    page = await page_service.get_user_page_by_id(db, parsed_page_id, current_user.id)
+    if page is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Page not found or not owned by current user.",
+        )
+
+    image_url = await upload_service.upload_product_image(file, page.slug, product_index)
+
+    products = deepcopy(page.products) if page.products else []
+    if not isinstance(products, list):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Products data must be a list.",
+        )
+
+    if product_index >= len(products):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Product index out of range",
+        )
+
+    if not isinstance(products[product_index], dict):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Product entry is invalid.",
+        )
+
+    products[product_index]["image_url"] = image_url
+    page.products = products
+    await db.commit()
+    await db.refresh(page)
+
+    return {
+        "image_url": image_url,
+        "product_index": product_index,
+    }

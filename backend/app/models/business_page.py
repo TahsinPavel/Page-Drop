@@ -27,8 +27,35 @@ class BusinessPage(Base):
     whatsapp_number: Mapped[str] = mapped_column(String, nullable=False)
     location: Mapped[str | None] = mapped_column(String, nullable=True)
     logo_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    banner_image_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+    phone_number: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+    )
+    business_hours: Mapped[dict | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
+    is_online_only: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
 
-    # User-supplied product list
+    # User-supplied product list.
+    # Structure:
+    # [
+    #   {
+    #     "name": "Beef Biryani",
+    #     "price": "180",
+    #     "description": "User provided description",
+    #     "image_url": "https://cloudinary.com/..."  # Optional
+    #   }
+    # ]
     products: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # AI-generated content

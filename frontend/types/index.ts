@@ -12,8 +12,25 @@ export interface User {
 
 export interface Product {
     name: string;
-    price: string;
+    price?: string;
     description?: string | null;
+    image_url?: string | null;
+}
+
+export interface BusinessHoursDay {
+    open: string;
+    close: string;
+    closed: boolean;
+}
+
+export interface BusinessHours {
+    monday?: BusinessHoursDay;
+    tuesday?: BusinessHoursDay;
+    wednesday?: BusinessHoursDay;
+    thursday?: BusinessHoursDay;
+    friday?: BusinessHoursDay;
+    saturday?: BusinessHoursDay;
+    sunday?: BusinessHoursDay;
 }
 
 export interface BusinessPage {
@@ -25,6 +42,10 @@ export interface BusinessPage {
     whatsapp_number: string;
     location: string | null;
     logo_url: string | null;
+    banner_image_url?: string | null;
+    phone_number?: string | null;
+    business_hours?: BusinessHours | null;
+    is_online_only: boolean;
     products: Product[] | null;
     ai_headline: string | null;
     ai_subheadline: string | null;
@@ -50,6 +71,10 @@ export interface PublicPage {
     whatsapp_number: string;
     location: string | null;
     logo_url: string | null;
+    banner_image_url?: string | null;
+    phone_number?: string | null;
+    business_hours?: BusinessHours | null;
+    is_online_only: boolean;
     products: Product[] | null;
     ai_headline: string | null;
     ai_subheadline: string | null;
@@ -78,19 +103,27 @@ export interface CreatePageInput {
     business_name: string;
     category: string;
     whatsapp_number: string;
-    location?: string;
+    phone_number?: string | null;
+    is_online_only?: boolean;
+    location?: string | null;
+    business_hours?: BusinessHours | null;
     products?: Product[];
     theme: string;
+    banner_image_url?: string | null;
 }
 
 export interface UpdatePageInput {
     business_name?: string;
     category?: string;
     whatsapp_number?: string;
-    location?: string;
+    phone_number?: string | null;
+    is_online_only?: boolean;
+    location?: string | null;
+    business_hours?: BusinessHours | null;
     products?: Product[];
     theme?: string;
     logo_url?: string;
+    banner_image_url?: string | null;
 }
 
 export interface LoginInput {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, Crown } from "lucide-react";
+import { Crown } from "lucide-react";
 import toast from "react-hot-toast";
 import { getMySubscription, cancelSubscription } from "@/lib/api";
 import type { SubscriptionStatus } from "@/types";

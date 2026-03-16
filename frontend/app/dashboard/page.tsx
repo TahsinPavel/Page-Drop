@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useMyPages } from "@/hooks/usePages";
@@ -23,7 +22,6 @@ export default function DashboardPage() {
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [summaryLoading, setSummaryLoading] = useState(true);
     const [paymentOpen, setPaymentOpen] = useState(false);
-    const searchParams = useSearchParams();
 
     useEffect(() => {
         getDashboardSummary()
@@ -33,12 +31,12 @@ export default function DashboardPage() {
     }, []);
 
     useEffect(() => {
-        const payment = searchParams.get('payment');
+        const payment = new URLSearchParams(window.location.search).get('payment');
         if (payment === 'success') {
             toast.success('Your Pro plan is now active! 🎉', { duration: 6000 });
             window.history.replaceState({}, '', '/dashboard');
         }
-    }, [searchParams]);
+    }, []);
 
     const totalViews = pages?.reduce((s, p) => s + p.page_views, 0) ?? 0;
     const totalClicks = pages?.reduce((s, p) => s + p.whatsapp_clicks, 0) ?? 0;

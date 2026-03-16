@@ -22,6 +22,9 @@ def _build_prompt(
     category: str,
     products: list[dict[str, Any]] | None = None,
     location: str | None = None,
+    phone_number: str | None = None,
+    business_hours: dict[str, Any] | None = None,
+    is_online_only: bool = True,
 ) -> str:
     """Build the marketing-copy prompt for Gemini.
 
@@ -38,12 +41,31 @@ def _build_prompt(
 
     location_text = f"\nLocation: {location}" if location else ""
 
+    phone_section = ""
+    if phone_number:
+        phone_section = f"Phone: {phone_number}"
+
+    hours_note = ""
+    if is_online_only:
+        hours_note = "This is an online-only business."
+    elif business_hours:
+        hours_note = "This business has physical operating hours."
+
     return f"""You are an expert copywriter for small local businesses.
 Generate marketing content for the following business.  The tone must be
 warm, inviting, human, and locally relevant — never generic or robotic.
 
 Business name: {business_name}
 Category: {category}{product_text}{location_text}
+
+Additional context:
+{phone_section}
+{hours_note}
+
+Important: If this is an online-only business,
+do NOT mention visiting in person or physical location
+in any generated content. Focus on WhatsApp ordering/contact.
+If this has a physical location, you may mention visiting.
 
 Return ONLY raw valid JSON (no markdown, no code fences, no extra text).
 The JSON must have exactly these keys:
@@ -87,6 +109,9 @@ async def generate_content(
     category: str,
     products: list[dict[str, Any]] | None = None,
     location: str | None = None,
+    phone_number: str | None = None,
+    business_hours: dict[str, Any] | None = None,
+    is_online_only: bool = True,
     max_retries: int = 3,
 ) -> dict[str, Any]:
     """Call Gemini 2.0 Flash and return parsed marketing content.
@@ -105,7 +130,15 @@ async def generate_content(
         Dict with keys: headline, subheadline, about, cta_text, products,
         seo_title, seo_description.
     """
-    prompt = _build_prompt(business_name, category, products, location)
+    prompt = _build_prompt(
+        business_name,
+        category,
+        products,
+        location,
+        phone_number,
+        business_hours,
+        is_online_only,
+    )
     model = genai.GenerativeModel(_MODEL_NAME)
 
     for attempt in range(max_retries):

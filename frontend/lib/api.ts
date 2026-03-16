@@ -147,6 +147,64 @@ export async function uploadLogo(file: File): Promise<string> {
     return data.logo_url;
 }
 
+export const uploadBanner = async (
+    file: File,
+    slug: string
+): Promise<{ banner_url: string; message: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("slug", slug);
+    const { data } = await api.post<{ banner_url: string; message: string }>(
+        "/pages/upload/banner",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+    );
+    return data;
+};
+
+export const uploadProductImage = async (
+    file: File,
+    pageId: string,
+    productIndex: number
+): Promise<{ image_url: string; product_index: number; products: NonNullable<BusinessPage["products"]> }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("page_id", pageId);
+    formData.append("product_index", String(productIndex));
+
+    const { data } = await api.post<{ image_url: string; product_index: number }>(
+        "/pages/upload/product-image",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    const refreshedPage = await getPageById(pageId);
+    return {
+        image_url: data.image_url,
+        product_index: data.product_index,
+        products: refreshedPage.products ?? [],
+    };
+};
+
+export const deleteProductImage = async (
+    pageId: string,
+    productIndex: number
+): Promise<void> => {
+    const page = await getPageById(pageId);
+    const products = [...(page.products ?? [])];
+    if (productIndex < 0 || productIndex >= products.length) {
+        throw new Error("Product index out of range");
+    }
+
+    const target = products[productIndex];
+    products[productIndex] = {
+        ...target,
+        image_url: null,
+    };
+
+    await updatePage(pageId, { products });
+};
+
 /* ── Analytics ── */
 export async function getPageAnalytics(
     pageId: string,
