@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { trackWhatsAppClick } from "@/lib/api";
 import type { BusinessHours, Product, PublicPage } from "@/types";
+import ProductCarousel3D from "./ProductCarousel3D";
 
 const syne = Syne({ subsets: ["latin"], weight: ["700"] });
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "700"] });
@@ -501,6 +502,23 @@ export default function PremiumPage({ page }: PremiumPageProps) {
                         </div>
                     </div>
 
+                    {/* 3D Carousel — shown when there are 3+ products */}
+                    {products.length >= 3 ? (
+                        <div className="mb-12">
+                            <ProductCarousel3D
+                                page={page}
+                                products={products}
+                                onOpenModal={(targetProduct, targetIndex) =>
+                                    setSelectedProduct({ product: targetProduct, index: targetIndex })
+                                }
+                                onOrderProduct={(productName) => {
+                                    openWhatsApp(`Hi! I'm interested in ordering: ${productName}`);
+                                }}
+                            />
+                        </div>
+                    ) : null}
+
+                    {/* Product grid — always rendered below the carousel as a browsable list */}
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                         {products.map((product, index) => (
                             <ProductCard
