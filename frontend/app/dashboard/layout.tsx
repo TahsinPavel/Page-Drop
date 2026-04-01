@@ -2,17 +2,14 @@
 
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { DashboardThemeProvider, useDashboardTheme } from "@/hooks/useDashboardTheme";
 import "./dashboard.css";
 
-export default function DashboardLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    useAuth(true); // require auth
+function DashboardShell({ children }: { children: React.ReactNode }) {
+    const { theme } = useDashboardTheme();
 
     return (
-        <div className="db-void" style={{ display: "flex", minHeight: "100vh" }}>
+        <div className={`db-void ${theme === "light" ? "db-light" : ""}`} style={{ display: "flex", minHeight: "100vh" }}>
             <DashboardSidebar />
             <main style={{ flex: 1, overflow: "auto" }}>
                 <div
@@ -28,3 +25,18 @@ export default function DashboardLayout({
         </div>
     );
 }
+
+export default function DashboardLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    useAuth(true);
+
+    return (
+        <DashboardThemeProvider>
+            <DashboardShell>{children}</DashboardShell>
+        </DashboardThemeProvider>
+    );
+}
+

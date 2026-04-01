@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlan } from "@/hooks/usePlan";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { useDashboardTheme } from "@/hooks/useDashboardTheme";
 import {
     LayoutDashboard,
     FileText,
@@ -12,11 +12,12 @@ import {
     BarChart2,
     Settings,
     LogOut,
-    Menu,
     Zap,
     Crown,
+    Sun,
+    Moon,
 } from "lucide-react";
-import { useState } from "react";
+
 
 const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -31,6 +32,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     const router = useRouter();
     const { user, logout } = useAuth();
     const { isPro, plan } = usePlan();
+    const { theme, toggleTheme } = useDashboardTheme();
 
     const handleLogout = () => {
         logout();
@@ -126,6 +128,18 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     </div>
                 </div>
 
+                {/* Theme Toggle */}
+                <button className="db-theme-toggle" onClick={toggleTheme}>
+                    <span className="db-theme-toggle-track">
+                        <span className="db-theme-toggle-thumb" />
+                    </span>
+                    {theme === "dark" ? (
+                        <><Sun size={14} /> Light Mode</>
+                    ) : (
+                        <><Moon size={14} /> Dark Mode</>
+                    )}
+                </button>
+
                 {/* Logout */}
                 <button
                     className="db-nav-item"
@@ -149,67 +163,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export default function DashboardSidebar() {
-    const [open, setOpen] = useState(false);
-
     return (
-        <>
-            {/* Mobile header */}
-            <div
-                className="lg:hidden"
-                style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 40,
-                    display: "flex",
-                    height: 56,
-                    alignItems: "center",
-                    borderBottom: "1px solid rgba(70,69,84,0.12)",
-                    background: "#121212",
-                    padding: "0 16px",
-                }}
-            >
-                <Sheet open={open} onOpenChange={setOpen}>
-                    <SheetTrigger asChild>
-                        <button
-                            className="db-btn-icon"
-                            style={{ background: "transparent", border: "none" }}
-                        >
-                            <Menu size={20} style={{ color: "#e5e2e1" }} />
-                        </button>
-                    </SheetTrigger>
-                    <SheetContent
-                        side="left"
-                        className="p-0"
-                        style={{
-                            width: 260,
-                            background: "#121212",
-                            border: "none",
-                        }}
-                    >
-                        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                        <SidebarContent onNavigate={() => setOpen(false)} />
-                    </SheetContent>
-                </Sheet>
-                <span
-                    style={{
-                        marginLeft: 12,
-                        fontSize: 18,
-                        fontWeight: 700,
-                        fontFamily: "var(--font-syne), sans-serif",
-                        color: "#f0f0ff",
-                    }}
-                >
-                    Page<span style={{ color: "#6366f1" }}>Drop</span>
-                </span>
-            </div>
-
-            {/* Desktop sidebar */}
-            <aside
-                className="hidden lg:flex lg:w-64 lg:flex-col"
-                style={{ background: "#121212", borderRight: "1px solid rgba(70,69,84,0.12)" }}
-            >
-                <SidebarContent />
-            </aside>
-        </>
+        <aside className="db-sidebar-wrapper">
+            <SidebarContent />
+        </aside>
     );
 }

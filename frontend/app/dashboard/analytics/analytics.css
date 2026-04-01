@@ -898,3 +898,122 @@
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════
+   ── ANALYTICS – LIGHT THEME ──
+   ═══════════════════════════════════════ */
+.db-light .an-tab { color: #6b7280; }
+.db-light .an-tab:hover { color: #1a1a2e; }
+.db-light .an-tab.active { color: #1a1a2e; border-bottom-color: #6366f1; }
+
+/* KPI */
+.db-light .an-kpi-card { background: #ffffff; }
+.db-light .an-kpi-card:hover { background: #f9f9fb; }
+.db-light .an-kpi-label { color: #6b7280; }
+.db-light .an-kpi-value { color: #1a1a2e; }
+.db-light .an-kpi-card .an-kpi-ghost { color: #6366f1; }
+.db-light .an-kpi-trend.positive { color: #059669; }
+.db-light .an-kpi-trend.negative { color: #dc2626; }
+.db-light .an-kpi-trend.neutral { color: #6b7280; }
+
+/* Insights */
+.db-light .an-insights { background: #ffffff; border-color: rgba(99, 102, 241, 0.12); }
+.db-light .an-insights::before { background: rgba(99, 102, 241, 0.04); }
+.db-light .an-insights-header h2 { color: #1a1a2e; }
+.db-light .an-insight-item { background: #f9f9fb; border-color: rgba(0, 0, 0, 0.04); }
+.db-light .an-insight-item:hover { background: #f4f5f7; }
+.db-light .an-insight-icon { background: rgba(99, 102, 241, 0.08); color: #6366f1; }
+.db-light .an-insight-title { color: #1a1a2e; }
+.db-light .an-insight-desc { color: #6b7280; }
+.db-light .an-btn-fill { background: #1a1a2e; color: #ffffff; }
+.db-light .an-btn-ghost { background: #edeef1; color: #1a1a2e; }
+
+/* Live Feed */
+.db-light .an-live { background: #ffffff; border-color: rgba(0, 0, 0, 0.06); }
+.db-light .an-live-header h2 { color: #6b7280; }
+.db-light .an-live-dot { background: #6366f1; }
+.db-light .an-live-count { color: #6366f1; }
+.db-light .an-live-bullet { background: #d1d5db; }
+.db-light .an-live-text { color: #1a1a2e; }
+.db-light .an-live-text .highlight { color: #6366f1; }
+.db-light .an-live-sub { color: #6b7280; }
+.db-light .an-live-map { border-top-color: rgba(0, 0, 0, 0.06); }
+.db-light .an-live-map-label { color: #6b7280; }
+.db-light .an-live-map-img { background: #f4f5f7; }
+.db-light .an-live-map-overlay { background: linear-gradient(to top, #ffffff, transparent); }
+
+/* Funnel */
+.db-light .an-funnel { background: #ffffff; }
+.db-light .an-funnel-header h2 { color: #1a1a2e; }
+.db-light .an-funnel-header span { color: #6b7280; }
+.db-light .an-funnel-step-inner { background: #f4f5f7; }
+.db-light .an-funnel-step-label { color: #6b7280; }
+.db-light .an-funnel-step-value { color: #1a1a2e; }
+.db-light .an-funnel-step-pct { color: #6366f1; }
+.db-light .an-funnel-chevron { background: #ffffff; color: #6b7280; }
+
+/* Heatmap */
+.db-light .an-heatmap { background: #ffffff; }
+.db-light .an-heatmap-header { border-bottom-color: rgba(0, 0, 0, 0.06); }
+.db-light .an-heatmap-header h2 { color: #1a1a2e; }
+.db-light .an-heatmap-header p { color: #6b7280; }
+.db-light .an-heatmap-select { background: #f4f5f7; color: #1a1a2e; }
+.db-light .an-heatmap-canvas { background: radial-gradient(circle at 50% 50%, #f9f9fb 0%, #f4f5f7 100%); }
+.db-light .an-legend-label { color: #6b7280; }
+.db-light .an-heatmap-tooltip { background: rgba(255, 255, 255, 0.9); border-color: rgba(99, 102, 241, 0.2); }
+.db-light .an-heatmap-tooltip .label { color: #1a1a2e; }
+.db-light .an-heatmap-tooltip .val { color: #6b7280; }
+
+/* CTA Compare */
+.db-light .an-cta-compare { background: #ffffff; }
+.db-light .an-cta-compare-header h2 { color: #1a1a2e; }
+.db-light .an-cta-badge { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.db-light .an-cta-variant { border-color: rgba(0, 0, 0, 0.06); }
+.db-light .an-cta-variant.winner { background: #f9f9fb; border-color: rgba(99, 102, 241, 0.25); }
+.db-light .an-cta-variant.loser { background: #f4f5f7; }
+.db-light .an-cta-winner-badge { background: #ffffff; color: #6366f1; }
+.db-light .an-cta-variant.winner .an-cta-name { color: #1a1a2e; }
+.db-light .an-cta-variant.loser .an-cta-name { color: #6b7280; }
+.db-light .an-cta-variant.winner .an-cta-pct { color: #1a1a2e; }
+.db-light .an-cta-variant.loser .an-cta-pct { color: #6b7280; }
+.db-light .an-cta-bar-track { background: #edeef1; }
+.db-light .an-cta-variant.winner .an-cta-bar-fill { background: #6366f1; }
+.db-light .an-cta-variant.loser .an-cta-bar-fill { background: #d1d5db; }
+.db-light .an-cta-note { color: #6b7280; }
+.db-light .an-cta-details-btn { background: #f4f5f7; color: #1a1a2e; }
+.db-light .an-cta-details-btn:hover { background: #edeef1; }
+
+/* Catalog */
+.db-light .an-catalog { background: #ffffff; }
+.db-light .an-catalog-header h2 { color: #1a1a2e; }
+.db-light .an-catalog-search { background: #f4f5f7; border-color: rgba(0, 0, 0, 0.06); }
+.db-light .an-catalog-search input { color: #1a1a2e; }
+.db-light .an-catalog-search input::placeholder { color: #9ca3af; }
+.db-light .an-catalog-table th { color: #6b7280; border-bottom-color: rgba(0, 0, 0, 0.06); }
+.db-light .an-catalog-table td { color: #1a1a2e; border-bottom-color: rgba(0, 0, 0, 0.04); }
+.db-light .an-catalog-table tbody tr:hover { background: #f9f9fb; }
+.db-light .an-product-thumb { background: #f4f5f7; }
+.db-light .an-product-name { color: #1a1a2e; }
+.db-light .an-conv-badge.high { background: rgba(99, 102, 241, 0.08); color: #6366f1; }
+.db-light .an-conv-badge.low { background: rgba(0, 0, 0, 0.04); color: #6b7280; }
+.db-light .an-more-btn { color: #6b7280; }
+.db-light .an-more-btn:hover { color: #1a1a2e; }
+
+/* Sources */
+.db-light .an-sources { background: #ffffff; }
+.db-light .an-sources h2 { color: #1a1a2e; }
+.db-light .an-source-name { color: #1a1a2e; }
+.db-light .an-source-bar-track { background: #edeef1; }
+.db-light .an-source-bar-fill { background: #6366f1; }
+.db-light .an-source-pct { color: #1a1a2e; }
+.db-light .an-source-count { color: #6b7280; }
+
+/* Devices */
+.db-light .an-devices { background: #ffffff; }
+.db-light .an-devices h2 { color: #6b7280; }
+.db-light .an-device-bar.mobile { background: #6366f1; }
+.db-light .an-device-bar.desktop { background: #edeef1; }
+.db-light .an-device-pct { color: #1a1a2e; }
+.db-light .an-device-name { color: #6b7280; }
+.db-light .an-devices-note { color: #6b7280; }
+

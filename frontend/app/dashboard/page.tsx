@@ -78,17 +78,10 @@ export default function DashboardPage() {
 
             {/* Welcome */}
             <div className="db-animate-in db-animate-delay-1" style={{ marginBottom: 28 }}>
-                <h1
-                    style={{
-                        fontSize: 24,
-                        fontWeight: 700,
-                        color: "#e5e2e1",
-                        fontFamily: "var(--font-syne), sans-serif",
-                    }}
-                >
+                <h1 className="db-page-title">
                     Welcome{user?.full_name ? `, ${user.full_name}` : ""} 👋
                 </h1>
-                <p style={{ fontSize: 14, color: "#908fa0", marginTop: 4 }}>
+                <p className="db-page-subtitle">
                     Manage your landing pages and track performance.
                 </p>
             </div>
