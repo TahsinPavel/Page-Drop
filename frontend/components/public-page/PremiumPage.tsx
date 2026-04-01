@@ -15,6 +15,13 @@ import {
 import { trackWhatsAppClick } from "@/lib/api";
 import type { BusinessHours, Product, PublicPage } from "@/types";
 import ProductCarousel3D from "./ProductCarousel3D";
+import TemplateShowroom from "../three/scenes/TemplateShowroom";
+
+const SHOWROOM_CATEGORIES = [
+    'restaurant', 'retail', 'bakery', 'cafe',
+    'salon', 'spa', 'fitness', 'photography',
+    'clothing', 'grocery', 'electronics',
+];
 
 const syne = Syne({ subsets: ["latin"], weight: ["700"] });
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "700"] });
@@ -337,6 +344,21 @@ export default function PremiumPage({ page }: PremiumPageProps) {
         [normalizedWhatsApp, trackWhatsApp]
     );
 
+    const handleWhatsAppOrder = useCallback(
+        (productName: string) => {
+            openWhatsApp(`Hi! I'm interested in ordering: ${productName}`);
+        },
+        [openWhatsApp]
+    );
+
+    const handleWhatsAppContact = useCallback(() => {
+        openWhatsApp();
+    }, [openWhatsApp]);
+
+    const useShowroom = SHOWROOM_CATEGORIES.includes(
+        page.category?.toLowerCase()
+    );
+
     const currentDayIndex = new Date().getDay();
 
     useEffect(() => {
@@ -348,6 +370,16 @@ export default function PremiumPage({ page }: PremiumPageProps) {
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
     }, []);
+
+    if (useShowroom) {
+        return (
+            <TemplateShowroom
+                page={page}
+                onWhatsAppOrder={handleWhatsAppOrder}
+                onWhatsAppContact={handleWhatsAppContact}
+            />
+        );
+    }
 
     return (
         <div className={`${dmSans.className} min-h-screen bg-[var(--pp-bg)] text-[var(--pp-text-primary)]`}>

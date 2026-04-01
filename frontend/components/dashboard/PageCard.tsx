@@ -1,82 +1,95 @@
 "use client";
 
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Eye, MousePointerClick, ExternalLink, Pencil, BarChart2 } from "lucide-react";
+import { Eye, Pencil, GripVertical, Trash2, Package } from "lucide-react";
 import type { BusinessPage } from "@/types";
 
 interface PageCardProps {
     page: BusinessPage;
+    onDelete?: (id: string) => void;
 }
 
-const themeColors: Record<string, string> = {
-    default: "bg-emerald-100 text-emerald-800",
-    dark: "bg-gray-800 text-gray-100",
-    minimal: "bg-gray-100 text-gray-800",
-    vibrant: "bg-purple-100 text-purple-800",
-};
-
-export default function PageCard({ page }: PageCardProps) {
+export default function PageCard({ page, onDelete }: PageCardProps) {
     const publicUrl = `/${page.slug}`;
 
     return (
-        <Card className="group relative overflow-hidden transition-shadow hover:shadow-lg">
-            <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg leading-tight">
-                        {page.business_name}
-                    </CardTitle>
-                    <Badge variant="secondary" className={themeColors[page.theme] ?? ""}>
-                        {page.theme}
-                    </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">/{page.slug}</p>
-            </CardHeader>
+        <div className="db-product-row">
+            {/* Thumbnail */}
+            <div className="db-product-thumb">
+                {page.logo_url ? (
+                    <img src={page.logo_url} alt={page.business_name} />
+                ) : (
+                    <Package size={20} style={{ color: "#908fa0" }} />
+                )}
+            </div>
 
-            <CardContent className="pb-3">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                        <Eye className="h-3.5 w-3.5" />
-                        {page.page_views.toLocaleString()} views
-                    </span>
-                    <span className="flex items-center gap-1">
-                        <MousePointerClick className="h-3.5 w-3.5" />
-                        {page.whatsapp_clicks.toLocaleString()} clicks
-                    </span>
+            {/* Info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                    style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#e5e2e1",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {page.business_name}
                 </div>
-            </CardContent>
+                <div
+                    style={{
+                        fontSize: 12,
+                        color: "#908fa0",
+                        marginTop: 2,
+                    }}
+                >
+                    {page.category}
+                </div>
+            </div>
 
-            <CardFooter className="gap-2">
-                <Link href={`/dashboard/pages/${page.id}`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full gap-1.5">
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                    </Button>
+            {/* Status badge */}
+            <span className={page.is_active ? "db-badge-active" : "db-badge-draft"}>
+                {page.is_active ? "ACTIVE" : "DRAFT"}
+            </span>
+
+            {/* Views */}
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontSize: 13,
+                    color: "#908fa0",
+                    minWidth: 60,
+                }}
+            >
+                <Eye size={14} />
+                {page.page_views >= 1000
+                    ? `${(page.page_views / 1000).toFixed(1)}k`
+                    : page.page_views}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Link href={`/dashboard/pages/${page.id}`}>
+                    <button className="db-icon-btn" title="Edit page">
+                        <Pencil size={15} />
+                    </button>
                 </Link>
-                <Link href={`/dashboard/pages/${page.id}/analytics`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full gap-1.5">
-                        <BarChart2 className="h-3.5 w-3.5" />
-                        Analytics
-                    </Button>
-                </Link>
-                <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="flex-1">
-                    <Button
-                        size="sm"
-                        className="w-full gap-1.5 bg-[#25D366] hover:bg-[#1da851] text-white"
+                <button className="db-icon-btn" title="Reorder">
+                    <GripVertical size={15} />
+                </button>
+                {onDelete && (
+                    <button
+                        className="db-icon-btn danger"
+                        title="Delete page"
+                        onClick={() => onDelete(page.id)}
                     >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        View Live
-                    </Button>
-                </a>
-            </CardFooter>
-        </Card>
+                        <Trash2 size={15} />
+                    </button>
+                )}
+            </div>
+        </div>
     );
 }

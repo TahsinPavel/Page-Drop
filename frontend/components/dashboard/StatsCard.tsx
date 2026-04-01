@@ -1,33 +1,63 @@
-import { Card, CardContent } from "@/components/ui/card";
+"use client";
+
 import type { LucideIcon } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface StatsCardProps {
     title: string;
     value: string | number;
     icon: LucideIcon;
-    description?: string;
+    trend?: number;          // e.g. +12 or -1
+    trendLabel?: string;     // e.g. "+12%"
+    delay?: number;
 }
 
 export default function StatsCard({
     title,
     value,
     icon: Icon,
-    description,
+    trend,
+    trendLabel,
+    delay = 0,
 }: StatsCardProps) {
+    const isPositive = trend !== undefined && trend >= 0;
+
     return (
-        <Card>
-            <CardContent className="flex items-center gap-4 p-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#25D366]/10">
-                    <Icon className="h-6 w-6 text-[#25D366]" />
+        <div className={`db-stat-card db-animate-in db-animate-delay-${delay}`}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                <div className="db-stat-icon">
+                    <Icon size={20} />
                 </div>
-                <div>
-                    <p className="text-sm font-medium text-muted-foreground">{title}</p>
-                    <p className="text-2xl font-bold">{value}</p>
-                    {description && (
-                        <p className="text-xs text-muted-foreground">{description}</p>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+                {trend !== undefined && trendLabel && (
+                    <div className={isPositive ? "db-stat-trend-up" : "db-stat-trend-down"}>
+                        {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                        {trendLabel}
+                    </div>
+                )}
+            </div>
+            <div style={{ marginTop: 16 }}>
+                <p
+                    style={{
+                        fontSize: 28,
+                        fontWeight: 700,
+                        color: "#e5e2e1",
+                        lineHeight: 1.1,
+                        fontFamily: "var(--font-syne), sans-serif",
+                    }}
+                >
+                    {typeof value === "number" ? value.toLocaleString() : value}
+                </p>
+                <p
+                    style={{
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: "#908fa0",
+                        marginTop: 4,
+                    }}
+                >
+                    {title}
+                </p>
+            </div>
+        </div>
     );
 }

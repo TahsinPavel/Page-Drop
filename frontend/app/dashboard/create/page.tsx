@@ -1,20 +1,36 @@
-import type { Metadata } from "next";
-import CreatePageForm from "@/components/forms/CreatePageForm";
+"use client";
 
-export const metadata: Metadata = {
-    title: "Create New Page — PageDrop",
-};
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import CreatePageForm from "@/components/forms/CreatePageForm";
 
 export default function CreatePage() {
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Create New Page</h1>
-                <p className="text-sm text-muted-foreground">
+        <>
+            <DashboardHeader
+                breadcrumb="PageDrop"
+                pageTitle="Create New Page"
+                showActions={false}
+            />
+
+            <div className="db-animate-in" style={{ marginBottom: 28 }}>
+                <h1
+                    style={{
+                        fontSize: 24,
+                        fontWeight: 700,
+                        color: "#e5e2e1",
+                        fontFamily: "var(--font-syne), sans-serif",
+                    }}
+                >
+                    Create New Page
+                </h1>
+                <p style={{ fontSize: 14, color: "#908fa0", marginTop: 4 }}>
                     Fill in your business details and let AI do the rest.
                 </p>
             </div>
-            <CreatePageForm />
-        </div>
+
+            <div className="db-section-card db-animate-in db-animate-delay-2">
+                <CreatePageForm />
+            </div>
+        </>
     );
 }

@@ -3,25 +3,26 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
+import { usePlan } from "@/hooks/usePlan";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import {
-    Rocket,
     LayoutDashboard,
+    FileText,
+    Box,
     BarChart2,
-    PlusCircle,
     Settings,
     LogOut,
     Menu,
+    Zap,
+    Crown,
 } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 
 const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard", label: "Analytics", icon: BarChart2, subtitle: "Per-page analytics" },
-    { href: "/dashboard/create", label: "Create New Page", icon: PlusCircle },
+    { href: "/dashboard/create", label: "My Pages", icon: FileText },
+    { href: "/dashboard/leads", label: "Orders & Leads", icon: Box },
+    { href: "/dashboard/analytics", label: "Analytics", icon: BarChart2 },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -29,70 +30,119 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     const pathname = usePathname();
     const router = useRouter();
     const { user, logout } = useAuth();
+    const { isPro, plan } = usePlan();
 
     const handleLogout = () => {
         logout();
         router.push("/login");
     };
 
+    const getInitials = (name: string | null | undefined) => {
+        if (!name) return "U";
+        return name
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    const isActive = (href: string) => {
+        if (href === "/dashboard") return pathname === "/dashboard";
+        return pathname.startsWith(href);
+    };
+
     return (
-        <div className="flex h-full flex-col">
-            {/* Logo */}
-            <div className="flex h-16 items-center gap-2 px-4 font-bold text-xl">
-                <Rocket className="h-6 w-6 text-[#25D366]" />
-                <span>
-                    Page<span className="text-[#25D366]">Drop</span>
-                </span>
+        <div className="db-sidebar">
+            {/* Brand */}
+            <div className="db-sidebar-brand">
+                <Link
+                    href="/dashboard"
+                    className="db-sidebar-brand-name"
+                    style={{ textDecoration: "none" }}
+                    onClick={onNavigate}
+                >
+                    <Zap size={22} style={{ color: "#6366f1" }} />
+                    <span>
+                        Page<span style={{ color: "#6366f1" }}>Drop</span>
+                    </span>
+                </Link>
+                {isPro && (
+                    <span className="db-sidebar-pro-badge" style={{ alignSelf: "flex-start", marginLeft: 32 }}>
+                        {plan.toUpperCase()} PLAN
+                    </span>
+                )}
             </div>
 
-            <Separator />
+            {/* Separator */}
+            <div style={{ height: 1, background: "rgba(70,69,84,0.12)", margin: "0 16px" }} />
 
-            {/* Nav links */}
-            <nav className="flex-1 space-y-1 px-3 py-4">
+            {/* Nav */}
+            <nav className="db-sidebar-nav" style={{ paddingTop: 12 }}>
                 {navItems.map((item) => {
-                    const isActive = item.label === "Analytics"
-                        ? pathname.includes("/analytics")
-                        : pathname === item.href;
+                    const active = isActive(item.href);
                     return (
                         <Link
                             key={item.label}
                             href={item.href}
                             onClick={onNavigate}
-                            className={cn(
-                                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                                isActive
-                                    ? "bg-[#25D366]/10 text-[#25D366]"
-                                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                            )}
+                            className={`db-nav-item ${active ? "active" : ""}`}
                         >
-                            <item.icon className="h-4 w-4" />
-                            <div>
-                                {item.label}
-                                {"subtitle" in item && item.subtitle && (
-                                    <span className="block text-[11px] font-normal text-muted-foreground">
-                                        {item.subtitle}
-                                    </span>
-                                )}
-                            </div>
+                            <item.icon className="db-nav-icon" />
+                            {item.label}
                         </Link>
                     );
                 })}
             </nav>
 
-            {/* User & logout */}
-            <div className="border-t px-3 py-4 space-y-2">
-                <p className="truncate px-3 text-xs text-muted-foreground">
-                    {user?.email ?? "—"}
-                </p>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start gap-2 text-muted-foreground hover:text-red-500"
+            {/* Footer */}
+            <div className="db-sidebar-footer">
+                {/* User info */}
+                <div className="db-sidebar-user">
+                    <div className="db-sidebar-avatar">
+                        {getInitials(user?.full_name)}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                        <div
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: "#e5e2e1",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {user?.full_name || "User Workspace"}
+                        </div>
+                        <div
+                            style={{
+                                fontSize: 11,
+                                color: "#908fa0",
+                            }}
+                        >
+                            {user?.email || "—"}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Logout */}
+                <button
+                    className="db-nav-item"
                     onClick={handleLogout}
+                    style={{ color: "#908fa0" }}
                 >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className="db-nav-icon" />
                     Logout
-                </Button>
+                </button>
+
+                {/* Upgrade */}
+                {!isPro && (
+                    <Link href="/pricing" className="db-upgrade-btn" onClick={onNavigate}>
+                        <Crown size={15} />
+                        Upgrade Workspace
+                    </Link>
+                )}
             </div>
         </div>
     );
@@ -103,25 +153,60 @@ export default function DashboardSidebar() {
 
     return (
         <>
-            {/* Mobile hamburger */}
-            <div className="sticky top-0 z-40 flex h-14 items-center border-b bg-white px-4 lg:hidden">
+            {/* Mobile header */}
+            <div
+                className="lg:hidden"
+                style={{
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 40,
+                    display: "flex",
+                    height: 56,
+                    alignItems: "center",
+                    borderBottom: "1px solid rgba(70,69,84,0.12)",
+                    background: "#121212",
+                    padding: "0 16px",
+                }}
+            >
                 <Sheet open={open} onOpenChange={setOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <Menu className="h-5 w-5" />
-                        </Button>
+                        <button
+                            className="db-btn-icon"
+                            style={{ background: "transparent", border: "none" }}
+                        >
+                            <Menu size={20} style={{ color: "#e5e2e1" }} />
+                        </button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="w-64 p-0">
+                    <SheetContent
+                        side="left"
+                        className="p-0"
+                        style={{
+                            width: 260,
+                            background: "#121212",
+                            border: "none",
+                        }}
+                    >
                         <SidebarContent onNavigate={() => setOpen(false)} />
                     </SheetContent>
                 </Sheet>
-                <span className="ml-3 font-bold">
-                    Page<span className="text-[#25D366]">Drop</span>
+                <span
+                    style={{
+                        marginLeft: 12,
+                        fontSize: 18,
+                        fontWeight: 700,
+                        fontFamily: "var(--font-syne), sans-serif",
+                        color: "#f0f0ff",
+                    }}
+                >
+                    Page<span style={{ color: "#6366f1" }}>Drop</span>
                 </span>
             </div>
 
             {/* Desktop sidebar */}
-            <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:bg-white">
+            <aside
+                className="hidden lg:flex lg:w-64 lg:flex-col"
+                style={{ background: "#121212", borderRight: "1px solid rgba(70,69,84,0.12)" }}
+            >
                 <SidebarContent />
             </aside>
         </>

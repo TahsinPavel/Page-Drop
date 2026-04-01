@@ -5,19 +5,31 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useMyPages } from "@/hooks/usePages";
-import { getDashboardSummary } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import PageCard from "@/components/dashboard/PageCard";
+import { getDashboardSummary, deletePage } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCard from "@/components/dashboard/StatsCard";
-import AnalyticsSummaryBar from "@/components/analytics/AnalyticsSummaryBar";
+import QuickActionCard from "@/components/dashboard/QuickActionCard";
+import PageCard from "@/components/dashboard/PageCard";
+import CarouselControl from "@/components/dashboard/CarouselControl";
 import PaymentMethodModal from "@/components/payments/PaymentMethodModal";
-import { PlusCircle, Eye, MousePointerClick, FileText, Inbox, Crown } from "lucide-react";
+import {
+    FileText,
+    Eye,
+    MousePointerClick,
+    TrendingUp,
+    PlusCircle,
+    Box,
+    Layout,
+    ExternalLink,
+    Inbox,
+} from "lucide-react";
 import type { DashboardSummary } from "@/types";
 
 export default function DashboardPage() {
     const { user } = useAuth(true);
     const { data: pages, isLoading } = useMyPages();
+    const queryClient = useQueryClient();
 
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [summaryLoading, setSummaryLoading] = useState(true);
@@ -26,106 +38,224 @@ export default function DashboardPage() {
     useEffect(() => {
         getDashboardSummary()
             .then(setSummary)
-            .catch(() => { })
+            .catch(() => {})
             .finally(() => setSummaryLoading(false));
     }, []);
 
     useEffect(() => {
-        const payment = new URLSearchParams(window.location.search).get('payment');
-        if (payment === 'success') {
-            toast.success('Your Pro plan is now active! 🎉', { duration: 6000 });
-            window.history.replaceState({}, '', '/dashboard');
+        const payment = new URLSearchParams(window.location.search).get("payment");
+        if (payment === "success") {
+            toast.success("Your Pro plan is now active! 🎉", { duration: 6000 });
+            window.history.replaceState({}, "", "/dashboard");
         }
     }, []);
 
     const totalViews = pages?.reduce((s, p) => s + p.page_views, 0) ?? 0;
     const totalClicks = pages?.reduce((s, p) => s + p.whatsapp_clicks, 0) ?? 0;
     const totalPages = pages?.length ?? 0;
+    const conversionRate = totalViews > 0 ? ((totalClicks / totalViews) * 100).toFixed(1) : "0.0";
+    const primarySlug = pages?.[0]?.slug;
 
-    const bestPageId = pages?.find(
-        (p) => p.slug === summary?.best_performing_page?.slug
-    )?.id;
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this page?")) return;
+        try {
+            await deletePage(id);
+            queryClient.invalidateQueries({ queryKey: ["my-pages"] });
+            toast.success("Page deleted");
+        } catch {
+            toast.error("Failed to delete page");
+        }
+    };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                        Welcome{user?.full_name ? `, ${user.full_name}` : ""} 👋
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                        Manage your landing pages and track performance.
-                    </p>
-                </div>
-                {!isLoading && totalPages >= 1 ? (
-                    <div className="text-right">
-                        <Button className="gap-2" disabled>
-                            <PlusCircle className="h-4 w-4" />
-                            Create New Page
-                        </Button>
-                        <button
-                            onClick={() => setPaymentOpen(true)}
-                            className="mt-1 flex items-center gap-1 text-xs text-[#818CF8] hover:underline ml-auto"
-                            style={{ background: "none", border: "none", cursor: "pointer" }}
-                        >
-                            <Crown className="h-3 w-3" />
-                            Upgrade to create more pages
-                        </button>
-                    </div>
-                ) : (
-                    <Link href="/dashboard/create">
-                        <Button className="gap-2 bg-[#25D366] hover:bg-[#1da851] text-white">
-                            <PlusCircle className="h-4 w-4" />
-                            Create New Page
-                        </Button>
-                    </Link>
-                )}
-            </div>
-
-            {/* Analytics Summary Bar */}
-            <AnalyticsSummaryBar
-                summary={summary}
-                loading={summaryLoading}
-                pageId={bestPageId}
+        <>
+            {/* Header */}
+            <DashboardHeader
+                breadcrumb="PageDrop"
+                pageTitle="Dashboard"
+                primarySlug={primarySlug}
             />
 
-            {/* Stats */}
-            <div className="grid gap-4 sm:grid-cols-3">
-                <StatsCard title="Total Pages" value={totalPages} icon={FileText} />
-                <StatsCard title="Total Views" value={totalViews} icon={Eye} />
-                <StatsCard title="WhatsApp Clicks" value={totalClicks} icon={MousePointerClick} />
+            {/* Welcome */}
+            <div className="db-animate-in db-animate-delay-1" style={{ marginBottom: 28 }}>
+                <h1
+                    style={{
+                        fontSize: 24,
+                        fontWeight: 700,
+                        color: "#e5e2e1",
+                        fontFamily: "var(--font-syne), sans-serif",
+                    }}
+                >
+                    Welcome{user?.full_name ? `, ${user.full_name}` : ""} 👋
+                </h1>
+                <p style={{ fontSize: 14, color: "#908fa0", marginTop: 4 }}>
+                    Manage your landing pages and track performance.
+                </p>
             </div>
 
-            {/* Pages grid */}
-            {isLoading ? (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                        <Skeleton key={i} className="h-48 rounded-xl" />
-                    ))}
+            {/* Stats Grid - 4 cards */}
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: 16,
+                    marginBottom: 28,
+                }}
+            >
+                <StatsCard
+                    title="Total Pages"
+                    value={totalPages}
+                    icon={FileText}
+                    trend={totalPages > 0 ? 12 : 0}
+                    trendLabel={totalPages > 0 ? `+${totalPages}` : "—"}
+                    delay={1}
+                />
+                <StatsCard
+                    title="Total Views"
+                    value={totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1)}k` : totalViews}
+                    icon={Eye}
+                    trend={summary?.total_views_last_30_days ?? 0}
+                    trendLabel={
+                        summary?.total_views_last_30_days
+                            ? `+${summary.total_views_last_30_days.toLocaleString()}`
+                            : "—"
+                    }
+                    delay={2}
+                />
+                <StatsCard
+                    title="WhatsApp Clicks"
+                    value={totalClicks}
+                    icon={MousePointerClick}
+                    trend={totalClicks}
+                    trendLabel={totalClicks > 0 ? `+${totalClicks}` : "—"}
+                    delay={3}
+                />
+                <StatsCard
+                    title="Conversion Rate"
+                    value={`${conversionRate}%`}
+                    icon={TrendingUp}
+                    trend={Number(conversionRate)}
+                    trendLabel={Number(conversionRate) > 0 ? `+${conversionRate}%` : "—"}
+                    delay={4}
+                />
+            </div>
+
+            {/* Quick Actions */}
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                    gap: 14,
+                    marginBottom: 28,
+                }}
+            >
+                <QuickActionCard
+                    icon={PlusCircle}
+                    label="Add New Page"
+                    href="/dashboard/create"
+                    delay={3}
+                />
+                <QuickActionCard
+                    icon={Box}
+                    label="Customize Carousel"
+                    onClick={() => toast("Carousel editor coming soon!", { icon: "🎠" })}
+                    delay={4}
+                />
+                <QuickActionCard
+                    icon={Layout}
+                    label="Edit Landing Page"
+                    href={pages?.[0] ? `/dashboard/pages/${pages[0].id}` : "/dashboard/create"}
+                    delay={5}
+                />
+                <QuickActionCard
+                    icon={ExternalLink}
+                    label="View Live Page"
+                    href={primarySlug ? `/${primarySlug}` : "#"}
+                    delay={6}
+                />
+            </div>
+
+            {/* Main content grid — Recent Pages + Carousel Control */}
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 320px",
+                    gap: 20,
+                    alignItems: "start",
+                }}
+                className="db-grid-responsive"
+            >
+                {/* Recent Pages / Products */}
+                <div className="db-section-card db-animate-in db-animate-delay-4">
+                    <div className="db-section-title">Recent Pages</div>
+
+                    {isLoading ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {[1, 2, 3].map((i) => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        height: 60,
+                                        borderRadius: 10,
+                                        background: "rgba(53,53,52,0.3)",
+                                        animation: "pulse 2s infinite",
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    ) : pages && pages.length > 0 ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            {pages.map((page) => (
+                                <PageCard
+                                    key={page.id}
+                                    page={page}
+                                    onDelete={handleDelete}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="db-empty-state">
+                            <Inbox size={40} style={{ color: "#5a5a7a" }} />
+                            <div>
+                                <h3
+                                    style={{
+                                        fontSize: 16,
+                                        fontWeight: 600,
+                                        color: "#e5e2e1",
+                                        marginBottom: 4,
+                                    }}
+                                >
+                                    No pages yet
+                                </h3>
+                                <p style={{ fontSize: 13, color: "#908fa0" }}>
+                                    Create your first landing page and go live in seconds.
+                                </p>
+                            </div>
+                            <Link href="/dashboard/create">
+                                <button className="db-btn-primary">
+                                    <PlusCircle
+                                        size={15}
+                                        style={{ marginRight: 6, display: "inline" }}
+                                    />
+                                    Create Your First Page
+                                </button>
+                            </Link>
+                        </div>
+                    )}
                 </div>
-            ) : pages && pages.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {pages.map((page) => (
-                        <PageCard key={page.id} page={page} />
-                    ))}
-                </div>
-            ) : (
-                <div className="flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed py-16 text-center">
-                    <Inbox className="h-12 w-12 text-muted-foreground/40" />
-                    <div>
-                        <h3 className="font-semibold text-gray-900">No pages yet</h3>
-                        <p className="text-sm text-muted-foreground">
-                            Create your first landing page and go live in seconds.
-                        </p>
-                    </div>
-                    <Link href="/dashboard/create">
-                        <Button className="gap-2 bg-[#25D366] hover:bg-[#1da851] text-white">
-                            <PlusCircle className="h-4 w-4" />
-                            Create Your First Page
-                        </Button>
-                    </Link>
-                </div>
-            )}
+
+                {/* Carousel Control */}
+                {pages && pages.length > 0 && <CarouselControl pages={pages} />}
+            </div>
+
+            {/* Responsive grid override */}
+            <style jsx>{`
+                @media (max-width: 768px) {
+                    .db-grid-responsive {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+            `}</style>
 
             {/* Payment Modal */}
             <PaymentMethodModal
@@ -133,6 +263,6 @@ export default function DashboardPage() {
                 onClose={() => setPaymentOpen(false)}
                 plan="pro"
             />
-        </div>
+        </>
     );
 }

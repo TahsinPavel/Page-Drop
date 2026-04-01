@@ -2,6 +2,7 @@
 
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import { useAuth } from "@/hooks/useAuth";
+import "./dashboard.css";
 
 export default function DashboardLayout({
     children,
@@ -11,10 +12,16 @@ export default function DashboardLayout({
     useAuth(true); // require auth
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="db-void" style={{ display: "flex", minHeight: "100vh" }}>
             <DashboardSidebar />
-            <main className="flex-1 overflow-auto">
-                <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+            <main style={{ flex: 1, overflow: "auto" }}>
+                <div
+                    style={{
+                        maxWidth: 1100,
+                        margin: "0 auto",
+                        padding: "28px 24px",
+                    }}
+                >
                     {children}
                 </div>
             </main>

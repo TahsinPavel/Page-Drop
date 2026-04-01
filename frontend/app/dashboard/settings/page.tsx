@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import SubscriptionCard from "@/components/payments/SubscriptionCard";
 import PaymentMethodModal from "@/components/payments/PaymentMethodModal";
 
@@ -11,46 +12,38 @@ export default function SettingsPage() {
     }>({ open: false, plan: "pro" });
 
     return (
-        <div style={{ padding: "32px 16px", maxWidth: 800, margin: "0 auto" }}>
-            <h1
-                style={{
-                    fontSize: 28,
-                    fontWeight: 700,
-                    color: "var(--pd-text-primary)",
-                    fontFamily: "var(--font-syne), sans-serif",
-                    marginBottom: 8,
-                }}
-            >
-                Settings
-            </h1>
-            <p
-                style={{
-                    color: "var(--pd-text-secondary)",
-                    fontSize: 14,
-                    marginBottom: 32,
-                }}
-            >
-                Manage your account and subscription
-            </p>
+        <>
+            <DashboardHeader
+                breadcrumb="PageDrop"
+                pageTitle="Settings"
+                showActions={false}
+            />
 
-            {/* Subscription Section */}
-            <section style={{ marginBottom: 32 }}>
-                <h2
+            <div className="db-animate-in" style={{ marginBottom: 28 }}>
+                <h1
                     style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: "var(--pd-text-primary)",
-                        marginBottom: 16,
+                        fontSize: 24,
+                        fontWeight: 700,
+                        color: "#e5e2e1",
+                        fontFamily: "var(--font-syne), sans-serif",
                     }}
                 >
-                    Subscription
-                </h2>
+                    Settings
+                </h1>
+                <p style={{ fontSize: 14, color: "#908fa0", marginTop: 4 }}>
+                    Manage your account and subscription
+                </p>
+            </div>
+
+            {/* Subscription Section */}
+            <div className="db-section-card db-animate-in db-animate-delay-2">
+                <div className="db-section-title">Subscription</div>
                 <SubscriptionCard
                     onUpgradeClick={(plan) =>
                         setPaymentModal({ open: true, plan })
                     }
                 />
-            </section>
+            </div>
 
             <PaymentMethodModal
                 isOpen={paymentModal.open}
@@ -59,6 +52,6 @@ export default function SettingsPage() {
                 }
                 plan={paymentModal.plan}
             />
-        </div>
+        </>
     );
 }
