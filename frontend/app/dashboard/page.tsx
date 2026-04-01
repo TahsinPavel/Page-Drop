@@ -248,14 +248,8 @@ export default function DashboardPage() {
                 {pages && pages.length > 0 && <CarouselControl pages={pages} />}
             </div>
 
-            {/* Responsive grid override */}
-            <style jsx>{`
-                @media (max-width: 768px) {
-                    .db-grid-responsive {
-                        grid-template-columns: 1fr !important;
-                    }
-                }
-            `}</style>
+
+
 
             {/* Payment Modal */}
             <PaymentMethodModal

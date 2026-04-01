@@ -608,3 +608,10 @@
   border-radius: 16px;
   background: rgba(28, 27, 27, 0.3);
 }
+
+/* ── Responsive grid ── */
+@media (max-width: 768px) {
+  .db-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+}

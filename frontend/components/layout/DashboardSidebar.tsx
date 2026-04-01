@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlan } from "@/hooks/usePlan";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import {
     LayoutDashboard,
     FileText,
@@ -186,6 +186,7 @@ export default function DashboardSidebar() {
                             border: "none",
                         }}
                     >
+                        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                         <SidebarContent onNavigate={() => setOpen(false)} />
                     </SheetContent>
                 </Sheet>
