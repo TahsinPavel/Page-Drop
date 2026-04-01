@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Clock, AlertCircle, BarChart2, CheckCircle, LockKeyhole, Copy } from "lucide-react";
+import { ArrowLeft, Clock, AlertCircle, BarChart2, Copy } from "lucide-react";
 import toast from "react-hot-toast";
 import { getPageAnalytics, getPageById } from "@/lib/api";
 import { usePlan } from "@/hooks/usePlan";
@@ -11,7 +11,6 @@ import StatsGrid from "@/components/analytics/StatsGrid";
 import TrafficChart from "@/components/analytics/TrafficChart";
 import ReferrersTable from "@/components/analytics/ReferrersTable";
 import BestDayCard from "@/components/analytics/BestDayCard";
-import PaymentMethodModal from "@/components/payments/PaymentMethodModal";
 import type { PageAnalyticsData } from "@/types";
 
 export default function PageAnalyticsPage() {
@@ -25,9 +24,8 @@ export default function PageAnalyticsPage() {
     const [slug, setSlug] = useState("");
     const params = useParams<{ id: string }>();
     const id = params.id;
-    const { isPro, isFree } = usePlan();
+    const { isPro } = usePlan();
     const router = useRouter();
-    const [paymentOpen, setPaymentOpen] = useState(false);
 
     const loadData = useCallback(async () => {
         if (!id) return;
@@ -168,37 +166,6 @@ export default function PageAnalyticsPage() {
                         </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span
-                            style={{
-                                fontSize: 11,
-                                background: isPro
-                                    ? "rgba(16,185,129,0.1)"
-                                    : "rgba(255,255,255,0.06)",
-                                border: `1px solid ${isPro ? "rgba(16,185,129,0.25)" : "var(--pd-border)"}`,
-                                color: isPro ? "#10B981" : "var(--pd-text-tertiary)",
-                                borderRadius: 9999,
-                                padding: "4px 12px",
-                                fontWeight: 500,
-                            }}
-                        >
-                            {isPro ? "Pro Plan ✓" : "Free Plan"}
-                        </span>
-                        {isFree && (
-                            <button
-                                onClick={() => setPaymentOpen(true)}
-                                style={{
-                                    fontSize: 12,
-                                    color: "#818CF8",
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                → Upgrade
-                            </button>
-                        )}
-                    </div>
                 </div>
 
                 {/* LOADING STATE */}
@@ -378,61 +345,6 @@ export default function PageAnalyticsPage() {
                         {/* Row 1 — FREE metrics */}
                         <StatsGrid analytics={analytics} />
 
-                        {/* Free vs Pro explanation */}
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 8,
-                                padding: 12,
-                                borderRadius: 10,
-                                background: "rgba(99,102,241,0.05)",
-                                border: "1px solid rgba(99,102,241,0.12)",
-                                flexWrap: "wrap",
-                            }}
-                        >
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                <CheckCircle size={15} color="#10B981" />
-                                <span
-                                    style={{
-                                        fontSize: 12,
-                                        color: "var(--pd-text-secondary)",
-                                    }}
-                                >
-                                    Basic metrics above are free for all users
-                                </span>
-                            </div>
-                            {isFree && (
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 6,
-                                        marginLeft: "auto",
-                                    }}
-                                >
-                                    <LockKeyhole size={14} color="#818CF8" />
-                                    <span style={{ fontSize: 12, color: "#818CF8" }}>
-                                        Upgrade to Pro for charts, traffic sources &amp; trends
-                                    </span>
-                                    <button
-                                        onClick={() => setPaymentOpen(true)}
-                                        style={{
-                                            fontSize: 12,
-                                            color: "#818CF8",
-                                            fontWeight: 700,
-                                            background: "none",
-                                            border: "none",
-                                            cursor: "pointer",
-                                            textDecoration: "none",
-                                        }}
-                                    >
-                                        Upgrade →
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
                         {/* Row 2 — PRO: Traffic chart */}
                         <TrafficChart
                             data={analytics.views_by_day}
@@ -478,13 +390,6 @@ export default function PageAnalyticsPage() {
                     </div>
                 )}
             </div>
-
-            {/* Payment Modal */}
-            <PaymentMethodModal
-                isOpen={paymentOpen}
-                onClose={() => setPaymentOpen(false)}
-                plan="pro"
-            />
         </div>
     );
 }

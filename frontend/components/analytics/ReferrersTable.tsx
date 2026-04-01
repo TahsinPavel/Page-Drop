@@ -1,7 +1,6 @@
 "use client";
 
 import { Globe } from "lucide-react";
-import BlurredCard from "@/components/analytics/BlurredCard";
 import type { ReferrerAnalytics } from "@/types";
 
 interface ReferrersTableProps {
@@ -11,7 +10,7 @@ interface ReferrersTableProps {
 
 const dotColors = ["#6366F1", "#10B981", "#8B5CF6", "#5A5A7A", "#5A5A7A"];
 
-export default function ReferrersTable({ referrers, isPro }: ReferrersTableProps) {
+export default function ReferrersTable({ referrers }: ReferrersTableProps) {
     const maxCount = referrers.length > 0 ? referrers[0].count : 1;
     const total = referrers.reduce((sum, r) => sum + r.count, 0) || 1;
 
@@ -25,95 +24,79 @@ export default function ReferrersTable({ referrers, isPro }: ReferrersTableProps
                 height: "100%",
             }}
         >
-            <BlurredCard isPro={isPro} featureName="Referrer Sources" minHeight="320px">
-                <div style={{ padding: 24 }}>
-                    {/* Header */}
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: 20,
-                        }}
-                    >
-                        <div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <Globe size={18} color="#6366F1" />
-                                <span
-                                    style={{
-                                        fontWeight: 600,
-                                        color: "var(--pd-text-primary)",
-                                        fontSize: 16,
-                                    }}
-                                >
-                                    Traffic Sources
-                                </span>
-                            </div>
+            <div style={{ padding: 24 }}>
+                {/* Header */}
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 20,
+                    }}
+                >
+                    <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <Globe size={18} color="#6366F1" />
                             <span
                                 style={{
-                                    fontSize: 12,
-                                    color: "var(--pd-text-tertiary)",
-                                    display: "block",
-                                    marginTop: 2,
+                                    fontWeight: 600,
+                                    color: "var(--pd-text-primary)",
+                                    fontSize: 16,
                                 }}
                             >
-                                Where your visitors come from
+                                Traffic Sources
                             </span>
                         </div>
                         <span
                             style={{
-                                fontSize: 10,
-                                background: isPro
-                                    ? "rgba(16,185,129,0.1)"
-                                    : "rgba(99,102,241,0.1)",
-                                border: `1px solid ${isPro ? "rgba(16,185,129,0.25)" : "rgba(99,102,241,0.25)"}`,
-                                color: isPro ? "#10B981" : "#a5b4fc",
-                                borderRadius: 9999,
-                                padding: "2px 8px",
-                                fontWeight: 500,
+                                fontSize: 12,
+                                color: "var(--pd-text-tertiary)",
+                                display: "block",
+                                marginTop: 2,
                             }}
                         >
-                            {isPro ? "Pro ✓" : "Pro Feature 🔒"}
+                            Where your visitors come from
                         </span>
                     </div>
+                </div>
 
-                    {/* Empty state */}
-                    {referrers.length === 0 && isPro ? (
-                        <div
+                {/* Empty state */}
+                {referrers.length === 0 ? (
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "40px 20px",
+                            textAlign: "center",
+                        }}
+                    >
+                        <Globe
+                            size={48}
+                            color="var(--pd-text-tertiary)"
+                            style={{ opacity: 0.4, marginBottom: 12 }}
+                        />
+                        <p
                             style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "40px 20px",
-                                textAlign: "center",
+                                fontWeight: 600,
+                                color: "var(--pd-text-secondary)",
+                                marginBottom: 4,
                             }}
                         >
-                            <Globe
-                                size={48}
-                                color="var(--pd-text-tertiary)"
-                                style={{ opacity: 0.4, marginBottom: 12 }}
-                            />
-                            <p
-                                style={{
-                                    fontWeight: 600,
-                                    color: "var(--pd-text-secondary)",
-                                    marginBottom: 4,
-                                }}
-                            >
-                                No referrer data yet
-                            </p>
-                            <p
-                                style={{
-                                    fontSize: 13,
-                                    color: "var(--pd-text-tertiary)",
-                                }}
-                            >
-                                Share your page link to start seeing traffic sources
-                            </p>
-                        </div>
-                    ) : (
-                        <div>
+                            No referrer data yet
+                        </p>
+                        <p
+                            style={{
+                                fontSize: 13,
+                                color: "var(--pd-text-tertiary)",
+                            }}
+                        >
+                            Share your page link to start seeing traffic sources
+                        </p>
+                    </div>
+                ) : (
+                    <div>
                             {/* Column headers */}
                             <div
                                 style={{
@@ -266,10 +249,9 @@ export default function ReferrersTable({ referrers, isPro }: ReferrersTableProps
                                     </div>
                                 );
                             })}
-                        </div>
-                    )}
-                </div>
-            </BlurredCard>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
