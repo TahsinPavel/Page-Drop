@@ -13,12 +13,15 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.business_page import BusinessPage
 from app.schemas.business_page import (
+    CatalogResponse,
     DashboardSummaryResponse,
     PageAnalyticsResponse,
     PageCreate,
     PageResponse,
     PageUpdate,
     PublicPageResponse,
+    RecentEventsResponse,
+    TrackEventRequest,
     UploadResponse,
 )
 from app.services import ai_service, page_service, upload_service
@@ -201,6 +204,27 @@ async def get_dashboard_summary(
     return DashboardSummaryResponse(**data)
 
 
+@router.get("/analytics/catalog", response_model=CatalogResponse)
+async def get_analytics_catalog(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CatalogResponse:
+    """Return per-page analytics metrics for all active pages owned by the user."""
+    data = await analytics_service.get_catalog_metrics(db, current_user.id)
+    return CatalogResponse(**data)
+
+
+@router.get("/analytics/recent-events", response_model=RecentEventsResponse)
+async def get_recent_events(
+    limit: int = Query(default=10, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> RecentEventsResponse:
+    """Return the most recent analytics events across all of the user's pages."""
+    data = await analytics_service.get_recent_events(db, current_user.id, limit)
+    return RecentEventsResponse(**data)
+
+
 # ──────────────────────────── Public routes ────────────────────────────
 
 
@@ -234,6 +258,32 @@ async def track_whatsapp_click(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found.")
 
     await analytics_service.track_event(db, page.id, "whatsapp_click", request)
+    return {"success": True}
+
+
+@router.post("/public/{slug}/event")
+async def track_custom_event(
+    slug: str,
+    body: TrackEventRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Track a custom analytics event for a page (public, no auth).
+
+    Accepts event types: interaction, focus_time_15s, focus_time_30s, product_click.
+    Silently rejects invalid event types (fire-and-forget from frontend).
+    Never raises errors to the caller.
+    """
+    # Reject page_view and whatsapp_click — those have dedicated endpoints
+    excluded = {"page_view", "whatsapp_click"}
+    if body.event_type not in analytics_service.VALID_EVENT_TYPES or body.event_type in excluded:
+        return {"success": False}
+
+    page = await page_service.get_public_page_by_slug(db, slug)
+    if page is None:
+        return {"success": False}
+
+    await analytics_service.track_event(db, page.id, body.event_type, request)
     return {"success": True}
 
 

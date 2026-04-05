@@ -3,7 +3,7 @@
 import re
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -295,6 +295,16 @@ class PageAnalyticsResponse(BaseModel):
     views_last_7_days: int
     views_last_30_days: int
     best_day: BestDay | None
+    funnel: dict = Field(
+        default_factory=lambda: {
+            "visitors": 0,
+            "interactions": 0,
+            "focus_15s": 0,
+            "cta_clicks": 0,
+        }
+    )
+    conversion_baseline: float = 0.0
+    conversion_vs_baseline: float = 0.0
 
 
 class DashboardSummaryResponse(BaseModel):
@@ -305,3 +315,65 @@ class DashboardSummaryResponse(BaseModel):
     total_whatsapp_clicks_all_time: int
     total_views_last_30_days: int
     best_performing_page: dict | None
+    views_change_pct: float = 0.0
+    clicks_change_pct: float = 0.0
+    conversion_rate: float = 0.0
+    conversion_change_pct: float = 0.0
+    acquisition_sources: list[dict] = Field(default_factory=list)
+    device_split: dict = Field(
+        default_factory=lambda: {"mobile_pct": 0.0, "desktop_pct": 0.0}
+    )
+
+
+# ---------- Catalog (Feature 2) ----------
+
+
+class PageCatalogMetric(BaseModel):
+    """Per-page analytics metrics for the catalog view."""
+
+    page_id: str
+    business_name: str
+    slug: str
+    category: str
+    views_30d: int
+    clicks_30d: int
+    conversion_rate: float
+    avg_time: Optional[float] = None
+
+
+class CatalogResponse(BaseModel):
+    """List of per-page metrics for the analytics catalog."""
+
+    pages: list[PageCatalogMetric]
+    total_pages: int
+
+
+# ---------- Recent Events (Feature 7) ----------
+
+
+class RecentEvent(BaseModel):
+    """A single recent analytics event with enriched metadata."""
+
+    event_type: str
+    page_name: str
+    page_slug: str
+    referrer: str
+    device: str
+    time_ago: str
+    timestamp: str
+
+
+class RecentEventsResponse(BaseModel):
+    """Recent events feed across all user pages."""
+
+    events: list[RecentEvent]
+    total: int
+
+
+# ---------- Custom Event Tracking (Feature 5) ----------
+
+
+class TrackEventRequest(BaseModel):
+    """Body for the public event-tracking endpoint."""
+
+    event_type: str
