@@ -4,14 +4,23 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Clock, AlertCircle, BarChart2, Copy } from "lucide-react";
 import toast from "react-hot-toast";
-import { getPageAnalytics, getPageById } from "@/lib/api";
+import {
+    getPageAnalytics,
+    getPageById,
+    getDashboardSummary,
+    getRecentEvents,
+} from "@/lib/api";
 import { usePlan } from "@/hooks/usePlan";
 import { useAuth } from "@/hooks/useAuth";
 import StatsGrid from "@/components/analytics/StatsGrid";
 import TrafficChart from "@/components/analytics/TrafficChart";
 import ReferrersTable from "@/components/analytics/ReferrersTable";
 import BestDayCard from "@/components/analytics/BestDayCard";
-import type { PageAnalyticsData } from "@/types";
+import FunnelChart from "@/components/analytics/FunnelChart";
+import RecentEventsFeed from "@/components/analytics/RecentEventsFeed";
+import DeviceSplit from "@/components/analytics/DeviceSplit";
+import AcquisitionSources from "@/components/analytics/AcquisitionSources";
+import type { PageAnalyticsData, DashboardSummary, RecentEvent } from "@/types";
 
 export default function PageAnalyticsPage() {
     useAuth(true);
@@ -22,6 +31,9 @@ export default function PageAnalyticsPage() {
     const [error, setError] = useState<string | null>(null);
     const [businessName, setBusinessName] = useState("");
     const [slug, setSlug] = useState("");
+    const [summary, setSummary] = useState<DashboardSummary | null>(null);
+    const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([]);
+    const [eventsLoading, setEventsLoading] = useState(true);
     const params = useParams<{ id: string }>();
     const id = params.id;
     const { isPro } = usePlan();
@@ -30,19 +42,25 @@ export default function PageAnalyticsPage() {
     const loadData = useCallback(async () => {
         if (!id) return;
         setLoading(true);
+        setEventsLoading(true);
         setError(null);
         try {
-            const [data, page] = await Promise.all([
+            const [data, page, summaryData, eventsData] = await Promise.all([
                 getPageAnalytics(id, days),
                 getPageById(id),
+                getDashboardSummary().catch(() => null),
+                getRecentEvents(10).catch(() => ({ events: [] as RecentEvent[], total: 0 })),
             ]);
             setAnalytics(data);
             setBusinessName(page.business_name);
             setSlug(page.slug);
+            setSummary(summaryData);
+            setRecentEvents(eventsData.events);
         } catch {
             setError("Failed to load analytics.");
         } finally {
             setLoading(false);
+            setEventsLoading(false);
         }
     }, [id, days]);
 
@@ -342,10 +360,11 @@ export default function PageAnalyticsPage() {
                 {/* NORMAL STATE */}
                 {analytics && !loading && !error && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                        {/* Row 1 — FREE metrics */}
-                        <StatsGrid analytics={analytics} />
 
-                        {/* Row 2 — PRO: Traffic chart */}
+                        {/* Row 1 — Stats with real trend data */}
+                        <StatsGrid analytics={analytics} summary={summary} />
+
+                        {/* Row 2 — Traffic chart */}
                         <TrafficChart
                             data={analytics.views_by_day}
                             days={days}
@@ -353,7 +372,7 @@ export default function PageAnalyticsPage() {
                             isPro={isPro}
                         />
 
-                        {/* Row 3 — PRO: Two column grid */}
+                        {/* Row 3 — Referrers + Best Day */}
                         <div
                             style={{
                                 display: "grid",
@@ -368,6 +387,39 @@ export default function PageAnalyticsPage() {
                             />
                             <BestDayCard bestDay={analytics.best_day} isPro={isPro} />
                         </div>
+
+                        {/* Row 4 — Funnel (if data exists) */}
+                        {analytics.funnel && (
+                            <FunnelChart funnel={analytics.funnel} />
+                        )}
+
+                        {/* Row 5 — Device Split + Acquisition Sources */}
+                        {summary && (
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "1fr",
+                                    gap: 16,
+                                }}
+                                className="lg:!grid-cols-2"
+                            >
+                                <DeviceSplit
+                                    deviceSplit={summary.device_split ?? {
+                                        mobile_pct: 0,
+                                        desktop_pct: 0,
+                                    }}
+                                />
+                                <AcquisitionSources
+                                    sources={summary.acquisition_sources ?? []}
+                                />
+                            </div>
+                        )}
+
+                        {/* Row 6 — Recent Events Feed */}
+                        <RecentEventsFeed
+                            events={recentEvents}
+                            loading={eventsLoading}
+                        />
 
                         {/* Bottom note */}
                         <div
@@ -384,7 +436,7 @@ export default function PageAnalyticsPage() {
                                     color: "var(--pd-text-tertiary)",
                                 }}
                             >
-                                Analytics data updates in real time as visitors arrive · Data retained for 90 days
+                                Analytics data updates in real time · Data retained for 90 days
                             </p>
                         </div>
                     </div>

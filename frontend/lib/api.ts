@@ -4,12 +4,14 @@ import axios from "axios";
 import type {
     AuthResponse,
     BusinessPage,
+    CatalogPage,
     CreatePageInput,
     DashboardSummary,
     NOWPaymentsInvoice,
     NOWPaymentsStatus,
     PageAnalyticsData,
     PublicPage,
+    RecentEvent,
     SubscriptionStatus,
     UpdatePageInput,
     User,
@@ -222,6 +224,38 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
         "/pages/analytics/summary"
     );
     return data;
+}
+
+export async function getAnalyticsCatalog(): Promise<{
+    pages: CatalogPage[];
+    total_pages: number;
+}> {
+    const { data } = await api.get<{ pages: CatalogPage[]; total_pages: number }>(
+        "/pages/analytics/catalog"
+    );
+    return data;
+}
+
+export async function getRecentEvents(
+    limit: number = 10
+): Promise<{ events: RecentEvent[]; total: number }> {
+    const { data } = await api.get<{ events: RecentEvent[]; total: number }>(
+        `/pages/analytics/recent-events?limit=${limit}`
+    );
+    return data;
+}
+
+export async function trackPageEvent(
+    slug: string,
+    eventType: string
+): Promise<void> {
+    try {
+        await api.post(`/pages/public/${slug}/event`, {
+            event_type: eventType,
+        });
+    } catch {
+        // fire-and-forget — never throw
+    }
 }
 
 /* ── Payments ── */

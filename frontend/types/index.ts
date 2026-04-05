@@ -176,6 +176,14 @@ export interface PageAnalyticsData {
     views_last_7_days: number;
     views_last_30_days: number;
     best_day: BestDay | null;
+    funnel?: {
+        visitors: number;
+        interactions: number;
+        focus_15s: number;
+        cta_clicks: number;
+    };
+    conversion_baseline?: number;
+    conversion_vs_baseline?: number;
 }
 
 export interface BestPerformingPage {
@@ -190,6 +198,41 @@ export interface DashboardSummary {
     total_whatsapp_clicks_all_time: number;
     total_views_last_30_days: number;
     best_performing_page: BestPerformingPage | null;
+    views_change_pct?: number;
+    clicks_change_pct?: number;
+    conversion_rate?: number;
+    conversion_change_pct?: number;
+    acquisition_sources?: Array<{
+        source: string;
+        category: string;
+        visits: number;
+        percentage: number;
+    }>;
+    device_split?: {
+        mobile_pct: number;
+        desktop_pct: number;
+    };
+}
+
+export interface CatalogPage {
+    page_id: string;
+    business_name: string;
+    slug: string;
+    category: string;
+    views_30d: number;
+    clicks_30d: number;
+    conversion_rate: number;
+    avg_time: number | null;
+}
+
+export interface RecentEvent {
+    event_type: string;
+    page_name: string;
+    page_slug: string;
+    referrer: string;
+    device: string;
+    time_ago: string;
+    timestamp: string;
 }
 
 /* ── Payment Types ── */

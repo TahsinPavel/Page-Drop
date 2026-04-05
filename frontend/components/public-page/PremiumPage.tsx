@@ -12,7 +12,7 @@ import {
     Share2,
     X,
 } from "lucide-react";
-import { trackWhatsAppClick } from "@/lib/api";
+import { trackWhatsAppClick, trackPageEvent } from "@/lib/api";
 import type { BusinessHours, Product, PublicPage } from "@/types";
 import ProductCarousel3D from "./ProductCarousel3D";
 import TemplateShowroom from "../three/scenes/TemplateShowroom";
@@ -370,6 +370,35 @@ export default function PremiumPage({ page }: PremiumPageProps) {
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
     }, []);
+
+    // Track 15s and 30s focus time
+    useEffect(() => {
+        const timer15 = setTimeout(() => {
+            trackPageEvent(page.slug, "focus_time_15s");
+        }, 15000);
+
+        const timer30 = setTimeout(() => {
+            trackPageEvent(page.slug, "focus_time_30s");
+        }, 30000);
+
+        return () => {
+            clearTimeout(timer15);
+            clearTimeout(timer30);
+        };
+    }, [page.slug]);
+
+    // Track first scroll interaction
+    useEffect(() => {
+        let tracked = false;
+        const handleScroll = () => {
+            if (!tracked && window.scrollY > 100) {
+                tracked = true;
+                trackPageEvent(page.slug, "interaction");
+            }
+        };
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [page.slug]);
 
     if (useShowroom) {
         return (

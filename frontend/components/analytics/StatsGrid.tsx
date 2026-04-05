@@ -6,10 +6,11 @@ import {
     TrendingUp,
     ShoppingBag,
 } from "lucide-react";
-import type { PageAnalyticsData } from "@/types";
+import type { PageAnalyticsData, DashboardSummary } from "@/types";
 
 interface StatsGridProps {
     analytics: PageAnalyticsData;
+    summary?: DashboardSummary | null;
 }
 
 interface StatCardConfig {
@@ -22,7 +23,7 @@ interface StatCardConfig {
     subtext: string;
 }
 
-export default function StatsGrid({ analytics }: StatsGridProps) {
+export default function StatsGrid({ analytics, summary }: StatsGridProps) {
     const cards: StatCardConfig[] = [
         {
             icon: Eye,
@@ -31,7 +32,10 @@ export default function StatsGrid({ analytics }: StatsGridProps) {
             iconBorder: "rgba(99,102,241,0.2)",
             value: analytics.total_views,
             label: "Total Page Views",
-            subtext: `↑ ${analytics.views_last_7_days} this week`,
+            subtext:
+                summary?.views_change_pct !== undefined
+                    ? `${summary.views_change_pct >= 0 ? "↑" : "↓"} ${Math.abs(summary.views_change_pct)}% vs last month`
+                    : `↑ ${analytics.views_last_7_days} this week`,
         },
         {
             icon: MessageCircle,
@@ -40,7 +44,10 @@ export default function StatsGrid({ analytics }: StatsGridProps) {
             iconBorder: "rgba(16,185,129,0.2)",
             value: analytics.total_whatsapp_clicks,
             label: "WhatsApp Clicks",
-            subtext: `CTR: ${analytics.click_through_rate.toFixed(1)}%`,
+            subtext:
+                summary?.clicks_change_pct !== undefined
+                    ? `${summary.clicks_change_pct >= 0 ? "↑" : "↓"} ${Math.abs(summary.clicks_change_pct)}% vs last month`
+                    : `CTR: ${analytics.click_through_rate.toFixed(1)}%`,
         },
         {
             icon: TrendingUp,
@@ -49,9 +56,12 @@ export default function StatsGrid({ analytics }: StatsGridProps) {
             iconBorder: "rgba(139,92,246,0.2)",
             value: analytics.views_last_30_days,
             label: "Views (30 Days)",
-            subtext: analytics.best_day
-                ? `Peak: ${analytics.best_day.date}`
-                : "Keep sharing your page",
+            subtext:
+                summary?.conversion_rate !== undefined
+                    ? `Conversion: ${summary.conversion_rate.toFixed(1)}%`
+                    : analytics.best_day
+                      ? `Peak: ${analytics.best_day.date}`
+                      : "Keep sharing your page",
         },
         {
             icon: ShoppingBag,
@@ -60,7 +70,10 @@ export default function StatsGrid({ analytics }: StatsGridProps) {
             iconBorder: "rgba(245,158,11,0.2)",
             value: analytics.total_product_clicks,
             label: "Product Clicks",
-            subtext: "Engagement metric",
+            subtext:
+                analytics.conversion_vs_baseline !== undefined
+                    ? `${analytics.conversion_vs_baseline >= 0 ? "+" : ""}${analytics.conversion_vs_baseline.toFixed(1)}% vs baseline`
+                    : "Engagement metric",
         },
     ];
 
