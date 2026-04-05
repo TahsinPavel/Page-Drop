@@ -26,6 +26,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "https://pagedrop.vercel.app",
         "https://*.vercel.app",
     ],
     allow_credentials=True,
