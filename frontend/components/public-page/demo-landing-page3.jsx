@@ -182,23 +182,26 @@ function PokerFan({ images, isActive, accentHue, isMobile }) {
       if (idx !== centerIdx) {
         setCenterIdx(idx);
       } else if (isMobile) {
-        // toggle tapped state on mobile
         setTapped((t) => !t);
       }
     },
     [isActive, centerIdx, isMobile]
   );
 
-  const expandFactor = hovered || tapped ? 1.25 : 1;
-  const cardW = isMobile ? 180 : 260;
-  const cardH = isMobile ? 220 : 300;
+  const isExpanded = hovered || tapped;
+
+  // Reference-like portrait cards with controlled fan spread
+  const cardW = isMobile ? 160 : 290;
+  const cardH = isMobile ? 230 : 420;
+  const containerW = cardW + (isMobile ? 170 : 320);
+  const containerH = cardH + (isMobile ? 70 : 90);
 
   return (
     <div
       style={{
         position: "relative",
-        width: `${cardW + 120}px`,
-        height: `${cardH + 60}px`,
+        width: `${containerW}px`,
+        height: `${containerH}px`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -208,32 +211,36 @@ function PokerFan({ images, isActive, accentHue, isMobile }) {
       onMouseLeave={() => isActive && !isMobile && setHovered(false)}
     >
       {images.map((src, idx) => {
-        // calculate position relative to center card
-        const offset = idx - centerIdx;
+        let rawOffset = idx - centerIdx;
+        let offset = rawOffset;
+        if (Math.abs(offset) > total / 2) {
+          offset = offset > 0 ? offset - total : offset + total;
+        }
+        
         const absOff = Math.abs(offset);
         const isCenter = offset === 0;
 
-        // rotation: side cards rotate ±12-15deg
-        const rotation = offset * 14 * expandFactor;
+        // Fan rotation from lower-center pivot to mimic the reference composition
+        const rotationAngle = isMobile ? 22 : 27;
+        const rotation = offset * rotationAngle * (isExpanded ? 1.08 : 1);
 
-        // horizontal translation
-        const tx = offset * (isMobile ? 42 : 62) * expandFactor;
-        // vertical shift: side cards shift down slightly
-        const ty = absOff * (isMobile ? 14 : 18);
+        // Horizontal spread: compact on mobile, dramatic on desktop
+        const spreadX = isMobile ? 78 : 136;
+        const tx = offset * spreadX * (isExpanded ? 1.12 : 1);
 
-        // scale: center = full, sides = smaller
-        const scale = isCenter ? 1 : 0.82 - absOff * 0.05;
+        // Side cards sit slightly lower than center card
+        const ty = absOff * (isMobile ? 24 : 30);
 
-        // z-index: center on top
-        const zIdx = total - absOff;
+        // Side cards are slightly smaller and dimmer
+        const scale = isCenter ? 1 : 0.9;
 
-        // shadow intensity
+        // Z-index: center card on top
+        const zIdx = 10 - absOff;
+
+        // Shadows
         const shadow = isCenter
-          ? `0 20px 60px rgba(0,0,0,0.6), 0 0 30px hsla(${accentHue},70%,50%,0.12)`
-          : `0 10px 30px rgba(0,0,0,0.4)`;
-
-        // brightness
-        const brightness = isCenter ? 1 : 0.65;
+          ? `0 32px 80px rgba(0,0,0,0.95), 0 0 30px hsla(${accentHue},60%,35%,0.12)`
+          : `0 18px 48px rgba(0,0,0,0.85)`;
 
         return (
           <div
@@ -243,43 +250,94 @@ function PokerFan({ images, isActive, accentHue, isMobile }) {
               position: "absolute",
               width: `${cardW}px`,
               height: `${cardH}px`,
-              borderRadius: "18px",
+              borderRadius: isMobile ? "16px" : "22px",
               overflow: "hidden",
               transform: `translateX(${tx}px) translateY(${ty}px) rotate(${rotation}deg) scale(${scale})`,
+              transformOrigin: "center 88%",
               zIndex: zIdx,
-              transition: "all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
+              transition: "transform 0.6s cubic-bezier(0.2, 1, 0.4, 1), background 0.6s, opacity 0.6s",
               boxShadow: shadow,
-              filter: `brightness(${brightness})`,
               cursor: isActive && !isCenter ? "pointer" : "default",
               border: isCenter
-                ? `1.5px solid hsla(${accentHue},60%,60%,0.2)`
-                : "1px solid rgba(255,255,255,0.06)",
-              background: "#111118",
+                ? "1px solid rgba(255,255,255,0.1)"
+                : "1px solid rgba(255,255,255,0.05)",
+              background:
+                "linear-gradient(180deg, #17181b 0%, #0e0f11 45%, #07080a 100%)",
+              opacity: isCenter ? 1 : 0.62,
             }}
           >
-            <img
-              src={src}
-              alt={`Product view ${idx + 1}`}
+            {/* Subtle top-edge highlight on center card */}
+            <div
               style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
+                position: "absolute",
+                inset: 0,
+                borderRadius: "inherit",
+                background: isCenter
+                  ? `linear-gradient(180deg, hsla(${accentHue},35%,55%,0.06) 0%, transparent 35%)`
+                  : "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 30%)",
                 pointerEvents: "none",
               }}
-              draggable={false}
             />
 
-            {/* Gradient overlay on side cards */}
+            {/* Product image — centered and contained, not full-bleed */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: isMobile ? "24px 20px 36px" : "32px 28px 50px",
+              }}
+            >
+              <img
+                src={src}
+                alt={`Product view ${idx + 1}`}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain",
+                  display: "block",
+                  pointerEvents: "none",
+                  filter: isCenter
+                    ? "drop-shadow(0 10px 30px rgba(0,0,0,0.45))"
+                    : "brightness(0.5) saturate(0.9) drop-shadow(0 6px 16px rgba(0,0,0,0.35))",
+                  transition: "filter 0.5s ease",
+                }}
+                draggable={false}
+              />
+            </div>
+
+            {/* Dark overlay on side cards */}
             {!isCenter && (
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background: `linear-gradient(${offset > 0 ? "to left" : "to right"}, rgba(8,8,14,0.5) 0%, transparent 60%)`,
+                  background: "rgba(6,6,12,0.3)",
                   pointerEvents: "none",
                 }}
               />
+            )}
+
+            {/* View label — only on center card */}
+            {isCenter && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: isMobile ? "16px" : "24px",
+                  left: isMobile ? "18px" : "24px",
+                  fontSize: isMobile ? "10px" : "12px",
+                  fontWeight: 600,
+                  letterSpacing: "0.15em",
+                  color: "#10B981", // Exact mint green from reference
+                  textTransform: "uppercase",
+                  fontFamily: "'Inter', sans-serif",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                FRONT VIEW
+              </div>
             )}
           </div>
         );
@@ -319,7 +377,7 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }) {
   const onPointerUp = useCallback(() => {
     if (!isDragging) return;
     setIsDragging(false);
-    const threshold = 80;
+    const threshold = isMobile ? 55 : 80;
     if (dragOffset.current > threshold) {
       onChangeIndex(((activeIndex - 1) % total + total) % total);
     } else if (dragOffset.current < -threshold) {
@@ -327,7 +385,7 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }) {
     }
     setDragDelta(0);
     dragOffset.current = 0;
-  }, [isDragging, activeIndex, onChangeIndex, total]);
+  }, [isDragging, isMobile, activeIndex, onChangeIndex, total]);
 
   useEffect(() => {
     if (isDragging) {
@@ -351,11 +409,11 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }) {
 
     const isActive = offset === 0;
     const absOff = Math.abs(offset);
-    const gap = isMobile ? 320 : 520;
-    const x = offset * gap + (isDragging ? dragDelta * 0.4 : 0);
-    const scale = isActive ? 1 : 0.55;
-    const opacity = absOff > 1 ? 0 : isActive ? 1 : 0.35;
-    const blur = isActive ? 0 : 4;
+    const gap = isMobile ? 280 : 420;
+    const x = offset * gap + (isDragging ? dragDelta * 0.55 : 0);
+    const scale = isActive ? 1 : 0.88;
+    const opacity = isActive ? 1 : isDragging ? 0.2 : 0;
+    const blur = isActive ? 0 : 6;
     const z = isActive ? 10 : 5 - absOff;
 
     return { x, scale, opacity, blur, z, isActive };
@@ -373,7 +431,7 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }) {
       style={{
         position: "relative",
         width: "100%",
-        height: isMobile ? "340px" : "420px",
+        height: isMobile ? "370px" : "500px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
