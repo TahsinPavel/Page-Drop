@@ -81,3 +81,5 @@ build/
 
 # ──────────────── Agents ───────────────────────────────
 .agent/
+
+Suggestions.txt
