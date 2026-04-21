@@ -1,0 +1,33 @@
+name: Backend Lint
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'backend/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install lint tools
+        run: pip install flake8 black
+
+      - name: Run Flake8
+        working-directory: backend
+        run: flake8 . --max-line-length=88 --exclude=__pycache__,.venv,alembic
+
+      - name: Check Black formatting
+        working-directory: backend
+        run: black . --check --exclude="alembic"

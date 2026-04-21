@@ -2,18 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
-/* ═══════════════════════════════════════════════════════════
- * AURA CHRONOS — Premium Watch Showroom  (Landing Page 2)
- * Matches the Variant.com design exactly:
- *   - Top nav: AURA CHRONOS logo | nav links | search + cart
- *   - Hero: 3D watch carousel (left) + product info card (right)
- *   - Trust badges bar (stars, delivery, ordering)
- *   - Craftsmanship: left text + right watch image + customer voice
- *   - Testimonials: 3 cards
- *   - CTA card
- *   - Footer with social icons
- * ═══════════════════════════════════════════════════════════ */
-
 const WATCHES = [
   {
     id: 1,
@@ -71,20 +59,46 @@ const TESTIMONIALS = [
   },
 ];
 
-const NAV_LINKS = ["Collections", "Our Story", "Tech", "Support"];
+const WHY_CHOOSE_ITEMS = [
+  {
+    id: "premium",
+    title: "Premium Quality",
+    description: "Precision-crafted materials and finish that feel luxurious from day one.",
+    marker: "PQ",
+  },
+  {
+    id: "fast",
+    title: "Fast Delivery",
+    description: "Quick dispatch with tracking so customers can order without waiting anxiety.",
+    marker: "FD",
+  },
+  {
+    id: "cod",
+    title: "Cash on Delivery",
+    description: "Flexible payment confidence that helps first-time buyers convert faster.",
+    marker: "CD",
+  },
+  {
+    id: "returns",
+    title: "Easy Returns",
+    description: "Simple return support designed to remove hesitation before clicking order.",
+    marker: "ER",
+  },
+];
 
 // ── Inject keyframes ──────────────────────────
 function useGlobalStyles() {
   useEffect(() => {
-    const id = "chronos-lp2-styles";
+    const id = "chronos-lp2-conversion-styles";
     if (document.getElementById(id)) return;
     const s = document.createElement("style");
     s.id = id;
     s.textContent = `
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=JetBrains+Mono:wght@500;700&display=swap');
-      @keyframes lp2FadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-      @keyframes lp2Float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-      @keyframes lp2Pulse{0%,100%{opacity:.35}50%{opacity:.9}}
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+      @keyframes lp2FadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes lp2HintFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+      @keyframes lp2GlowPulse{0%,100%{opacity:.45}50%{opacity:.9}}
+      @keyframes lp2Shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     `;
     document.head.appendChild(s);
   }, []);
@@ -116,7 +130,17 @@ function Fade({ children, delay = 0, style = {} }) {
 // ── 3D Watch Carousel ─────────────────────────
 function WatchCarousel({ watches, activeIndex, onChangeIndex }) {
   const touchX = useRef(0);
+  const mouseX = useRef(null);
   const total = watches.length;
+
+  const onSwipe = useCallback(
+    (diff) => {
+      if (Math.abs(diff) > 50) {
+        onChangeIndex(activeIndex + (diff > 0 ? 1 : -1));
+      }
+    },
+    [activeIndex, onChangeIndex]
+  );
 
   const getTransform = (i) => {
     let offset = i - activeIndex;
@@ -125,35 +149,50 @@ function WatchCarousel({ watches, activeIndex, onChangeIndex }) {
 
     const isActive = offset === 0;
     const absOff = Math.abs(offset);
-    const x = offset * 300;
-    const z = isActive ? 0 : -180 * absOff;
-    const scale = isActive ? 1 : 0.7;
-    const opacity = absOff > 1 ? 0.25 : isActive ? 1 : 0.55;
-    const brightness = isActive ? 1 : 0.45;
+    const x = offset * 280;
+    const z = isActive ? 80 : -190 * absOff;
+    const scale = isActive ? 1.1 : absOff === 1 ? 0.74 : 0.62;
+    const opacity = isActive ? 1 : absOff === 1 ? 0.44 : 0.14;
+    const brightness = isActive ? 1.2 : absOff === 1 ? 0.58 : 0.32;
+    const blur = isActive ? 0 : absOff === 1 ? 1.8 : 3.6;
 
-    return { x, z, scale, opacity, isActive, brightness };
+    return { x, z, scale, opacity, isActive, brightness, blur };
   };
 
   return (
     <div
       style={{
         position: "relative", width: "100%", height: "100%",
-        perspective: "1200px", display: "flex", alignItems: "center",
+        perspective: "1300px", display: "flex", alignItems: "center",
         justifyContent: "center",
       }}
       onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => {
         const diff = touchX.current - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 50) onChangeIndex(activeIndex + (diff > 0 ? 1 : -1));
+        onSwipe(diff);
+      }}
+      onMouseDown={(e) => {
+        mouseX.current = e.clientX;
+      }}
+      onMouseUp={(e) => {
+        if (mouseX.current == null) return;
+        const diff = mouseX.current - e.clientX;
+        mouseX.current = null;
+        onSwipe(diff);
+      }}
+      onMouseLeave={() => {
+        mouseX.current = null;
       }}
     >
       {/* Ambient glow */}
       <div style={{
         position: "absolute", top: "50%", left: "50%",
-        transform: "translate(-50%, -50%)", width: "60%", height: "60%",
+        transform: "translate(-50%, -50%)", width: "66%", height: "66%",
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(201,162,39,0.04) 0%, transparent 70%)",
-        filter: "blur(50px)", pointerEvents: "none",
+        background: "radial-gradient(circle, rgba(201,162,39,0.18) 0%, rgba(99,102,241,0.08) 45%, transparent 75%)",
+        filter: "blur(62px)",
+        animation: "lp2GlowPulse 5s ease-in-out infinite",
+        pointerEvents: "none",
       }} />
 
       {watches.map((w, i) => {
@@ -166,19 +205,37 @@ function WatchCarousel({ watches, activeIndex, onChangeIndex }) {
               position: "absolute", width: "280px", height: "280px",
               transform: `translateX(${t.x}px) translateZ(${t.z}px) scale(${t.scale})`,
               opacity: t.opacity,
-              transition: "all 0.8s cubic-bezier(.25,.1,.25,1)",
-              zIndex: t.isActive ? 10 : 5 - Math.abs(i - activeIndex),
+              transition: "all 0.85s cubic-bezier(.22,.61,.36,1)",
+              zIndex: t.isActive ? 20 : 10 - Math.abs(i - activeIndex),
               cursor: "pointer",
-              filter: `brightness(${t.brightness})`,
+              filter: `brightness(${t.brightness}) saturate(${t.isActive ? 1.08 : 0.84}) blur(${t.blur}px)`,
+              willChange: "transform, opacity, filter",
             }}
           >
+            {t.isActive && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: "12%",
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(201,162,39,0.25) 30%, rgba(99,102,241,0.15) 55%, transparent 75%)",
+                  filter: "blur(30px)",
+                  pointerEvents: "none",
+                  zIndex: 0,
+                }}
+              />
+            )}
             <img
               src={w.image}
               alt={w.name}
               style={{
                 width: "100%", height: "100%", objectFit: "contain",
-                filter: t.isActive ? "drop-shadow(0 20px 50px rgba(0,0,0,0.7))" : "none",
-                transition: "filter 0.5s",
+                filter: t.isActive
+                  ? "drop-shadow(0 36px 70px rgba(0,0,0,0.7)) drop-shadow(0 0 30px rgba(201,162,39,0.28))"
+                  : "drop-shadow(0 22px 38px rgba(0,0,0,0.35))",
+                transition: "filter 0.5s ease",
+                position: "relative",
+                zIndex: 1,
               }}
             />
           </div>
@@ -195,7 +252,6 @@ export default function DemoLandingPage2() {
   useGlobalStyles();
   const [activeWatch, setActiveWatch] = useState(1); // Start with Nebula Blue
   const [autoplay, setAutoplay] = useState(true);
-  const [mobileNav, setMobileNav] = useState(false);
   const total = WATCHES.length;
 
   useEffect(() => {
@@ -211,583 +267,739 @@ export default function DemoLandingPage2() {
   }, [total]);
 
   const watch = WATCHES[activeWatch];
+  const urgencyNote =
+    watch.badge === "LIMITED EDITION"
+      ? "Limited drop. Stock updates hourly."
+      : watch.badge === "EXCLUSIVE"
+      ? "Only few left in this finish."
+      : "Best seller this week.";
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#08080c", color: "#f0ece4",
-      fontFamily: "'Inter', system-ui, sans-serif", overflowX: "hidden",
+      minHeight: "100vh",
+      background:
+        "radial-gradient(1200px 700px at 15% -10%, rgba(99,102,241,0.16), transparent 62%), radial-gradient(900px 540px at 86% 0%, rgba(201,162,39,0.16), transparent 58%), #07080d",
+      color: "#f3efe8",
+      fontFamily: "'Manrope', sans-serif",
+      overflowX: "hidden",
     }}>
-      {/* ── NAV ─────────────────────────────────── */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 32px", height: "60px",
-        background: "rgba(8,8,12,0.85)", backdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(255,255,255,0.04)",
-      }}>
-        {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{
-            width: "28px", height: "28px", borderRadius: "50%",
-            border: "1.5px solid rgba(201,162,39,0.5)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "12px",
-          }}>⌚</div>
-          <span style={{
-            fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: "13px",
-            letterSpacing: "0.1em", color: "#f0ece4",
-          }}>AURA CHRONOS</span>
-        </div>
+      {/* ── HERO SECTION (Desire → Selection → Action) ────────────────────────── */}
+      <section
+        style={{
+          minHeight: "100vh",
+          position: "relative",
+          padding: "22px 24px 56px",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(160deg, rgba(9,10,16,0.9) 0%, rgba(10,11,18,0.65) 42%, rgba(7,8,13,0.98) 100%)",
+          }}
+        />
 
-        {/* Center nav links (desktop) */}
-        <div className="lp2-desktop-nav" style={{
-          display: "flex", alignItems: "center", gap: "28px",
-          position: "absolute", left: "50%", transform: "translateX(-50%)",
-        }}>
-          {NAV_LINKS.map((link) => (
-            <a key={link} href="#" style={{
-              fontSize: "12px", fontWeight: 500, color: "rgba(240,236,228,0.5)",
-              textDecoration: "none", letterSpacing: "0.02em", transition: "color 0.2s",
-            }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#c9a227"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(240,236,228,0.5)"; }}
-            >{link}</a>
-          ))}
-        </div>
-
-        {/* Right icons */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <button style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(240,236,228,0.5)", padding: "4px" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-          </button>
-          <button style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(240,236,228,0.5)", padding: "4px" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
-              <path d="M16 10a4 4 0 01-8 0"/>
-            </svg>
-          </button>
-          {/* Mobile hamburger */}
-          <button className="lp2-mobile-toggle" onClick={() => setMobileNav(!mobileNav)} style={{
-            display: "none", background: "none", border: "none", cursor: "pointer", padding: "4px",
-          }}>
-            <div style={{ width: "20px", display: "flex", flexDirection: "column", gap: "4px" }}>
-              <span style={{ height: "2px", background: "#c9a227", borderRadius: "2px", transition: "all 0.3s", transform: mobileNav ? "rotate(45deg) translate(4px,4px)" : "none" }} />
-              <span style={{ height: "2px", background: "#c9a227", borderRadius: "2px", transition: "all 0.3s", opacity: mobileNav ? 0 : 1 }} />
-              <span style={{ height: "2px", background: "#c9a227", borderRadius: "2px", transition: "all 0.3s", transform: mobileNav ? "rotate(-45deg) translate(4px,-4px)" : "none" }} />
-            </div>
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile nav overlay */}
-      {mobileNav && (
-        <div style={{
-          position: "fixed", top: "60px", left: 0, right: 0, bottom: 0,
-          background: "rgba(8,8,12,0.97)", backdropFilter: "blur(20px)",
-          zIndex: 99, display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", gap: "28px",
-          animation: "lp2FadeUp 0.3s ease",
-        }}>
-          {NAV_LINKS.map((link) => (
-            <a key={link} href="#" onClick={() => setMobileNav(false)} style={{
-              fontSize: "18px", fontWeight: 600, color: "#f0ece4", textDecoration: "none",
-            }}>{link}</a>
-          ))}
-        </div>
-      )}
-
-      {/* ── HERO SECTION ────────────────────────── */}
-      <section style={{
-        minHeight: "100vh", paddingTop: "60px", display: "flex",
-        position: "relative", overflow: "hidden",
-      }}>
-        {/* Background */}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(180deg, #0b0b14 0%, #0a0a12 40%, #08080c 100%)",
-        }} />
-
-        {/* Ambient glow */}
-        <div style={{
-          position: "absolute", top: "25%", left: "35%", width: "400px", height: "400px",
-          borderRadius: "50%", background: "radial-gradient(circle, rgba(201,162,39,0.04) 0%, transparent 70%)",
-          filter: "blur(80px)", pointerEvents: "none",
-        }} />
-
-        {/* Left: 3D Carousel */}
-        <div style={{
-          flex: "1 1 60%", position: "relative", display: "flex",
-          alignItems: "center", justifyContent: "center",
-          minHeight: "calc(100vh - 60px)", zIndex: 2,
-        }}>
-          <WatchCarousel watches={WATCHES} activeIndex={activeWatch} onChangeIndex={goTo} />
-
-          {/* "EXPLORE THE COLLECTION" */}
-          <div style={{
-            position: "absolute", bottom: "40px", left: "50%", transform: "translateX(-50%)",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-            animation: "lp2Pulse 3s ease-in-out infinite",
-          }}>
-            <span style={{ fontSize: "9px", color: "rgba(240,236,228,0.2)", letterSpacing: "0.2em", fontWeight: 600 }}>EXPLORE THE COLLECTION</span>
-            <div style={{ width: "1px", height: "20px", background: "linear-gradient(to bottom, rgba(201,162,39,0.3), transparent)" }} />
-          </div>
-        </div>
-
-        {/* Right: Product Info Card */}
-        <div style={{
-          flex: "0 0 380px", display: "flex", alignItems: "center",
-          justifyContent: "center", padding: "40px 32px 40px 0", zIndex: 3,
-        }}>
+        <div
+          style={{
+            maxWidth: "1240px",
+            margin: "0 auto",
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
+          {/* Top bar */}
           <div
-            key={watch.id}
+            className="lp2-topbar"
             style={{
-              width: "100%", maxWidth: "340px",
-              background: "rgba(18,18,24,0.92)", border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: "20px", padding: "28px", backdropFilter: "blur(20px)",
-              boxShadow: "0 30px 60px rgba(0,0,0,0.6)",
-              animation: "lp2FadeUp 0.5s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "14px",
+              padding: "12px 16px",
+              borderRadius: "16px",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              backdropFilter: "blur(16px)",
             }}
           >
-            {/* Badge */}
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: "6px",
-              background: `${watch.badgeColor}15`, border: `1px solid ${watch.badgeColor}30`,
-              borderRadius: "6px", padding: "4px 10px", marginBottom: "14px",
-            }}>
-              <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: watch.badgeColor }} />
-              <span style={{
-                fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em",
-                color: watch.badgeColor, textTransform: "uppercase",
-              }}>{watch.badge}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div
+                style={{
+                  width: "30px",
+                  height: "30px",
+                  borderRadius: "50%",
+                  border: "1px solid rgba(201,162,39,0.45)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                  color: "#e7d5a1",
+                }}
+              >
+                AC
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontWeight: 800,
+                  fontSize: "13px",
+                  letterSpacing: "0.12em",
+                  color: "rgba(243,239,232,0.94)",
+                }}
+              >
+                AURA CHRONOS
+              </p>
             </div>
 
-            {/* Color dots */}
-            <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
-              {WATCHES.map((w, i) => (
-                <button
-                  key={w.id}
-                  onClick={() => goTo(i)}
-                  style={{
-                    width: i === activeWatch ? "10px" : "8px",
-                    height: i === activeWatch ? "10px" : "8px",
-                    borderRadius: "50%", border: i === activeWatch ? `2px solid ${w.dotColor}` : "1px solid rgba(255,255,255,0.1)",
-                    background: w.dotColor, cursor: "pointer",
-                    transition: "all 0.3s", padding: 0,
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Watch name */}
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif", fontSize: "28px", fontWeight: 700,
-              fontStyle: "italic", color: "#f0ece4", margin: "0 0 8px", lineHeight: 1.15,
-            }}>{watch.name}</h2>
-
-            {/* Description */}
-            <p style={{
-              fontSize: "12px", color: "rgba(240,236,228,0.4)", lineHeight: 1.65,
-              margin: "0 0 18px",
-            }}>{watch.tagline}</p>
-
-            {/* Price */}
-            <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "18px" }}>
-              <span style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: "26px",
-                fontWeight: 700, color: "#f0ece4",
-              }}>{watch.price}</span>
-              {watch.originalPrice && (
-                <span style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: "14px",
-                  color: "rgba(240,236,228,0.3)", textDecoration: "line-through",
-                }}>{watch.originalPrice}</span>
-              )}
-            </div>
-
-            {/* Trust items */}
-            <div style={{ display: "flex", gap: "16px", marginBottom: "22px" }}>
-              {[
-                { icon: "🚚", text: "Free Delivery" },
-                { icon: "⏱️", text: "72H Installable" },
-              ].map((item) => (
-                <div key={item.text} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ fontSize: "12px" }}>{item.icon}</span>
-                  <span style={{ fontSize: "11px", color: "rgba(240,236,228,0.45)" }}>{item.text}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA Button */}
-            <button
-              onClick={() => window.open("#", "_blank")}
+            <div
               style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                gap: "10px", width: "100%", padding: "14px 0",
-                background: "#f0ece4", color: "#08080c", border: "none",
-                borderRadius: "12px", fontSize: "13px", fontWeight: 700,
-                fontFamily: "'Inter', sans-serif", cursor: "pointer",
-                transition: "all 0.3s",
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                color: "rgba(243,239,232,0.75)",
+                background: "rgba(201,162,39,0.1)",
+                border: "1px solid rgba(201,162,39,0.28)",
+                borderRadius: "999px",
+                padding: "6px 12px",
+                whiteSpace: "nowrap",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#f0ece4"; e.currentTarget.style.transform = "translateY(0)"; }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              Order {watch.name} on WhatsApp
-            </button>
+              Trusted by 1,200+ customers
+            </div>
+          </div>
 
-            {/* Sub-note */}
-            <p style={{
-              fontSize: "10px", color: "rgba(240,236,228,0.25)", textAlign: "center",
-              marginTop: "12px",
-            }}>No payment required now • Ask anything first</p>
+          {/* Headline block */}
+          <Fade delay={0.06}>
+            <div
+              style={{
+                textAlign: "center",
+                margin: "44px auto 26px",
+                maxWidth: "860px",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.24em",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  color: "#d6b760",
+                }}
+              >
+                LIMITED EDITION DROP
+              </p>
+              <h1
+                style={{
+                  margin: "12px 0 14px",
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "clamp(42px, 8.2vw, 78px)",
+                  fontWeight: 700,
+                  lineHeight: 0.95,
+                  letterSpacing: "0.01em",
+                  color: "#f5f1e9",
+                }}
+              >
+                Find the Style Everyone Wants
+              </h1>
+              <p
+                style={{
+                  margin: "0 auto",
+                  maxWidth: "620px",
+                  fontSize: "clamp(14px, 2.6vw, 17px)",
+                  lineHeight: 1.7,
+                  color: "rgba(243,239,232,0.66)",
+                }}
+              >
+                Premium quality. Limited stock. Instant WhatsApp ordering with no payment required now.
+              </p>
+            </div>
+          </Fade>
+
+          {/* Carousel + floating CTA card */}
+          <div
+            className="lp2-hero-main"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr) 380px",
+              gap: "28px",
+              alignItems: "center",
+            }}
+          >
+            <Fade delay={0.1}>
+              <div
+                style={{
+                  borderRadius: "28px",
+                  background: "linear-gradient(180deg, rgba(22,24,36,0.5) 0%, rgba(10,12,19,0.45) 100%)",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  backdropFilter: "blur(20px)",
+                  padding: "26px 12px 18px",
+                  boxShadow: "0 44px 90px rgba(0,0,0,0.52)",
+                }}
+              >
+                <div style={{ height: "460px", maxWidth: "820px", margin: "0 auto" }}>
+                  <WatchCarousel watches={WATCHES} activeIndex={activeWatch} onChangeIndex={goTo} />
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
+                  {WATCHES.map((w, i) => (
+                    <button
+                      key={w.id}
+                      onClick={() => goTo(i)}
+                      aria-label={`Select ${w.name}`}
+                      style={{
+                        width: i === activeWatch ? "28px" : "10px",
+                        height: "10px",
+                        borderRadius: "999px",
+                        border: i === activeWatch ? `1px solid ${w.badgeColor}` : "1px solid rgba(255,255,255,0.22)",
+                        background: i === activeWatch ? w.badgeColor : "rgba(255,255,255,0.22)",
+                        transition: "all 0.25s ease",
+                        cursor: "pointer",
+                        padding: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <p
+                  style={{
+                    margin: "14px 0 2px",
+                    textAlign: "center",
+                    fontSize: "12px",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(243,239,232,0.5)",
+                    animation: "lp2HintFloat 2.6s ease-in-out infinite",
+                  }}
+                >
+                  Swipe to explore products
+                </p>
+              </div>
+            </Fade>
+
+            <Fade delay={0.15}>
+              <aside
+                key={watch.id}
+                className="lp2-cta-card"
+                style={{
+                  borderRadius: "22px",
+                  padding: "24px",
+                  background:
+                    "linear-gradient(180deg, rgba(25,26,38,0.88) 0%, rgba(13,15,22,0.94) 100%)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(20px)",
+                  boxShadow: "0 34px 80px rgba(0,0,0,0.5)",
+                  animation: "lp2FadeUp .45s ease",
+                }}
+              >
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: `${watch.badgeColor}20`,
+                    border: `1px solid ${watch.badgeColor}5c`,
+                    borderRadius: "999px",
+                    padding: "6px 12px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      background: watch.badgeColor,
+                      boxShadow: `0 0 16px ${watch.badgeColor}`,
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 800,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: watch.badgeColor,
+                    }}
+                  >
+                    {watch.badge}
+                  </span>
+                </div>
+
+                <h2
+                  style={{
+                    margin: "16px 0 4px",
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "40px",
+                    lineHeight: 0.95,
+                    fontWeight: 700,
+                    color: "#f5f1e9",
+                  }}
+                >
+                  {watch.name}
+                </h2>
+
+                <p
+                  style={{
+                    margin: "0 0 12px",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "rgba(243,239,232,0.86)",
+                  }}
+                >
+                  Designed to elevate your everyday style.
+                </p>
+                <p
+                  style={{
+                    margin: "0 0 16px",
+                    fontSize: "12px",
+                    lineHeight: 1.7,
+                    color: "rgba(243,239,232,0.58)",
+                  }}
+                >
+                  {watch.tagline}
+                </p>
+
+                <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "16px" }}>
+                  <span
+                    style={{
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: "34px",
+                      fontWeight: 700,
+                      color: "#f7f2e9",
+                    }}
+                  >
+                    {watch.price}
+                  </span>
+                  {watch.originalPrice && (
+                    <span
+                      style={{
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        fontSize: "16px",
+                        color: "rgba(243,239,232,0.38)",
+                        textDecoration: "line-through",
+                      }}
+                    >
+                      {watch.originalPrice}
+                    </span>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: "12px",
+                    background: "rgba(239,68,68,0.12)",
+                    border: "1px solid rgba(239,68,68,0.35)",
+                    color: "#fecaca",
+                    padding: "8px 11px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    marginBottom: "16px",
+                  }}
+                >
+                  {urgencyNote}
+                </div>
+
+                <button
+                  onClick={() => window.open("#", "_blank")}
+                  style={{
+                    width: "100%",
+                    border: "none",
+                    borderRadius: "14px",
+                    padding: "15px 14px",
+                    fontSize: "14px",
+                    fontWeight: 800,
+                    color: "#081109",
+                    background:
+                      "linear-gradient(95deg, #25d366 0%, #56f08c 48%, #25d366 100%)",
+                    backgroundSize: "200% 100%",
+                    boxShadow: "0 14px 30px rgba(37,211,102,0.33)",
+                    cursor: "pointer",
+                    transition: "transform .2s ease, box-shadow .2s ease",
+                    animation: "lp2Shimmer 3.6s linear infinite",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 18px 34px rgba(37,211,102,0.42)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 14px 30px rgba(37,211,102,0.33)";
+                  }}
+                >
+                  Order on WhatsApp
+                </button>
+
+                <p
+                  style={{
+                    margin: "10px 0 14px",
+                    fontSize: "11px",
+                    textAlign: "center",
+                    color: "rgba(243,239,232,0.56)",
+                  }}
+                >
+                  No payment required now • Ask anything first
+                </p>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                    gap: "8px",
+                  }}
+                >
+                  {[
+                    "Cash on Delivery",
+                    "Fast Delivery",
+                    "Easy Returns",
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      style={{
+                        borderRadius: "10px",
+                        border: "1px solid rgba(255,255,255,0.13)",
+                        background: "rgba(255,255,255,0.03)",
+                        padding: "8px 6px",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        textAlign: "center",
+                        color: "rgba(243,239,232,0.82)",
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </aside>
+            </Fade>
           </div>
         </div>
       </section>
 
-      {/* ── TRUST BADGES BAR ────────────────────── */}
-      <Fade>
-        <div style={{
-          display: "flex", justifyContent: "center", gap: "60px",
-          padding: "40px 24px",
-          borderTop: "1px solid rgba(255,255,255,0.04)",
-          borderBottom: "1px solid rgba(255,255,255,0.04)",
-          flexWrap: "wrap",
-        }}>
-          {[
-            { stars: true, title: "4.8 Average Rating", sub: "Based on 1,500+ genuine reviews" },
-            { icon: "⚡", title: "Lightning Fast Delivery", sub: "Ships within 24 hours of order" },
-            { icon: "🛒", title: "Hassle-Free Ordering", sub: "Order via WhatsApp, Pay at doorstep" },
-          ].map((b) => (
-            <div key={b.title} style={{ textAlign: "center" }}>
-              {b.stars ? (
-                <div style={{ display: "flex", justifyContent: "center", gap: "2px", marginBottom: "8px" }}>
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} style={{ color: "#f59e0b", fontSize: "14px" }}>★</span>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ fontSize: "20px", marginBottom: "8px" }}>{b.icon}</div>
-              )}
-              <p style={{
-                fontSize: "14px", fontWeight: 700, color: "#f0ece4", margin: "0 0 4px",
-              }}>{b.title}</p>
-              <p style={{ fontSize: "11px", color: "rgba(240,236,228,0.35)", margin: 0 }}>{b.sub}</p>
-            </div>
-          ))}
-        </div>
-      </Fade>
-
-      {/* ── CRAFTSMANSHIP SECTION ───────────────── */}
-      <section style={{ maxWidth: "1100px", margin: "0 auto", padding: "100px 32px 80px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }}>
-          {/* Left: Text */}
-          <Fade>
-            <div>
-              <h2 style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800,
-                lineHeight: 1.15, margin: "0 0 20px", color: "#f0ece4",
-              }}>
-                Masterfully crafted<br />for the modern{" "}
-                <span style={{ fontStyle: "italic", color: "#c9a227" }}>visionary.</span>
-              </h2>
-              <p style={{
-                fontSize: "14px", color: "rgba(240,236,228,0.4)", lineHeight: 1.7,
-                margin: "0 0 36px", maxWidth: "420px",
-              }}>
-                We don't just make watches. We create statements of engineering
-                that bridge the gap between digital luxury and physical excellence.
-              </p>
-
-              {/* Spec items */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {[
-                  { icon: "◆", title: "Premium Grade 5 Titanium", desc: "Ultra-lightweight yet stronger than steel. Used in aerospace applications." },
-                  { icon: "◆", title: "100M Water Resistance", desc: "Designed for both deep boardroom discussions and deep ocean exploration." },
-                ].map((spec) => (
-                  <div key={spec.title} style={{ display: "flex", gap: "14px" }}>
-                    <div style={{
-                      width: "32px", height: "32px", borderRadius: "8px",
-                      background: "rgba(201,162,39,0.08)", border: "1px solid rgba(201,162,39,0.15)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: "#c9a227", fontSize: "12px", flexShrink: 0, marginTop: "2px",
-                    }}>{spec.icon}</div>
-                    <div>
-                      <p style={{
-                        fontSize: "14px", fontWeight: 700, color: "#f0ece4", margin: "0 0 4px",
-                      }}>{spec.title}</p>
-                      <p style={{
-                        fontSize: "12px", color: "rgba(240,236,228,0.4)", margin: 0, lineHeight: 1.6,
-                      }}>{spec.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Fade>
-
-          {/* Right: Watch illustration + customer voice */}
-          <Fade delay={0.15}>
-            <div style={{ position: "relative" }}>
-              {/* Watch image */}
-              <div style={{
-                width: "100%", aspectRatio: "1", maxWidth: "380px", margin: "0 auto",
-                borderRadius: "50%",
-                background: "radial-gradient(circle, rgba(201,162,39,0.06) 0%, rgba(20,20,28,0.8) 60%, transparent 100%)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                position: "relative",
-              }}>
-                {/* Minimalist clock face */}
-                <div style={{
-                  width: "65%", height: "65%", borderRadius: "50%",
-                  border: "2px solid rgba(240,236,228,0.08)",
-                  position: "relative",
-                  background: "rgba(20,20,28,0.5)",
-                }}>
-                  {/* Hour marks */}
-                  {[...Array(12)].map((_, i) => (
-                    <div key={i} style={{
-                      position: "absolute", top: "50%", left: "50%",
-                      width: i % 3 === 0 ? "2px" : "1px",
-                      height: i % 3 === 0 ? "10px" : "6px",
-                      background: "rgba(240,236,228,0.2)",
-                      transformOrigin: "50% 0",
-                      transform: `rotate(${i * 30}deg) translateY(-${i % 3 === 0 ? 90 : 92}px)`,
-                    }} />
-                  ))}
-                  {/* Hands */}
-                  <div style={{
-                    position: "absolute", bottom: "50%", left: "50%",
-                    width: "2px", height: "35%", background: "#f0ece4",
-                    transformOrigin: "bottom center", transform: "translateX(-50%) rotate(-30deg)",
-                    borderRadius: "1px",
-                  }} />
-                  <div style={{
-                    position: "absolute", bottom: "50%", left: "50%",
-                    width: "1.5px", height: "45%", background: "rgba(240,236,228,0.6)",
-                    transformOrigin: "bottom center", transform: "translateX(-50%) rotate(60deg)",
-                    borderRadius: "1px",
-                  }} />
-                  <div style={{
-                    position: "absolute", top: "50%", left: "50%",
-                    width: "6px", height: "6px", borderRadius: "50%",
-                    background: "#c9a227", transform: "translate(-50%, -50%)",
-                  }} />
-                </div>
-              </div>
-
-              {/* Customer Voice card */}
-              <div style={{
-                position: "absolute", bottom: "-20px", right: "-10px",
-                background: "rgba(201,162,39,0.06)", border: "1px solid rgba(201,162,39,0.12)",
-                borderRadius: "14px", padding: "18px 20px", maxWidth: "260px",
-              }}>
-                <div style={{
-                  display: "inline-flex", alignItems: "center", gap: "6px",
-                  background: "rgba(201,162,39,0.1)", borderRadius: "4px",
-                  padding: "3px 8px", marginBottom: "10px",
-                }}>
-                  <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "#c9a227", textTransform: "uppercase" }}>Customer Voices</span>
-                </div>
-                <p style={{
-                  fontSize: "12px", color: "rgba(240,236,228,0.6)", fontStyle: "italic",
-                  lineHeight: 1.6, margin: "0 0 10px",
-                }}>
-                  "The weight is perfect. Feels like quality engineering on your wrist."
-                </p>
-                <p style={{ fontSize: "11px", color: "#c9a227", margin: 0, fontWeight: 600 }}>— Alex R., Founder</p>
-              </div>
-            </div>
-          </Fade>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ────────────────────────── */}
-      <section style={{ padding: "60px 32px 80px" }}>
+      {/* ── WHY CHOOSE US ────────────────────── */}
+      <section style={{ maxWidth: "1180px", margin: "0 auto", padding: "34px 24px 44px" }}>
         <Fade>
-          <h2 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "clamp(24px, 3.5vw, 36px)", fontWeight: 800,
-            textAlign: "center", margin: "0 0 48px", color: "#f0ece4",
-          }}>Trusted by the Global Community</h2>
+          <div style={{ textAlign: "center", marginBottom: "24px" }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "rgba(214,183,96,0.92)",
+              }}
+            >
+              Why Choose Us
+            </p>
+            <h3
+              style={{
+                margin: "10px 0 0",
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "clamp(30px, 5vw, 48px)",
+                fontWeight: 700,
+                color: "#f5f1e9",
+              }}
+            >
+              Built to Convert Curiosity into Confidence
+            </h3>
+          </div>
         </Fade>
 
-        <div style={{
-          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "20px", maxWidth: "1100px", margin: "0 auto",
-        }}>
-          {TESTIMONIALS.map((t, i) => (
-            <Fade key={i} delay={i * 0.12}>
-              <div style={{
-                background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
-                borderRadius: "16px", padding: "28px",
-                transition: "border-color 0.3s",
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(201,162,39,0.15)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; }}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "14px",
+          }}
+        >
+          {WHY_CHOOSE_ITEMS.map((item, idx) => (
+            <Fade key={item.id} delay={idx * 0.06}>
+              <article
+                style={{
+                  borderRadius: "18px",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  background: "linear-gradient(160deg, rgba(255,255,255,0.04) 0%, rgba(16,17,26,0.65) 100%)",
+                  padding: "18px 16px",
+                  boxShadow: "0 18px 34px rgba(0,0,0,0.28)",
+                }}
               >
-                {/* Stars */}
-                <div style={{ display: "flex", gap: "2px", marginBottom: "16px" }}>
-                  {[...Array(5)].map((_, si) => (
-                    <span key={si} style={{ color: "#f59e0b", fontSize: "13px" }}>★</span>
-                  ))}
+                <div
+                  style={{
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "10px",
+                    border: "1px solid rgba(201,162,39,0.5)",
+                    background: "rgba(201,162,39,0.12)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#e7d5a1",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    letterSpacing: "0.04em",
+                    marginBottom: "12px",
+                  }}
+                >
+                  {item.marker}
                 </div>
-                <p style={{
-                  fontSize: "13px", color: "rgba(240,236,228,0.6)", lineHeight: 1.7,
-                  margin: "0 0 20px",
-                }}>"{t.quote}"</p>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={{
-                    width: "32px", height: "32px", borderRadius: "50%",
-                    background: t.avatar, display: "flex", alignItems: "center",
-                    justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#fff",
-                  }}>{t.name.charAt(0)}</div>
-                  <div>
-                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#f0ece4", margin: 0 }}>{t.name}</p>
-                    <p style={{ fontSize: "11px", color: "rgba(240,236,228,0.35)", margin: 0 }}>{t.role}</p>
-                  </div>
-                </div>
-              </div>
+                <h4
+                  style={{
+                    margin: "0 0 6px",
+                    fontSize: "16px",
+                    color: "#f6f1e9",
+                    fontWeight: 800,
+                  }}
+                >
+                  {item.title}
+                </h4>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12px",
+                    lineHeight: 1.7,
+                    color: "rgba(243,239,232,0.62)",
+                  }}
+                >
+                  {item.description}
+                </p>
+              </article>
             </Fade>
           ))}
         </div>
       </section>
 
-      {/* ── CTA SECTION ─────────────────────────── */}
-      <section style={{ padding: "40px 32px 100px" }}>
+      {/* ── SOCIAL PROOF ────────────────────────── */}
+      <section style={{ maxWidth: "1180px", margin: "0 auto", padding: "26px 24px 66px" }}>
         <Fade>
-          <div style={{
-            maxWidth: "700px", margin: "0 auto", textAlign: "center",
-            background: "linear-gradient(180deg, rgba(20,20,28,0.7) 0%, rgba(14,14,20,0.9) 100%)",
-            borderRadius: "28px", padding: "80px 40px",
-            border: "1px solid rgba(255,255,255,0.04)",
-            position: "relative", overflow: "hidden",
-          }}>
-            {/* Subtle glow */}
-            <div style={{
-              position: "absolute", top: "-50px", left: "50%", transform: "translateX(-50%)",
-              width: "300px", height: "200px", borderRadius: "50%",
-              background: "radial-gradient(ellipse, rgba(201,162,39,0.05) 0%, transparent 70%)",
-              pointerEvents: "none",
-            }} />
+          <div
+            style={{
+              marginBottom: "22px",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                borderRadius: "999px",
+                border: "1px solid rgba(245,158,11,0.4)",
+                background: "rgba(245,158,11,0.12)",
+                color: "#fcd68a",
+                fontSize: "12px",
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                padding: "10px 16px",
+              }}
+            >
+              ★ 4.8 from 1,200+ happy customers
+            </div>
+          </div>
+        </Fade>
 
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 800,
-              margin: "0 0 16px", color: "#f0ece4", position: "relative",
-            }}>Ready to upgrade your<br />wrist game?</h2>
-            <p style={{
-              fontSize: "14px", color: "rgba(240,236,228,0.4)",
-              margin: "0 auto 32px", lineHeight: 1.7, maxWidth: "400px", position: "relative",
-            }}>
-              Join 10,000+ others who have redefined their style with Aura Chronos.
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))",
+            gap: "14px",
+          }}
+        >
+          {TESTIMONIALS.map((t, idx) => (
+            <Fade key={t.name} delay={idx * 0.07}>
+              <article
+                style={{
+                  borderRadius: "18px",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "linear-gradient(160deg, rgba(20,22,34,0.92) 0%, rgba(11,13,20,0.97) 100%)",
+                  padding: "22px 20px",
+                  boxShadow: "0 20px 38px rgba(0,0,0,0.32)",
+                }}
+              >
+                <p style={{ margin: "0 0 8px", color: "#f59e0b", fontSize: "13px", letterSpacing: "0.04em" }}>★★★★★</p>
+                <p
+                  style={{
+                    margin: "0 0 16px",
+                    color: "rgba(243,239,232,0.7)",
+                    lineHeight: 1.75,
+                    fontSize: "13px",
+                  }}
+                >
+                  "{t.quote}"
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "50%",
+                      background: t.avatar,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 800,
+                      color: "#fff",
+                      fontSize: "12px",
+                    }}
+                  >
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#f5f1e9" }}>{t.name}</p>
+                    <p style={{ margin: 0, fontSize: "11px", color: "rgba(243,239,232,0.42)" }}>{t.role}</p>
+                  </div>
+                </div>
+              </article>
+            </Fade>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FINAL CTA ─────────────────────────── */}
+      <section style={{ padding: "0 24px 100px" }}>
+        <Fade>
+          <div
+            style={{
+              maxWidth: "940px",
+              margin: "0 auto",
+              borderRadius: "28px",
+              overflow: "hidden",
+              background:
+                "linear-gradient(105deg, rgba(8,11,21,0.95) 0%, rgba(19,23,39,0.95) 34%, rgba(23,18,8,0.94) 100%)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 44px 100px rgba(0,0,0,0.5)",
+              textAlign: "center",
+              padding: "74px 24px",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "-120px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "430px",
+                height: "240px",
+                borderRadius: "50%",
+                background: "radial-gradient(ellipse, rgba(201,162,39,0.28) 0%, transparent 74%)",
+                filter: "blur(26px)",
+                pointerEvents: "none",
+              }}
+            />
+
+            <h3
+              style={{
+                position: "relative",
+                margin: "0 0 10px",
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "clamp(34px, 6vw, 58px)",
+                lineHeight: 0.95,
+                color: "#f7f2e9",
+                fontWeight: 700,
+              }}
+            >
+              Found the one you like? Order now.
+            </h3>
+
+            <p
+              style={{
+                position: "relative",
+                margin: "0 auto 24px",
+                maxWidth: "560px",
+                fontSize: "14px",
+                lineHeight: 1.7,
+                color: "rgba(243,239,232,0.64)",
+              }}
+            >
+              This drop is moving fast. Message us on WhatsApp to reserve your preferred model before it sells out.
             </p>
 
             <button
               onClick={() => window.open("#", "_blank")}
               style={{
-                display: "inline-flex", alignItems: "center", gap: "10px",
-                background: "#f0ece4", color: "#08080c", border: "none",
-                borderRadius: "14px", padding: "16px 36px", fontSize: "14px",
-                fontWeight: 700, fontFamily: "'Inter', sans-serif", cursor: "pointer",
-                transition: "all 0.3s", position: "relative",
+                position: "relative",
+                border: "none",
+                borderRadius: "14px",
+                padding: "16px 34px",
+                fontSize: "15px",
+                fontWeight: 800,
+                letterSpacing: "0.02em",
+                color: "#081109",
+                background: "linear-gradient(95deg, #25d366 0%, #62f39a 52%, #25d366 100%)",
+                backgroundSize: "200% 100%",
+                boxShadow: "0 16px 34px rgba(37,211,102,0.35)",
+                cursor: "pointer",
+                animation: "lp2Shimmer 3.4s linear infinite",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#f0ece4"; e.currentTarget.style.transform = "translateY(0)"; }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              Order Instantly via WhatsApp
+              Order on WhatsApp
             </button>
 
-            <p style={{
-              fontSize: "11px", color: "rgba(240,236,228,0.25)", marginTop: "16px", position: "relative",
-            }}>Free Shipping Worldwide • 24/7 Support</p>
+            <p
+              style={{
+                position: "relative",
+                margin: "14px 0 0",
+                fontSize: "11px",
+                color: "rgba(243,239,232,0.55)",
+              }}
+            >
+              Cash on Delivery • Fast Delivery • Easy Returns
+            </p>
           </div>
         </Fade>
       </section>
 
-      {/* ── FOOTER ──────────────────────────────── */}
-      <footer style={{
-        borderTop: "1px solid rgba(255,255,255,0.04)",
-        padding: "28px 32px",
-      }}>
-        <div style={{
-          maxWidth: "1100px", margin: "0 auto",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          flexWrap: "wrap", gap: "16px",
-        }}>
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{
-              width: "24px", height: "24px", borderRadius: "50%",
-              border: "1.5px solid rgba(201,162,39,0.4)",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px",
-            }}>⌚</div>
-            <span style={{
-              fontWeight: 700, fontSize: "12px", letterSpacing: "0.08em", color: "rgba(240,236,228,0.5)",
-            }}>AURA CHRONOS</span>
-          </div>
-
-          {/* Links */}
-          <div style={{ display: "flex", gap: "20px" }}>
-            {["Privacy Policy", "Terms of Service", "Shipping Policy"].map((link) => (
-              <a key={link} href="#" style={{
-                fontSize: "11px", color: "rgba(240,236,228,0.3)", textDecoration: "none",
-                transition: "color 0.2s",
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "#c9a227"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(240,236,228,0.3)"; }}
-              >{link}</a>
-            ))}
-          </div>
-
-          {/* Social icons */}
-          <div style={{ display: "flex", gap: "12px" }}>
-            {["instagram", "twitter", "facebook", "globe"].map((social) => (
-              <a key={social} href="#" style={{
-                width: "32px", height: "32px", borderRadius: "50%",
-                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "rgba(240,236,228,0.4)", textDecoration: "none",
-                transition: "all 0.2s", fontSize: "14px",
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(201,162,39,0.3)"; e.currentTarget.style.color = "#c9a227"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(240,236,228,0.4)"; }}
-              >
-                {social === "instagram" && "📷"}
-                {social === "twitter" && "𝕏"}
-                {social === "facebook" && "f"}
-                {social === "globe" && "🌐"}
-              </a>
-            ))}
-          </div>
+      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "20px 24px 30px" }}>
+        <div
+          style={{
+            maxWidth: "1180px",
+            margin: "0 auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <p style={{ margin: 0, fontSize: "12px", color: "rgba(243,239,232,0.48)", letterSpacing: "0.1em" }}>
+            AURA CHRONOS
+          </p>
+          <p style={{ margin: 0, fontSize: "11px", color: "rgba(243,239,232,0.32)" }}>
+            Premium selections for ad-driven commerce.
+          </p>
         </div>
-
-        {/* Copyright */}
-        <p style={{
-          textAlign: "center", fontSize: "11px", color: "rgba(240,236,228,0.15)",
-          margin: "20px 0 0",
-        }}>© 2024 Aura Chronos. All rights reserved.</p>
       </footer>
 
-      {/* Responsive CSS */}
       <style>{`
-        @media(max-width:900px){
-          .lp2-desktop-nav{display:none!important}
-          .lp2-mobile-toggle{display:block!important}
-          section:nth-of-type(1){flex-direction:column!important}
-          section:nth-of-type(1)>div:last-child{flex:1!important;padding:0 24px 40px!important}
+        @media (max-width: 1040px) {
+          .lp2-hero-main {
+            grid-template-columns: 1fr !important;
+          }
+          .lp2-cta-card {
+            max-width: 640px;
+            margin: 0 auto;
+          }
         }
-        @media(max-width:768px){
-          section>div[style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}
+
+        @media (max-width: 760px) {
+          .lp2-topbar {
+            padding: 10px 12px !important;
+          }
         }
-        div::-webkit-scrollbar{display:none}
+
+        @media (max-width: 640px) {
+          .lp2-topbar {
+            flex-direction: column;
+            align-items: flex-start !important;
+          }
+        }
+
+        div::-webkit-scrollbar {
+          display: none;
+        }
       `}</style>
     </div>
   );
