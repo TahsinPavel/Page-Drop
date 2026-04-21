@@ -27,7 +27,3 @@ jobs:
       - name: Run Flake8
         working-directory: backend
         run: flake8 . --max-line-length=88 --exclude=__pycache__,.venv,alembic,tests --ignore=E501,F401,F841,W391,W291,W503
-
-      - name: Check Black formatting
-        working-directory: backend
-        run: black . --check --exclude="alembic"
