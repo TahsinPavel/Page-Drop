@@ -459,9 +459,10 @@ function WhatsAppCTA({ productName, accentHue, label = "Order on WhatsApp" }) {
         gap: "10px",
         width: "100%",
         padding: "16px 18px",
-        background: btnHovered
+        backgroundImage: btnHovered
           ? `linear-gradient(135deg, #25D366 0%, hsl(${accentHue}, 68%, 54%) 100%)`
-          : "#25D366",
+          : "none",
+        backgroundColor: "#25D366",
         backgroundSize: "200% 100%",
         color: "#fff",
         border: "none",
@@ -836,7 +837,7 @@ export default function DemoLandingPage3() {
             position: "absolute",
             inset: 0,
             pointerEvents: "none",
-            background:
+            backgroundImage:
               "linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px)",
             backgroundSize: "68px 68px",
             maskImage:
