@@ -2,22 +2,26 @@
 
 from datetime import datetime, timedelta, timezone
 
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from app.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ph = PasswordHasher()
 
 
 def hash_password(password: str) -> str:
-    """Return a bcrypt hash of the given plaintext password."""
-    return pwd_context.hash(password)
+    """Return an Argon2id hash of the given plaintext password."""
+    return ph.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plaintext password against the stored hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verify a plaintext password against the stored Argon2 hash."""
+    try:
+        return ph.verify(hashed_password, plain_password)
+    except VerifyMismatchError:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
