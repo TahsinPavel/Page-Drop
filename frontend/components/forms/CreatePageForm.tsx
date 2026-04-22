@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
 import {
-    Globe,
+    ChevronDown,
     Loader2,
-    MapPin,
     Plus,
     Trash2,
+    X,
 } from "lucide-react";
 
 import { useCreatePage } from "@/hooks/usePages";
@@ -23,6 +23,7 @@ import {
 } from "@/lib/api";
 import type { BusinessHours } from "@/types";
 
+import PhoneInput from "@/components/forms/PhoneInput";
 import ImageUploadBox from "@/components/forms/ImageUploadBox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,7 +61,7 @@ const productSchema = z.object({
     name: z.string().min(1, "Product name is required"),
     price: z.string().optional(),
     description: z.string().optional(),
-    image_url: z.string().nullable().optional(),
+    image_urls: z.array(z.string()).max(5).optional(),
 });
 
 const businessHoursDaySchema = z.object({
@@ -82,13 +83,25 @@ const businessHoursSchema = z
     .nullable()
     .optional();
 
+const whatsappNumberSchema = z.string()
+    .min(1, "WhatsApp number is required")
+    .refine((val) => {
+        const digits = val.replace(/^\+\d{1,4}/, "");
+        return /^\d{7,12}$/.test(digits);
+    }, "Enter 7–12 digits after the country code");
+
+const phoneNumberSchema = z.string().optional()
+    .refine((val) => {
+        if (!val || val.trim() === "") return true;
+        const digits = val.replace(/^\+\d{1,4}/, "");
+        return /^\d{7,12}$/.test(digits);
+    }, "Enter 7–12 digits after the country code");
+
 const formSchema = z.object({
     business_name: z.string().min(1, "Business name is required").max(255),
     category: z.string().min(1, "Select a category"),
-    whatsapp_number: z.string().min(6, "Valid WhatsApp number is required").max(20),
-    phone_number: z.string().optional(),
-    is_online_only: z.boolean(),
-    location: z.string().optional(),
+    whatsapp_number: whatsappNumberSchema,
+    phone_number: phoneNumberSchema,
     products: z.array(productSchema).max(10, "Maximum 10 products"),
     theme: z.string(),
     business_hours: businessHoursSchema,
@@ -128,17 +141,17 @@ export default function CreatePageForm() {
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [showBusinessHours, setShowBusinessHours] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [productImageFiles, setProductImageFiles] = useState<Array<File | null>>([]);
+    const [productImageFiles, setProductImageFiles] = useState<Array<File[]>>([]);
+    const [openCards, setOpenCards] = useState<Set<number>>(new Set());
+    const productNameRefs = useRef<Array<HTMLInputElement | null>>([]);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             business_name: "",
             category: "",
-            whatsapp_number: "+880",
+            whatsapp_number: "",
             phone_number: "",
-            is_online_only: true,
-            location: "",
             products: [],
             theme: "default",
             business_hours: null,
@@ -152,27 +165,42 @@ export default function CreatePageForm() {
     });
 
     const watchedProducts = form.watch("products");
-    const isOnlineOnly = form.watch("is_online_only");
     const hours = form.watch("business_hours");
 
     const fieldsByStep: Record<number, Array<keyof FormValues>> = {
-        1: ["business_name", "category", "whatsapp_number", "phone_number", "is_online_only", "location", "business_hours"],
+        1: ["business_name", "category", "whatsapp_number", "phone_number", "business_hours"],
         2: ["products"],
         3: ["theme"],
     };
 
     const totalPendingUploads = useMemo(() => {
-        const productPendingCount = productImageFiles.filter(Boolean).length;
+        const productPendingCount = productImageFiles.reduce((sum, arr) => sum + arr.length, 0);
         return (bannerFile ? 1 : 0) + productPendingCount;
     }, [bannerFile, productImageFiles]);
 
-    const setProductFileAt = (index: number, file: File | null) => {
+    const toggleCard = (index: number) => {
+        setOpenCards((prev) => {
+            const next = new Set(prev);
+            if (next.has(index)) next.delete(index);
+            else next.add(index);
+            return next;
+        });
+    };
+
+    const addProductImageFile = (productIndex: number, file: File) => {
         setProductImageFiles((prev) => {
             const next = [...prev];
-            while (next.length <= index) {
-                next.push(null);
-            }
-            next[index] = file;
+            while (next.length <= productIndex) next.push([]);
+            if (next[productIndex].length >= 5) return prev;
+            next[productIndex] = [...next[productIndex], file];
+            return next;
+        });
+    };
+
+    const removeProductImageFile = (productIndex: number, fileIndex: number) => {
+        setProductImageFiles((prev) => {
+            const next = [...prev];
+            next[productIndex] = next[productIndex].filter((_, i) => i !== fileIndex);
             return next;
         });
     };
@@ -180,6 +208,11 @@ export default function CreatePageForm() {
     const handleProductRemove = (index: number) => {
         remove(index);
         setProductImageFiles((prev) => prev.filter((_, i) => i !== index));
+        setOpenCards((prev) => {
+            const next = new Set<number>();
+            prev.forEach((v) => { if (v < index) next.add(v); else if (v > index) next.add(v - 1); });
+            return next;
+        });
     };
 
     const validateStep = async () => {
@@ -211,8 +244,8 @@ export default function CreatePageForm() {
                 category: values.category,
                 whatsapp_number: values.whatsapp_number,
                 phone_number: values.phone_number?.trim() ? values.phone_number.trim() : null,
-                is_online_only: values.is_online_only,
-                location: values.is_online_only ? null : values.location?.trim() || null,
+                is_online_only: true,
+                location: null as string | null,
                 business_hours: showBusinessHours ? values.business_hours ?? null : null,
                 products: values.products.length > 0 ? values.products : undefined,
                 theme: "default",
@@ -236,12 +269,14 @@ export default function CreatePageForm() {
             }
 
             for (let i = 0; i < productImageFiles.length; i += 1) {
-                const file = productImageFiles[i];
-                if (!file) continue;
-                toast.loading(`Uploading product images... (${++uploadCount}/${totalPendingUploads})`, {
-                    id: loadingToast,
-                });
-                await uploadProductImage(file, createdPage.id, i);
+                const files = productImageFiles[i];
+                if (!files || files.length === 0) continue;
+                for (const file of files) {
+                    toast.loading(`Uploading product images... (${++uploadCount}/${totalPendingUploads})`, {
+                        id: loadingToast,
+                    });
+                    await uploadProductImage(file, createdPage.id, i);
+                }
             }
 
             if (logoUrl) {
@@ -323,71 +358,23 @@ export default function CreatePageForm() {
                                 ) : null}
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="whatsapp_number">WhatsApp Number *</Label>
-                                <Input id="whatsapp_number" placeholder="+8801XXXXXXXXX" {...form.register("whatsapp_number")} />
-                                {form.formState.errors.whatsapp_number ? (
-                                    <p className="text-sm text-red-500">{form.formState.errors.whatsapp_number.message}</p>
-                                ) : null}
-                            </div>
+                            <PhoneInput
+                                id="whatsapp_number"
+                                label="WhatsApp Number"
+                                required
+                                value={form.watch("whatsapp_number")}
+                                onChange={(val) => form.setValue("whatsapp_number", val, { shouldValidate: true })}
+                                error={form.formState.errors.whatsapp_number?.message}
+                            />
 
-                            <div className="space-y-2">
-                                <Label htmlFor="phone_number" className="flex items-center gap-2">
-                                    Phone Number
-                                    <span className="text-xs text-muted-foreground">(optional)</span>
-                                </Label>
-                                <Input id="phone_number" placeholder="+8801XXXXXXXXX" {...form.register("phone_number")} />
-                                <p className="text-xs text-muted-foreground">For a call button on your page</p>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Business Type</Label>
-                                <div className="flex flex-col gap-2 sm:flex-row">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            form.setValue("is_online_only", true);
-                                            form.setValue("location", "");
-                                        }}
-                                        className={[
-                                            "inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-colors",
-                                            isOnlineOnly
-                                                ? "border-indigo-500/50 bg-indigo-500/15 text-indigo-200"
-                                                : "border-border text-muted-foreground hover:bg-muted/40",
-                                        ].join(" ")}
-                                    >
-                                        <Globe className="h-4 w-4" />
-                                        Online Only
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => form.setValue("is_online_only", false)}
-                                        className={[
-                                            "inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-colors",
-                                            !isOnlineOnly
-                                                ? "border-indigo-500/50 bg-indigo-500/15 text-indigo-200"
-                                                : "border-border text-muted-foreground hover:bg-muted/40",
-                                        ].join(" ")}
-                                    >
-                                        <MapPin className="h-4 w-4" />
-                                        Has Physical Location
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div
-                                className={[
-                                    "space-y-2 overflow-hidden transition-all duration-200 ease-out",
-                                    isOnlineOnly ? "max-h-0 translate-y-2 opacity-0" : "max-h-48 translate-y-0 opacity-100",
-                                ].join(" ")}
-                            >
-                                {!isOnlineOnly ? (
-                                    <>
-                                        <Label htmlFor="location">Location</Label>
-                                        <Input id="location" placeholder="e.g. Dhanmondi, Dhaka" {...form.register("location")} />
-                                    </>
-                                ) : null}
-                            </div>
+                            <PhoneInput
+                                id="phone_number"
+                                label="Phone Number"
+                                hint="(optional) For a call button on your page"
+                                value={form.watch("phone_number") ?? ""}
+                                onChange={(val) => form.setValue("phone_number", val, { shouldValidate: true })}
+                                error={form.formState.errors.phone_number?.message}
+                            />
 
                             <div className="space-y-3 rounded-xl border border-border/60 p-4">
                                 <div>
@@ -500,49 +487,99 @@ export default function CreatePageForm() {
                             <CardTitle>Products & Services</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {fields.map((field, index) => (
-                                <div key={field.id} className="space-y-3 rounded-xl border p-4">
-                                    <div className="flex gap-3">
-                                        <div className="flex-1 space-y-3">
-                                            <Input placeholder="Product name *" {...form.register(`products.${index}.name`)} />
-                                            <div className="flex gap-2">
-                                                <Input placeholder="Price (e.g. ?250)" className="w-36" {...form.register(`products.${index}.price`)} />
-                                                <Input placeholder="Description" className="flex-1" {...form.register(`products.${index}.description`)} />
-                                            </div>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="shrink-0 text-red-500 hover:text-red-600"
-                                            onClick={() => handleProductRemove(index)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                            {fields.map((field, index) => {
+                                const isOpen = openCards.has(index);
+                                const productName = watchedProducts[index]?.name;
+                                const headerLabel = productName?.trim() || `Product ${index + 1}`;
+                                const currentFiles = productImageFiles[index] ?? [];
 
-                                    <div className="space-y-1">
-                                        <p className="text-sm font-medium">Product Image <span className="text-xs text-muted-foreground">(optional)</span></p>
-                                        <ImageUploadBox
-                                            label="Product Image"
-                                            hint="Square image recommended - Max 3MB"
-                                            aspectRatio="1 / 1"
-                                            currentImageUrl={filePreview(productImageFiles[index]) ?? watchedProducts[index]?.image_url ?? null}
-                                            onFileSelect={(file) => {
-                                                if (file.size > 3 * 1024 * 1024) {
-                                                    toast.error("Product image must be under 3 MB");
-                                                    return;
-                                                }
-                                                setProductFileAt(index, file);
-                                            }}
-                                            onRemove={() => {
-                                                setProductFileAt(index, null);
-                                                form.setValue(`products.${index}.image_url`, null);
-                                            }}
-                                        />
+                                return (
+                                    <div key={field.id} className="rounded-xl border transition-colors">
+                                        {/* Accordion header */}
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleCard(index)}
+                                            className="flex w-full items-center justify-between rounded-t-xl px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                                        >
+                                            <span className="text-sm font-medium truncate pr-2">{headerLabel}</span>
+                                            <div className="flex items-center gap-1">
+                                                <ChevronDown className={["h-4 w-4 text-muted-foreground transition-transform duration-200", isOpen ? "rotate-180" : ""].join(" ")} />
+                                            </div>
+                                        </button>
+
+                                        {/* Collapsible body */}
+                                        {isOpen ? (
+                                            <div className="space-y-3 border-t px-4 pb-4 pt-3">
+                                                <div className="flex gap-3">
+                                                    <div className="flex-1 space-y-3">
+                                                        <Input
+                                                            placeholder="Product name *"
+                                                            {...form.register(`products.${index}.name`)}
+                                                            ref={(el) => {
+                                                                form.register(`products.${index}.name`).ref(el);
+                                                                productNameRefs.current[index] = el;
+                                                            }}
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <Input placeholder="Price (e.g. ৳250)" className="w-36" {...form.register(`products.${index}.price`)} />
+                                                            <Input placeholder="Description" className="flex-1" {...form.register(`products.${index}.description`)} />
+                                                        </div>
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="shrink-0 text-red-500 hover:text-red-600"
+                                                        onClick={() => handleProductRemove(index)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+
+                                                {/* Multi-image upload row */}
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-medium">Images <span className="text-xs text-muted-foreground">(up to 5, optional)</span></p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {currentFiles.map((file, fileIdx) => (
+                                                            <div key={fileIdx} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border">
+                                                                <img
+                                                                    src={URL.createObjectURL(file)}
+                                                                    alt={`Product ${index + 1} image ${fileIdx + 1}`}
+                                                                    className="h-full w-full object-cover"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeProductImageFile(index, fileIdx)}
+                                                                    className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+                                                                >
+                                                                    <X className="h-5 w-5 text-white" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                        {currentFiles.length < 5 ? (
+                                                            <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-[1.5px] border-dashed border-indigo-500/30 bg-indigo-500/5 transition-colors hover:border-indigo-400 hover:bg-indigo-500/10">
+                                                                <Plus className="h-5 w-5 text-indigo-400/80" />
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/jpeg,image/png,image/webp"
+                                                                    className="hidden"
+                                                                    onChange={(e) => {
+                                                                        const f = e.target.files?.[0];
+                                                                        if (!f) return;
+                                                                        if (f.size > 3 * 1024 * 1024) { toast.error("Product image must be under 3 MB"); return; }
+                                                                        addProductImageFile(index, f);
+                                                                        e.target.value = "";
+                                                                    }}
+                                                                />
+                                                            </label>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : null}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
 
                             {fields.length < 10 ? (
                                 <Button
@@ -550,8 +587,14 @@ export default function CreatePageForm() {
                                     variant="outline"
                                     className="w-full"
                                     onClick={() => {
-                                        append({ name: "", price: "", description: "", image_url: null });
-                                        setProductImageFiles((prev) => [...prev, null]);
+                                        const newIndex = fields.length;
+                                        append({ name: "", price: "", description: "", image_urls: [] });
+                                        setProductImageFiles((prev) => [...prev, []]);
+                                        setOpenCards((prev) => new Set(prev).add(newIndex));
+                                        setTimeout(() => {
+                                            productNameRefs.current[newIndex]?.focus();
+                                            productNameRefs.current[newIndex]?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                        }, 100);
                                     }}
                                 >
                                     <Plus className="mr-2 h-4 w-4" />
