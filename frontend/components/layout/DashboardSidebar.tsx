@@ -105,24 +105,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                         {getInitials(user?.full_name)}
                     </div>
                     <div style={{ minWidth: 0 }}>
-                        <div
-                            style={{
-                                fontSize: 13,
-                                fontWeight: 600,
-                                color: "#e5e2e1",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
+                        <div className="db-user-name">
                             {user?.full_name || "User Workspace"}
                         </div>
-                        <div
-                            style={{
-                                fontSize: 11,
-                                color: "#908fa0",
-                            }}
-                        >
+                        <div className="db-user-email">
                             {user?.email || "—"}
                         </div>
                     </div>
@@ -144,7 +130,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 <button
                     className="db-nav-item"
                     onClick={handleLogout}
-                    style={{ color: "#908fa0" }}
                 >
                     <LogOut className="db-nav-icon" />
                     Logout

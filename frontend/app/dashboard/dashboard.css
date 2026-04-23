@@ -405,6 +405,20 @@
   padding: 4px 8px;
 }
 
+.db-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e5e2e1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.db-user-email {
+  font-size: 11px;
+  color: #908fa0;
+}
+
 .db-sidebar-avatar {
   width: 32px;
   height: 32px;
@@ -748,18 +762,21 @@
   color: #6366f1;
   border-color: rgba(99, 102, 241, 0.2);
 }
-.db-light .db-nav-item { color: #6b7280; }
+.db-light .db-nav-item { color: #4b5563; font-weight: 600; }
 .db-light .db-nav-item:hover {
-  color: #1a1a2e;
-  background: rgba(99, 102, 241, 0.04);
+  color: #111827;
+  background: rgba(99, 102, 241, 0.08);
 }
 .db-light .db-nav-item.active {
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.06);
+  color: #4f46e5;
+  font-weight: 700;
+  background: rgba(99, 102, 241, 0.12);
 }
 .db-light .db-sidebar-footer {
   border-top-color: rgba(0, 0, 0, 0.06);
 }
+.db-light .db-user-name { color: #111827; font-weight: 700; }
+.db-light .db-user-email { color: #4b5563; font-weight: 500; }
 .db-light .db-sidebar-avatar {
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
 }
