@@ -16,12 +16,10 @@ import {
 
 import { useCreatePage } from "@/hooks/usePages";
 import {
-    uploadBanner,
     uploadLogo,
     uploadProductImage,
     updatePage,
 } from "@/lib/api";
-import type { BusinessHours } from "@/types";
 
 import PhoneInput from "@/components/forms/PhoneInput";
 import ImageUploadBox from "@/components/forms/ImageUploadBox";
@@ -29,7 +27,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 
 const CATEGORIES = [
     "Restaurant",
@@ -45,43 +42,12 @@ const CATEGORIES = [
     "Other",
 ];
 
-type DayKey = keyof NonNullable<BusinessHours>;
-
-const DAY_OPTIONS: Array<{ key: DayKey; label: string }> = [
-    { key: "monday", label: "Monday" },
-    { key: "tuesday", label: "Tuesday" },
-    { key: "wednesday", label: "Wednesday" },
-    { key: "thursday", label: "Thursday" },
-    { key: "friday", label: "Friday" },
-    { key: "saturday", label: "Saturday" },
-    { key: "sunday", label: "Sunday" },
-];
-
 const productSchema = z.object({
     name: z.string().min(1, "Product name is required"),
     price: z.string().optional(),
     description: z.string().optional(),
     image_urls: z.array(z.string()).max(5).optional(),
 });
-
-const businessHoursDaySchema = z.object({
-    open: z.string(),
-    close: z.string(),
-    closed: z.boolean(),
-});
-
-const businessHoursSchema = z
-    .object({
-        monday: businessHoursDaySchema.optional(),
-        tuesday: businessHoursDaySchema.optional(),
-        wednesday: businessHoursDaySchema.optional(),
-        thursday: businessHoursDaySchema.optional(),
-        friday: businessHoursDaySchema.optional(),
-        saturday: businessHoursDaySchema.optional(),
-        sunday: businessHoursDaySchema.optional(),
-    })
-    .nullable()
-    .optional();
 
 const whatsappNumberSchema = z.string()
     .min(1, "WhatsApp number is required")
@@ -104,22 +70,9 @@ const formSchema = z.object({
     phone_number: phoneNumberSchema,
     products: z.array(productSchema).max(10, "Maximum 10 products"),
     theme: z.string(),
-    business_hours: businessHoursSchema,
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-function makeDefaultHours(): NonNullable<FormValues["business_hours"]> {
-    return {
-        monday: { open: "09:00", close: "22:00", closed: false },
-        tuesday: { open: "09:00", close: "22:00", closed: false },
-        wednesday: { open: "09:00", close: "22:00", closed: false },
-        thursday: { open: "09:00", close: "22:00", closed: false },
-        friday: { open: "09:00", close: "22:00", closed: false },
-        saturday: { open: "09:00", close: "22:00", closed: false },
-        sunday: { open: "09:00", close: "22:00", closed: true },
-    };
-}
 
 function parseError(error: unknown, fallback: string): string {
     if (error instanceof Error && error.message) {
@@ -138,8 +91,6 @@ export default function CreatePageForm() {
 
     const [step, setStep] = useState(1);
     const [logoFile, setLogoFile] = useState<File | null>(null);
-    const [bannerFile, setBannerFile] = useState<File | null>(null);
-    const [showBusinessHours, setShowBusinessHours] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [productImageFiles, setProductImageFiles] = useState<Array<File[]>>([]);
     const [openCards, setOpenCards] = useState<Set<number>>(new Set());
@@ -154,7 +105,6 @@ export default function CreatePageForm() {
             phone_number: "",
             products: [],
             theme: "default",
-            business_hours: null,
         },
         mode: "onChange",
     });
@@ -165,18 +115,16 @@ export default function CreatePageForm() {
     });
 
     const watchedProducts = form.watch("products");
-    const hours = form.watch("business_hours");
 
     const fieldsByStep: Record<number, Array<keyof FormValues>> = {
-        1: ["business_name", "category", "whatsapp_number", "phone_number", "business_hours"],
+        1: ["business_name", "category", "whatsapp_number", "phone_number"],
         2: ["products"],
         3: ["theme"],
     };
 
     const totalPendingUploads = useMemo(() => {
-        const productPendingCount = productImageFiles.reduce((sum, arr) => sum + arr.length, 0);
-        return (bannerFile ? 1 : 0) + productPendingCount;
-    }, [bannerFile, productImageFiles]);
+        return productImageFiles.reduce((sum, arr) => sum + arr.length, 0);
+    }, [productImageFiles]);
 
     const toggleCard = (index: number) => {
         setOpenCards((prev) => {
@@ -219,14 +167,18 @@ export default function CreatePageForm() {
         return form.trigger(fieldsByStep[step]);
     };
 
-    const handleNext = async () => {
+    const handleNext = async (e: React.MouseEvent) => {
+        e.preventDefault();
         const valid = await validateStep();
         if (valid) {
             setStep((prev) => Math.min(3, prev + 1));
         }
     };
 
-    const handleBack = () => setStep((prev) => Math.max(1, prev - 1));
+    const handleBack = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setStep((prev) => Math.max(1, prev - 1));
+    };
 
     const onSubmit = async (values: FormValues) => {
         setIsSubmitting(true);
@@ -246,7 +198,7 @@ export default function CreatePageForm() {
                 phone_number: values.phone_number?.trim() ? values.phone_number.trim() : null,
                 is_online_only: true,
                 location: null as string | null,
-                business_hours: showBusinessHours ? values.business_hours ?? null : null,
+                business_hours: null,
                 products: values.products.length > 0 ? values.products : undefined,
                 theme: "default",
             };
@@ -255,18 +207,9 @@ export default function CreatePageForm() {
 
             const patchData: {
                 logo_url?: string;
-                banner_image_url?: string;
             } = {};
 
             let uploadCount = 0;
-
-            if (bannerFile && totalPendingUploads > 0) {
-                toast.loading(`Uploading banner... (${++uploadCount}/${totalPendingUploads})`, {
-                    id: loadingToast,
-                });
-                const bannerRes = await uploadBanner(bannerFile, createdPage.slug);
-                patchData.banner_image_url = bannerRes.banner_url;
-            }
 
             for (let i = 0; i < productImageFiles.length; i += 1) {
                 const files = productImageFiles[i];
@@ -306,8 +249,8 @@ export default function CreatePageForm() {
                         <div
                             className={[
                                 "flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors",
-                                value <= step ? "bg-[#25D366] text-white" : "bg-gray-200 text-gray-500",
-                            ].join(" ")}
+                                value <= step ? "bg-[#25D366] text-white" : "bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300",
+                            ].join(" ") /* Added dark:bg-zinc-700 dark:text-zinc-400 */}
                         >
                             {value}
                         </div>
@@ -315,8 +258,8 @@ export default function CreatePageForm() {
                             <div
                                 className={[
                                     "h-1 flex-1 rounded-full transition-colors",
-                                    value < step ? "bg-[#25D366]" : "bg-gray-200",
-                                ].join(" ")}
+                                    value < step ? "bg-[#25D366]" : "bg-gray-200 dark:bg-zinc-700",
+                                ].join(" ") /* Added dark:bg-zinc-700 */}
                             />
                         ) : null}
                     </div>
@@ -325,24 +268,24 @@ export default function CreatePageForm() {
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {step === 1 ? (
-                    <Card>
+                    <Card className="bg-white dark:bg-zinc-900 dark:border-zinc-800">
                         <CardHeader>
-                            <CardTitle>Business Information</CardTitle>
+                            <CardTitle className="text-gray-900 font-bold dark:text-gray-100">Business Information</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="business_name">Business Name *</Label>
-                                <Input id="business_name" placeholder="e.g. Ahmed's Biryani House" {...form.register("business_name")} />
+                                <Label htmlFor="business_name" className="text-gray-900 font-semibold dark:text-gray-200">Business Name *</Label>
+                                <Input id="business_name" placeholder="e.g. Ahmed's Biryani House" className="bg-white border-gray-300 text-gray-900 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-100 dark:placeholder:text-zinc-500" {...form.register("business_name")} />
                                 {form.formState.errors.business_name ? (
                                     <p className="text-sm text-red-500">{form.formState.errors.business_name.message}</p>
                                 ) : null}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="category">Category *</Label>
+                                <Label htmlFor="category" className="text-gray-900 font-semibold dark:text-gray-200">Category *</Label>
                                 <select
                                     id="category"
-                                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 font-medium dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100"
                                     value={form.watch("category")}
                                     onChange={(event) => form.setValue("category", event.target.value, { shouldValidate: true })}
                                 >
@@ -375,116 +318,14 @@ export default function CreatePageForm() {
                                 onChange={(val) => form.setValue("phone_number", val, { shouldValidate: true })}
                                 error={form.formState.errors.phone_number?.message}
                             />
-
-                            <div className="space-y-3 rounded-xl border border-border/60 p-4">
-                                <div>
-                                    <Label className="flex items-center gap-2">
-                                        Business Hours
-                                        <span className="text-xs text-muted-foreground">(optional)</span>
-                                    </Label>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        Leave empty if you are available anytime or it varies.
-                                    </p>
-                                </div>
-
-                                {!showBusinessHours ? (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="w-full border-dashed"
-                                        onClick={() => {
-                                            setShowBusinessHours(true);
-                                            form.setValue("business_hours", makeDefaultHours(), { shouldDirty: true });
-                                        }}
-                                    >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Business Hours
-                                    </Button>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {DAY_OPTIONS.map((day) => {
-                                            const value = hours?.[day.key] ?? { open: "09:00", close: "22:00", closed: day.key === "sunday" };
-                                            const disabled = Boolean(value.closed);
-
-                                            return (
-                                                <div key={day.key} className="flex flex-col gap-2 rounded-lg border border-border/70 p-3 sm:flex-row sm:items-center">
-                                                    <p className="w-20 text-sm font-medium">{day.label}</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <Switch
-                                                            checked={!disabled}
-                                                            onCheckedChange={(checked) => {
-                                                                const nextHours = {
-                                                                    ...(hours ?? makeDefaultHours()),
-                                                                    [day.key]: {
-                                                                        ...(hours?.[day.key] ?? value),
-                                                                        closed: !checked,
-                                                                    },
-                                                                };
-                                                                form.setValue("business_hours", nextHours, { shouldDirty: true });
-                                                            }}
-                                                        />
-                                                        <span className="text-xs text-muted-foreground">{disabled ? "Closed" : "Open"}</span>
-                                                    </div>
-                                                    {!disabled ? (
-                                                        <div className="flex items-center gap-2 sm:ml-auto">
-                                                            <Input
-                                                                type="time"
-                                                                value={value.open}
-                                                                className="w-32"
-                                                                onChange={(event) => {
-                                                                    const nextHours = {
-                                                                        ...(hours ?? makeDefaultHours()),
-                                                                        [day.key]: {
-                                                                            ...(hours?.[day.key] ?? value),
-                                                                            open: event.target.value,
-                                                                        },
-                                                                    };
-                                                                    form.setValue("business_hours", nextHours, { shouldDirty: true });
-                                                                }}
-                                                            />
-                                                            <span className="text-xs text-muted-foreground">to</span>
-                                                            <Input
-                                                                type="time"
-                                                                value={value.close}
-                                                                className="w-32"
-                                                                onChange={(event) => {
-                                                                    const nextHours = {
-                                                                        ...(hours ?? makeDefaultHours()),
-                                                                        [day.key]: {
-                                                                            ...(hours?.[day.key] ?? value),
-                                                                            close: event.target.value,
-                                                                        },
-                                                                    };
-                                                                    form.setValue("business_hours", nextHours, { shouldDirty: true });
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    ) : null}
-                                                </div>
-                                            );
-                                        })}
-
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setShowBusinessHours(false);
-                                                form.setValue("business_hours", null, { shouldDirty: true });
-                                            }}
-                                            className="text-xs font-medium text-muted-foreground underline underline-offset-4"
-                                        >
-                                            Remove Hours
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
                         </CardContent>
                     </Card>
                 ) : null}
 
                 {step === 2 ? (
-                    <Card>
+                    <Card className="bg-white dark:bg-zinc-900 dark:border-zinc-800">
                         <CardHeader>
-                            <CardTitle>Products & Services</CardTitle>
+                            <CardTitle className="text-gray-900 font-bold dark:text-gray-100">Products & Services</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {fields.map((field, index) => {
@@ -494,26 +335,27 @@ export default function CreatePageForm() {
                                 const currentFiles = productImageFiles[index] ?? [];
 
                                 return (
-                                    <div key={field.id} className="rounded-xl border transition-colors">
+                                    <div key={field.id} className="rounded-xl border border-gray-200 transition-colors dark:border-zinc-700">
                                         {/* Accordion header */}
                                         <button
                                             type="button"
                                             onClick={() => toggleCard(index)}
-                                            className="flex w-full items-center justify-between rounded-t-xl px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                                            className="flex w-full items-center justify-between rounded-t-xl px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/40 dark:text-gray-100"
                                         >
-                                            <span className="text-sm font-medium truncate pr-2">{headerLabel}</span>
+                                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate pr-2">{headerLabel}</span>
                                             <div className="flex items-center gap-1">
-                                                <ChevronDown className={["h-4 w-4 text-muted-foreground transition-transform duration-200", isOpen ? "rotate-180" : ""].join(" ")} />
+                                                <ChevronDown className={["h-4 w-4 text-gray-500 dark:text-zinc-400 transition-transform duration-200", isOpen ? "rotate-180" : ""].join(" ")} />
                                             </div>
                                         </button>
 
                                         {/* Collapsible body */}
                                         {isOpen ? (
-                                            <div className="space-y-3 border-t px-4 pb-4 pt-3">
+                                            <div className="space-y-3 border-t border-gray-200 px-4 pb-4 pt-3 dark:border-zinc-700">
                                                 <div className="flex gap-3">
                                                     <div className="flex-1 space-y-3">
                                                         <Input
                                                             placeholder="Product name *"
+                                                            className="bg-white border-gray-300 text-gray-900 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-100 dark:placeholder:text-zinc-500"
                                                             {...form.register(`products.${index}.name`)}
                                                             ref={(el) => {
                                                                 form.register(`products.${index}.name`).ref(el);
@@ -521,8 +363,8 @@ export default function CreatePageForm() {
                                                             }}
                                                         />
                                                         <div className="flex gap-2">
-                                                            <Input placeholder="Price (e.g. ৳250)" className="w-36" {...form.register(`products.${index}.price`)} />
-                                                            <Input placeholder="Description" className="flex-1" {...form.register(`products.${index}.description`)} />
+                                                            <Input placeholder="Price (e.g. ৳250)" className="w-36 bg-white border-gray-300 text-gray-900 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-100 dark:placeholder:text-zinc-500" {...form.register(`products.${index}.price`)} />
+                                                            <Input placeholder="Description" className="flex-1 bg-white border-gray-300 text-gray-900 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-100 dark:placeholder:text-zinc-500" {...form.register(`products.${index}.description`)} />
                                                         </div>
                                                     </div>
                                                     <Button
@@ -538,10 +380,10 @@ export default function CreatePageForm() {
 
                                                 {/* Multi-image upload row */}
                                                 <div className="space-y-1">
-                                                    <p className="text-sm font-medium">Images <span className="text-xs text-muted-foreground">(up to 5, optional)</span></p>
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Images <span className="text-xs text-gray-600 font-medium dark:text-zinc-400">(up to 5, optional)</span></p>
                                                     <div className="flex flex-wrap gap-2">
                                                         {currentFiles.map((file, fileIdx) => (
-                                                            <div key={fileIdx} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border">
+                                                            <div key={fileIdx} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200 dark:border-zinc-700">
                                                                 <img
                                                                     src={URL.createObjectURL(file)}
                                                                     alt={`Product ${index + 1} image ${fileIdx + 1}`}
@@ -585,7 +427,7 @@ export default function CreatePageForm() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="w-full"
+                                    className="w-full border-gray-300 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
                                     onClick={() => {
                                         const newIndex = fields.length;
                                         append({ name: "", price: "", description: "", image_urls: [] });
@@ -606,13 +448,13 @@ export default function CreatePageForm() {
                 ) : null}
 
                 {step === 3 ? (
-                    <Card>
+                    <Card className="bg-white dark:bg-zinc-900 dark:border-zinc-800">
                         <CardHeader>
-                            <CardTitle>Design</CardTitle>
+                            <CardTitle className="text-gray-900 font-bold dark:text-gray-100">Design</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-5">
                             <div className="space-y-1">
-                                <Label>Logo <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                                <Label className="text-gray-900 font-semibold dark:text-gray-200">Logo <span className="text-xs text-gray-600 font-medium dark:text-zinc-400">(optional)</span></Label>
                                 <ImageUploadBox
                                     label="Upload Logo"
                                     hint="Square logo - Max 2MB"
@@ -628,39 +470,13 @@ export default function CreatePageForm() {
                                     onRemove={() => setLogoFile(null)}
                                 />
                             </div>
-
-                            <div className="space-y-1">
-                                <Label>
-                                    Page Banner <span className="text-xs text-muted-foreground">(optional)</span>
-                                </Label>
-                                <p className="text-xs text-muted-foreground">
-                                    A wide image shown at the top of your page (restaurant food spread, salon interior, etc.)
-                                </p>
-                                <ImageUploadBox
-                                    label="Upload Banner Image"
-                                    hint="Recommended: 1200x400px - Max 5MB"
-                                    aspectRatio="3 / 1"
-                                    currentImageUrl={filePreview(bannerFile)}
-                                    onFileSelect={(file) => {
-                                        if (file.size > 5 * 1024 * 1024) {
-                                            toast.error("Banner must be under 5 MB");
-                                            return;
-                                        }
-                                        setBannerFile(file);
-                                    }}
-                                    onRemove={() => setBannerFile(null)}
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    No banner? No problem - your page looks great without one too.
-                                </p>
-                            </div>
                         </CardContent>
                     </Card>
                 ) : null}
 
                 <div className="flex justify-between">
                     {step > 1 ? (
-                        <Button type="button" variant="outline" onClick={handleBack}>
+                        <Button type="button" variant="outline" onClick={handleBack} className="dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
                             Back
                         </Button>
                     ) : (

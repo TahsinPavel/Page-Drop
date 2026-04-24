@@ -9,7 +9,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     const { theme } = useDashboardTheme();
 
     return (
-        <div className={`db-void ${theme === "light" ? "db-light" : ""}`} style={{ display: "flex", minHeight: "100vh" }}>
+        <div className={`db-void ${theme === "light" ? "db-light" : "dark"}`} style={{ display: "flex", minHeight: "100vh" }}>
             <DashboardSidebar />
             <main style={{ flex: 1, overflow: "auto" }}>
                 <div
