@@ -56,17 +56,10 @@ export default function EditPage() {
             />
 
             <div className="db-animate-in" style={{ marginBottom: 28 }}>
-                <h1
-                    style={{
-                        fontSize: 24,
-                        fontWeight: 700,
-                        color: "#e5e2e1",
-                        fontFamily: "var(--font-syne), sans-serif",
-                    }}
-                >
+                <h1 className="db-page-title">
                     Edit: {page.business_name}
                 </h1>
-                <p style={{ fontSize: 14, color: "#908fa0", marginTop: 4 }}>
+                <p className="db-page-subtitle">
                     Update your page details. Changes to your business name or products
                     will re-trigger AI content generation.
                 </p>

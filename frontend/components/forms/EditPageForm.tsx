@@ -13,18 +13,16 @@ import {
     Loader2,
     MapPin,
     Plus,
-    RefreshCw,
     Trash2,
 } from "lucide-react";
 
-import { useDeletePage, useRegenerateAI, useUpdatePage } from "@/hooks/usePages";
+import { useDeletePage, useUpdatePage } from "@/hooks/usePages";
 import {
     deleteProductImage,
-    uploadBanner,
     uploadLogo,
     uploadProductImage,
 } from "@/lib/api";
-import type { BusinessHours, BusinessPage } from "@/types";
+import type { BusinessPage } from "@/types";
 
 import ImageUploadBox from "@/components/forms/ImageUploadBox";
 import { Button } from "@/components/ui/button";
@@ -46,7 +44,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 
 const CATEGORIES = [
     "Restaurant",
@@ -62,18 +59,6 @@ const CATEGORIES = [
     "Other",
 ];
 
-type DayKey = keyof NonNullable<BusinessHours>;
-
-const DAY_OPTIONS: Array<{ key: DayKey; label: string }> = [
-    { key: "monday", label: "Monday" },
-    { key: "tuesday", label: "Tuesday" },
-    { key: "wednesday", label: "Wednesday" },
-    { key: "thursday", label: "Thursday" },
-    { key: "friday", label: "Friday" },
-    { key: "saturday", label: "Saturday" },
-    { key: "sunday", label: "Sunday" },
-];
-
 const productSchema = z.object({
     name: z.string().min(1, "Product name is required"),
     price: z.string().optional(),
@@ -81,35 +66,13 @@ const productSchema = z.object({
     image_url: z.string().nullable().optional(),
 });
 
-const businessHoursDaySchema = z.object({
-    open: z.string(),
-    close: z.string(),
-    closed: z.boolean(),
-});
-
-const businessHoursSchema = z
-    .object({
-        monday: businessHoursDaySchema.optional(),
-        tuesday: businessHoursDaySchema.optional(),
-        wednesday: businessHoursDaySchema.optional(),
-        thursday: businessHoursDaySchema.optional(),
-        friday: businessHoursDaySchema.optional(),
-        saturday: businessHoursDaySchema.optional(),
-        sunday: businessHoursDaySchema.optional(),
-    })
-    .nullable()
-    .optional();
-
 const editSchema = z.object({
     business_name: z.string().min(1, "Business name is required"),
     category: z.string().min(1, "Select a category"),
     whatsapp_number: z.string().min(6, "Valid WhatsApp number is required"),
     phone_number: z.string().optional(),
-    is_online_only: z.boolean(),
-    location: z.string().optional(),
     products: z.array(productSchema).max(10),
     theme: z.string(),
-    business_hours: businessHoursSchema,
 });
 
 type EditFormValues = z.infer<typeof editSchema>;
@@ -129,13 +92,10 @@ export default function EditPageForm({ page }: EditPageFormProps) {
     const router = useRouter();
     const updatePageMutation = useUpdatePage(page.id);
     const deletePageMutation = useDeletePage();
-    const regenerateAIMutation = useRegenerateAI(page.id);
 
     const [logoUploading, setLogoUploading] = useState(false);
-    const [bannerUploading, setBannerUploading] = useState(false);
     const [productUploadingIndex, setProductUploadingIndex] = useState<number | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [showBusinessHours, setShowBusinessHours] = useState(Boolean(page.business_hours));
 
     const form = useForm<EditFormValues>({
         resolver: zodResolver(editSchema),
@@ -144,8 +104,6 @@ export default function EditPageForm({ page }: EditPageFormProps) {
             category: page.category,
             whatsapp_number: page.whatsapp_number,
             phone_number: page.phone_number ?? "",
-            is_online_only: page.is_online_only,
-            location: page.location ?? "",
             products: (page.products ?? []).map((item) => ({
                 name: item.name,
                 price: item.price ?? "",
@@ -153,7 +111,6 @@ export default function EditPageForm({ page }: EditPageFormProps) {
                 image_url: item.image_url ?? null,
             })),
             theme: page.theme,
-            business_hours: page.business_hours ?? null,
         },
     });
 
@@ -173,9 +130,9 @@ export default function EditPageForm({ page }: EditPageFormProps) {
                 category: data.category,
                 whatsapp_number: data.whatsapp_number,
                 phone_number: data.phone_number?.trim() ? data.phone_number.trim() : null,
-                is_online_only: data.is_online_only,
-                location: data.is_online_only ? null : data.location?.trim() || null,
-                business_hours: showBusinessHours ? data.business_hours ?? null : null,
+                is_online_only: false,
+                location: null,
+                business_hours: null,
                 products: data.products,
                 theme: "default",
             });
@@ -183,15 +140,6 @@ export default function EditPageForm({ page }: EditPageFormProps) {
             toast.success("Page updated successfully!");
         } catch (error) {
             toast.error(parseError(error, "Failed to update page."));
-        }
-    };
-
-    const handleRegenerate = async () => {
-        try {
-            await regenerateAIMutation.mutateAsync();
-            toast.success("AI content regenerated!");
-        } catch (error) {
-            toast.error(parseError(error, "Failed to regenerate AI content."));
         }
     };
 
@@ -220,33 +168,6 @@ export default function EditPageForm({ page }: EditPageFormProps) {
             toast.error(parseError(error, "Failed to upload logo"));
         } finally {
             setLogoUploading(false);
-        }
-    };
-
-    const handleBannerUpload = async (file: File) => {
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("Banner must be under 5 MB");
-            return;
-        }
-
-        setBannerUploading(true);
-        try {
-            const response = await uploadBanner(file, page.slug);
-            await updatePageMutation.mutateAsync({ banner_image_url: response.banner_url });
-            toast.success("Banner updated");
-        } catch (error) {
-            toast.error(parseError(error, "Failed to upload banner"));
-        } finally {
-            setBannerUploading(false);
-        }
-    };
-
-    const handleBannerRemove = async () => {
-        try {
-            await updatePageMutation.mutateAsync({ banner_image_url: null });
-            toast.success("Banner removed");
-        } catch (error) {
-            toast.error(parseError(error, "Failed to remove banner"));
         }
     };
 
@@ -299,36 +220,6 @@ export default function EditPageForm({ page }: EditPageFormProps) {
 
     return (
         <div className="mx-auto max-w-4xl space-y-6">
-            {page.is_ai_generated ? (
-                <Card className="border-[#25D366]/30 bg-[#25D366]/5">
-                    <CardHeader className="pb-2">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <CardTitle className="text-base">AI-Generated Content</CardTitle>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-1.5"
-                                onClick={handleRegenerate}
-                                disabled={regenerateAIMutation.isPending}
-                            >
-                                {regenerateAIMutation.isPending ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                    <RefreshCw className="h-3.5 w-3.5" />
-                                )}
-                                Regenerate AI
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                        <p><span className="font-medium">Headline:</span> {page.ai_headline}</p>
-                        <p><span className="font-medium">Subheadline:</span> {page.ai_subheadline}</p>
-                        <p><span className="font-medium">About:</span> {page.ai_about}</p>
-                        <p><span className="font-medium">CTA:</span> {page.ai_cta_text}</p>
-                    </CardContent>
-                </Card>
-            ) : null}
-
             <div className="flex justify-end">
                 <a href={liveLink} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm" className="gap-1.5">
@@ -374,161 +265,6 @@ export default function EditPageForm({ page }: EditPageFormProps) {
                                 Phone Number <span className="text-xs text-muted-foreground">(optional)</span>
                             </Label>
                             <Input id="phone_number" placeholder="+8801XXXXXXXXX" {...form.register("phone_number")} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Business Type</Label>
-                            <div className="flex flex-col gap-2 sm:flex-row">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        form.setValue("is_online_only", true);
-                                        form.setValue("location", "");
-                                    }}
-                                    className={[
-                                        "inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-colors",
-                                        values.is_online_only
-                                            ? "border-indigo-500/50 bg-indigo-500/15 text-indigo-200"
-                                            : "border-border text-muted-foreground hover:bg-muted/40",
-                                    ].join(" ")}
-                                >
-                                    <Globe className="h-4 w-4" />
-                                    Online Only
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => form.setValue("is_online_only", false)}
-                                    className={[
-                                        "inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-colors",
-                                        !values.is_online_only
-                                            ? "border-indigo-500/50 bg-indigo-500/15 text-indigo-200"
-                                            : "border-border text-muted-foreground hover:bg-muted/40",
-                                    ].join(" ")}
-                                >
-                                    <MapPin className="h-4 w-4" />
-                                    Has Physical Location
-                                </button>
-                            </div>
-                        </div>
-
-                        {!values.is_online_only ? (
-                            <div className="space-y-2">
-                                <Label htmlFor="location">Location</Label>
-                                <Input id="location" placeholder="e.g. Dhanmondi, Dhaka" {...form.register("location")} />
-                            </div>
-                        ) : null}
-
-                        <div className="space-y-3 rounded-xl border border-border/60 p-4">
-                            <div>
-                                <Label className="flex items-center gap-2">
-                                    Business Hours <span className="text-xs text-muted-foreground">(optional)</span>
-                                </Label>
-                                <p className="mt-1 text-xs text-muted-foreground">Leave empty if schedule varies.</p>
-                            </div>
-
-                            {!showBusinessHours ? (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full border-dashed"
-                                    onClick={() => {
-                                        setShowBusinessHours(true);
-                                        if (!values.business_hours) {
-                                            form.setValue("business_hours", {
-                                                monday: { open: "09:00", close: "22:00", closed: false },
-                                                tuesday: { open: "09:00", close: "22:00", closed: false },
-                                                wednesday: { open: "09:00", close: "22:00", closed: false },
-                                                thursday: { open: "09:00", close: "22:00", closed: false },
-                                                friday: { open: "09:00", close: "22:00", closed: false },
-                                                saturday: { open: "09:00", close: "22:00", closed: false },
-                                                sunday: { open: "09:00", close: "22:00", closed: true },
-                                            }, { shouldDirty: true });
-                                        }
-                                    }}
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Business Hours
-                                </Button>
-                            ) : (
-                                <div className="space-y-3">
-                                    {DAY_OPTIONS.map((day) => {
-                                        const value = values.business_hours?.[day.key] ?? {
-                                            open: "09:00",
-                                            close: "22:00",
-                                            closed: day.key === "sunday",
-                                        };
-                                        const disabled = Boolean(value.closed);
-
-                                        return (
-                                            <div key={day.key} className="flex flex-col gap-2 rounded-lg border border-border/70 p-3 sm:flex-row sm:items-center">
-                                                <p className="w-20 text-sm font-medium">{day.label}</p>
-                                                <div className="flex items-center gap-2">
-                                                    <Switch
-                                                        checked={!disabled}
-                                                        onCheckedChange={(checked) => {
-                                                            const next = {
-                                                                ...(values.business_hours ?? {}),
-                                                                [day.key]: {
-                                                                    ...(values.business_hours?.[day.key] ?? value),
-                                                                    closed: !checked,
-                                                                },
-                                                            };
-                                                            form.setValue("business_hours", next, { shouldDirty: true });
-                                                        }}
-                                                    />
-                                                    <span className="text-xs text-muted-foreground">{disabled ? "Closed" : "Open"}</span>
-                                                </div>
-                                                {!disabled ? (
-                                                    <div className="flex items-center gap-2 sm:ml-auto">
-                                                        <Input
-                                                            type="time"
-                                                            value={value.open}
-                                                            className="w-32"
-                                                            onChange={(event) => {
-                                                                const next = {
-                                                                    ...(values.business_hours ?? {}),
-                                                                    [day.key]: {
-                                                                        ...(values.business_hours?.[day.key] ?? value),
-                                                                        open: event.target.value,
-                                                                    },
-                                                                };
-                                                                form.setValue("business_hours", next, { shouldDirty: true });
-                                                            }}
-                                                        />
-                                                        <span className="text-xs text-muted-foreground">to</span>
-                                                        <Input
-                                                            type="time"
-                                                            value={value.close}
-                                                            className="w-32"
-                                                            onChange={(event) => {
-                                                                const next = {
-                                                                    ...(values.business_hours ?? {}),
-                                                                    [day.key]: {
-                                                                        ...(values.business_hours?.[day.key] ?? value),
-                                                                        close: event.target.value,
-                                                                    },
-                                                                };
-                                                                form.setValue("business_hours", next, { shouldDirty: true });
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                        );
-                                    })}
-
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowBusinessHours(false);
-                                            form.setValue("business_hours", null, { shouldDirty: true });
-                                        }}
-                                        className="text-xs font-medium text-muted-foreground underline underline-offset-4"
-                                    >
-                                        Remove Hours
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -593,19 +329,6 @@ export default function EditPageForm({ page }: EditPageFormProps) {
                                 currentImageUrl={page.logo_url}
                                 loading={logoUploading}
                                 onFileSelect={handleLogoUpload}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Page Banner <span className="text-xs text-muted-foreground">(optional)</span></Label>
-                            <ImageUploadBox
-                                label="Upload Banner Image"
-                                hint="Recommended: 1200x400px - Max 5MB"
-                                aspectRatio="3 / 1"
-                                currentImageUrl={values.business_name ? page.banner_image_url : null}
-                                loading={bannerUploading}
-                                onFileSelect={handleBannerUpload}
-                                onRemove={handleBannerRemove}
                             />
                         </div>
                     </CardContent>
