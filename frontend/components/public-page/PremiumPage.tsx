@@ -183,7 +183,17 @@ function WhatsAppCTA({ productName, openWhatsApp, isLarge = false }: { productNa
 
 // --- Demo 3 Components ---
 
-function PokerFan({ images, isActive, accentHue, isMobile }: any) {
+type MappedProduct = {
+  id: string;
+  name: string;
+  price?: string | null;
+  description?: string;
+  image_url?: string | null;
+  images: string[];
+  accentHue: number;
+};
+
+function PokerFan({ images, isActive, accentHue, isMobile }: { images: string[]; isActive: boolean; accentHue: number; isMobile: boolean }) {
   const [centerIdx, setCenterIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [tapped, setTapped] = useState(false);
@@ -233,7 +243,7 @@ function PokerFan({ images, isActive, accentHue, isMobile }: any) {
       onMouseLeave={() => isActive && !isMobile && setHovered(false)}
     >
       {safeImages.map((src: string, idx: number) => {
-        let rawOffset = idx - centerIdx;
+        const rawOffset = idx - centerIdx;
         let offset = rawOffset;
 
         if (Math.abs(offset) > total / 2) {
@@ -363,7 +373,7 @@ function PokerFan({ images, isActive, accentHue, isMobile }: any) {
   );
 }
 
-function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }: any) {
+function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }: { products: MappedProduct[]; activeIndex: number; onChangeIndex: (idx: number) => void; isMobile: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartX = useRef(0);
   const dragOffset = useRef(0);
@@ -459,7 +469,7 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }: any
         userSelect: "none",
       }}
     >
-      {products.map((product: any, idx: number) => {
+      {products.map((product: MappedProduct, idx: number) => {
         const t = getProductTransform(idx);
 
         return (
@@ -491,7 +501,7 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }: any
   );
 }
 
-function ProductInfoPanel({ product, isMobile, openWhatsApp }: any) {
+function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: MappedProduct | null; isMobile: boolean; openWhatsApp: (msg?: string) => void }) {
   if (!product) return null;
 
   return (
@@ -835,7 +845,7 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                                 
                                 <div style={{ marginTop: isMobile ? "-20px" : "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", zIndex: 20, position: "relative" }}>
                                     <div style={{ display: "flex", gap: "6px" }}>
-                                        {mappedProducts.map((_: any, idx: number) => (
+                                        {mappedProducts.map((_: unknown, idx: number) => (
                                             <div
                                                 key={idx}
                                                 onClick={() => setActiveProductIdx(idx)}
