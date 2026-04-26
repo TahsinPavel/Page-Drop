@@ -184,13 +184,16 @@ function WhatsAppCTA({ productName, openWhatsApp, isLarge = false }: { productNa
 // --- Demo 3 Components ---
 
 type MappedProduct = {
-  id: string;
+  id: string | number;
   name: string;
+  tagline?: string;
   price?: string | null;
   description?: string;
   image_url?: string | null;
   images: string[];
   accentHue: number;
+  badge?: string;
+  badgeColor?: string;
 };
 
 function PokerFan({ images, isActive, accentHue, isMobile }: { images: string[]; isActive: boolean; accentHue: number; isMobile: boolean }) {
