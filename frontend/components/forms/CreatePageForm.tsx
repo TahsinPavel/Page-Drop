@@ -117,9 +117,8 @@ export default function CreatePageForm() {
     const watchedProducts = form.watch("products");
 
     const fieldsByStep: Record<number, Array<keyof FormValues>> = {
-        1: ["business_name", "category", "whatsapp_number", "phone_number"],
+        1: ["business_name", "category", "whatsapp_number", "phone_number", "theme"],
         2: ["products"],
-        3: ["theme"],
     };
 
     const totalPendingUploads = useMemo(() => {
@@ -171,7 +170,7 @@ export default function CreatePageForm() {
         e.preventDefault();
         const valid = await validateStep();
         if (valid) {
-            setStep((prev) => Math.min(3, prev + 1));
+            setStep((prev) => Math.min(2, prev + 1));
         }
     };
 
@@ -243,83 +242,112 @@ export default function CreatePageForm() {
 
     return (
         <div className="mx-auto max-w-3xl">
-            <div className="mb-8 flex items-center gap-2">
-                {[1, 2, 3].map((value) => (
-                    <div key={value} className="flex flex-1 items-center gap-2">
-                        <div
-                            className={[
-                                "flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors",
-                                value <= step ? "bg-[#25D366] text-white" : "bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300",
-                            ].join(" ") /* Added dark:bg-zinc-700 dark:text-zinc-400 */}
-                        >
-                            {value}
-                        </div>
-                        {value < 3 ? (
-                            <div
-                                className={[
-                                    "h-1 flex-1 rounded-full transition-colors",
-                                    value < step ? "bg-[#25D366]" : "bg-gray-200 dark:bg-zinc-700",
-                                ].join(" ") /* Added dark:bg-zinc-700 */}
-                            />
-                        ) : null}
-                    </div>
-                ))}
+            <div className="mb-8 flex items-center w-full">
+                <div
+                    className={[
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors",
+                        1 <= step ? "bg-[#25D366] text-white" : "bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300",
+                    ].join(" ")}
+                >
+                    1
+                </div>
+                <div
+                    className={[
+                        "h-1 flex-1 mx-4 rounded-full transition-colors",
+                        1 < step ? "bg-[#25D366]" : "bg-gray-200 dark:bg-zinc-700",
+                    ].join(" ")}
+                />
+                <div
+                    className={[
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors",
+                        2 <= step ? "bg-[#25D366] text-white" : "bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300",
+                    ].join(" ")}
+                >
+                    2
+                </div>
             </div>
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {step === 1 ? (
-                    <Card className="bg-white dark:bg-zinc-900 dark:border-zinc-800">
-                        <CardHeader>
-                            <CardTitle className="text-gray-900 font-bold dark:text-gray-100">Business Information</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-5">
-                            <div className="space-y-2">
-                                <Label htmlFor="business_name" className="text-gray-900 font-semibold dark:text-gray-200">Business Name *</Label>
-                                <Input id="business_name" placeholder="e.g. Ahmed's Biryani House" className="bg-white border-gray-300 text-gray-900 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-100 dark:placeholder:text-zinc-500" {...form.register("business_name")} />
-                                {form.formState.errors.business_name ? (
-                                    <p className="text-sm text-red-500">{form.formState.errors.business_name.message}</p>
-                                ) : null}
-                            </div>
+                    <div className="space-y-6">
+                        <Card className="bg-white dark:bg-zinc-900 dark:border-zinc-800">
+                            <CardHeader>
+                                <CardTitle className="text-gray-900 font-bold dark:text-gray-100">Business Information</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="business_name" className="text-gray-900 font-semibold dark:text-gray-200">Business Name *</Label>
+                                    <Input id="business_name" placeholder="e.g. Ahmed's Biryani House" className="bg-white border-gray-300 text-gray-900 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-100 dark:placeholder:text-zinc-500" {...form.register("business_name")} />
+                                    {form.formState.errors.business_name ? (
+                                        <p className="text-sm text-red-500">{form.formState.errors.business_name.message}</p>
+                                    ) : null}
+                                </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="category" className="text-gray-900 font-semibold dark:text-gray-200">Category *</Label>
-                                <select
-                                    id="category"
-                                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 font-medium dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100"
-                                    value={form.watch("category")}
-                                    onChange={(event) => form.setValue("category", event.target.value, { shouldValidate: true })}
-                                >
-                                    <option value="">Select category</option>
-                                    {CATEGORIES.map((category) => (
-                                        <option key={category} value={category.toLowerCase()}>
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                                {form.formState.errors.category ? (
-                                    <p className="text-sm text-red-500">{form.formState.errors.category.message}</p>
-                                ) : null}
-                            </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="category" className="text-gray-900 font-semibold dark:text-gray-200">Category *</Label>
+                                    <select
+                                        id="category"
+                                        className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 font-medium dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100"
+                                        value={form.watch("category")}
+                                        onChange={(event) => form.setValue("category", event.target.value, { shouldValidate: true })}
+                                    >
+                                        <option value="">Select category</option>
+                                        {CATEGORIES.map((category) => (
+                                            <option key={category} value={category.toLowerCase()}>
+                                                {category}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {form.formState.errors.category ? (
+                                        <p className="text-sm text-red-500">{form.formState.errors.category.message}</p>
+                                    ) : null}
+                                </div>
 
-                            <PhoneInput
-                                id="whatsapp_number"
-                                label="WhatsApp Number"
-                                required
-                                value={form.watch("whatsapp_number")}
-                                onChange={(val) => form.setValue("whatsapp_number", val, { shouldValidate: true })}
-                                error={form.formState.errors.whatsapp_number?.message}
-                            />
+                                <PhoneInput
+                                    id="whatsapp_number"
+                                    label="WhatsApp Number"
+                                    required
+                                    value={form.watch("whatsapp_number")}
+                                    onChange={(val) => form.setValue("whatsapp_number", val, { shouldValidate: true })}
+                                    error={form.formState.errors.whatsapp_number?.message}
+                                />
 
-                            <PhoneInput
-                                id="phone_number"
-                                label="Phone Number"
-                                hint="(optional) For a call button on your page"
-                                value={form.watch("phone_number") ?? ""}
-                                onChange={(val) => form.setValue("phone_number", val, { shouldValidate: true })}
-                                error={form.formState.errors.phone_number?.message}
-                            />
-                        </CardContent>
-                    </Card>
+                                <PhoneInput
+                                    id="phone_number"
+                                    label="Phone Number"
+                                    hint="(optional) For a call button on your page"
+                                    value={form.watch("phone_number") ?? ""}
+                                    onChange={(val) => form.setValue("phone_number", val, { shouldValidate: true })}
+                                    error={form.formState.errors.phone_number?.message}
+                                />
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-white dark:bg-zinc-900 dark:border-zinc-800">
+                            <CardHeader>
+                                <CardTitle className="text-gray-900 font-bold dark:text-gray-100">Logo</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-1">
+                                <Label className="text-gray-900 font-semibold dark:text-gray-200">
+                                    Logo <span className="text-xs text-gray-600 font-medium dark:text-zinc-400">(optional)</span>
+                                </Label>
+                                <ImageUploadBox
+                                    label="Upload Logo"
+                                    hint="Square logo - Max 2MB"
+                                    aspectRatio="1 / 1"
+                                    currentImageUrl={filePreview(logoFile)}
+                                    onFileSelect={(file) => {
+                                        if (file.size > 2 * 1024 * 1024) {
+                                            toast.error("Logo must be under 2 MB");
+                                            return;
+                                        }
+                                        setLogoFile(file);
+                                    }}
+                                    onRemove={() => setLogoFile(null)}
+                                />
+                            </CardContent>
+                        </Card>
+                    </div>
                 ) : null}
 
                 {step === 2 ? (
@@ -447,32 +475,7 @@ export default function CreatePageForm() {
                     </Card>
                 ) : null}
 
-                {step === 3 ? (
-                    <Card className="bg-white dark:bg-zinc-900 dark:border-zinc-800">
-                        <CardHeader>
-                            <CardTitle className="text-gray-900 font-bold dark:text-gray-100">Design</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-5">
-                            <div className="space-y-1">
-                                <Label className="text-gray-900 font-semibold dark:text-gray-200">Logo <span className="text-xs text-gray-600 font-medium dark:text-zinc-400">(optional)</span></Label>
-                                <ImageUploadBox
-                                    label="Upload Logo"
-                                    hint="Square logo - Max 2MB"
-                                    aspectRatio="1 / 1"
-                                    currentImageUrl={filePreview(logoFile)}
-                                    onFileSelect={(file) => {
-                                        if (file.size > 2 * 1024 * 1024) {
-                                            toast.error("Logo must be under 2 MB");
-                                            return;
-                                        }
-                                        setLogoFile(file);
-                                    }}
-                                    onRemove={() => setLogoFile(null)}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                ) : null}
+
 
                 <div className="flex justify-between">
                     {step > 1 ? (
@@ -483,7 +486,7 @@ export default function CreatePageForm() {
                         <div />
                     )}
 
-                    {step < 3 ? (
+                    {step < 2 ? (
                         <Button type="button" className="bg-[#25D366] text-white hover:bg-[#1ea851]" onClick={handleNext}>
                             Next
                         </Button>
