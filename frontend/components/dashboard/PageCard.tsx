@@ -19,17 +19,17 @@ export default function PageCard({ page, onDelete }: PageCardProps) {
                 {page.logo_url ? (
                     <img src={page.logo_url} alt={page.business_name} />
                 ) : (
-                    <Package size={20} style={{ color: "#908fa0" }} />
+                    <Package size={20} className="text-slate-400 dark:text-[#908fa0]" />
                 )}
             </div>
 
             {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div
+                    className="text-slate-900 dark:text-[#e5e2e1]"
                     style={{
                         fontSize: 14,
                         fontWeight: 600,
-                        color: "#e5e2e1",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -38,9 +38,9 @@ export default function PageCard({ page, onDelete }: PageCardProps) {
                     {page.business_name}
                 </div>
                 <div
+                    className="text-slate-600 dark:text-[#908fa0]"
                     style={{
                         fontSize: 12,
-                        color: "#908fa0",
                         marginTop: 2,
                     }}
                 >
@@ -55,12 +55,12 @@ export default function PageCard({ page, onDelete }: PageCardProps) {
 
             {/* Views */}
             <div
+                className="text-slate-600 dark:text-[#908fa0]"
                 style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 4,
                     fontSize: 13,
-                    color: "#908fa0",
                     minWidth: 60,
                 }}
             >

@@ -37,10 +37,10 @@ export default function StatsCard({
             </div>
             <div style={{ marginTop: 16 }}>
                 <p
+                    className="text-slate-900 dark:text-[#e5e2e1]"
                     style={{
                         fontSize: 28,
                         fontWeight: 700,
-                        color: "#e5e2e1",
                         lineHeight: 1.1,
                         fontFamily: "var(--font-syne), sans-serif",
                     }}
@@ -48,10 +48,10 @@ export default function StatsCard({
                     {typeof value === "number" ? value.toLocaleString() : value}
                 </p>
                 <p
+                    className="text-slate-500 dark:text-[#908fa0]"
                     style={{
                         fontSize: 13,
                         fontWeight: 500,
-                        color: "#908fa0",
                         marginTop: 4,
                     }}
                 >

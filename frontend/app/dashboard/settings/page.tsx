@@ -21,16 +21,16 @@ export default function SettingsPage() {
 
             <div className="db-animate-in" style={{ marginBottom: 28 }}>
                 <h1
+                    className="text-slate-900 dark:text-[#e5e2e1]"
                     style={{
                         fontSize: 24,
                         fontWeight: 700,
-                        color: "#e5e2e1",
                         fontFamily: "var(--font-syne), sans-serif",
                     }}
                 >
                     Settings
                 </h1>
-                <p style={{ fontSize: 14, color: "#908fa0", marginTop: 4 }}>
+                <p className="text-slate-600 dark:text-[#908fa0]" style={{ fontSize: 14, marginTop: 4 }}>
                     Manage your account and subscription
                 </p>
             </div>

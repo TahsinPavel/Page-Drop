@@ -208,19 +208,19 @@ export default function DashboardPage() {
                         </div>
                     ) : (
                         <div className="db-empty-state">
-                            <Inbox size={40} style={{ color: "#5a5a7a" }} />
+                            <Inbox size={40} className="text-slate-400 dark:text-[#5a5a7a]" />
                             <div>
                                 <h3
+                                    className="text-slate-900 dark:text-[#e5e2e1]"
                                     style={{
                                         fontSize: 16,
                                         fontWeight: 600,
-                                        color: "#e5e2e1",
                                         marginBottom: 4,
                                     }}
                                 >
                                     No pages yet
                                 </h3>
-                                <p style={{ fontSize: 13, color: "#908fa0" }}>
+                                <p className="text-slate-600 dark:text-[#908fa0]" style={{ fontSize: 13 }}>
                                     Create your first landing page and go live in seconds.
                                 </p>
                             </div>

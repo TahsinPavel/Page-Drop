@@ -27,7 +27,7 @@ export default function CarouselControl({ pages }: CarouselControlProps) {
                     marginBottom: 20,
                 }}
             >
-                <span style={{ fontSize: 13, color: "#c8c6c5", fontWeight: 500 }}>
+                <span className="text-slate-900 dark:text-[#c8c6c5]" style={{ fontSize: 13, fontWeight: 500 }}>
                     Auto-Rotation
                 </span>
                 <button
@@ -39,7 +39,7 @@ export default function CarouselControl({ pages }: CarouselControlProps) {
             </div>
 
             {/* Sequence */}
-            <div style={{ fontSize: 12, color: "#908fa0", marginBottom: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <div className="text-slate-600 dark:text-[#908fa0]" style={{ fontSize: 12, marginBottom: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 Sequence Order
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
@@ -50,10 +50,10 @@ export default function CarouselControl({ pages }: CarouselControlProps) {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div
+                                className="text-slate-900 dark:text-[#e5e2e1]"
                                 style={{
                                     fontSize: 13,
                                     fontWeight: 500,
-                                    color: "#e5e2e1",
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
                                     whiteSpace: "nowrap",
@@ -62,7 +62,7 @@ export default function CarouselControl({ pages }: CarouselControlProps) {
                                 {page.business_name}
                             </div>
                         </div>
-                        <GripVertical size={16} style={{ color: "#5a5a7a", cursor: "grab" }} />
+                        <GripVertical size={16} className="text-slate-400 dark:text-[#5a5a7a]" style={{ cursor: "grab" }} />
                     </div>
                 ))}
             </div>

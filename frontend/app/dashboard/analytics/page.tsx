@@ -164,10 +164,10 @@ export default function AnalyticsPage() {
             >
                 <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
                     <h1
+                        className="text-slate-900 dark:text-[#c6c6c8]"
                         style={{
                             fontSize: 20,
                             fontWeight: 600,
-                            color: "#c6c6c8",
                             fontFamily: "var(--font-syne), sans-serif",
                         }}
                     >
