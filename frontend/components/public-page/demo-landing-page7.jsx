@@ -127,184 +127,328 @@ function WaIcon({ className }) {
 
 function Coverflow({ products, activeIndex, onChange, onInteract }) {
   const reduced = useReducedMotion();
-  const touchX = useRef(0);
   const N = products.length;
-  const theta = 360 / N; // 72° per face for 5 products
+  const theta = 360 / N;
 
-  /* Calculate prism radius (apothem) based on viewport */
-  const [radius, setRadius] = useState(234);
+  const sceneRef    = useRef(null);
+  const carouselRef = useRef(null);
+
+  const currentRotY = useRef(0);
+  const targetRotY  = useRef(0);
+  const isDragging  = useRef(false);
+  const isIdle      = useRef(true);
+  const startX      = useRef(0);
+  const rafId       = useRef(null);
+  const prevIdx     = useRef(-1);
+  const radius      = useRef(300);
+
+  /* Radius computed from card width — (w/2)/tan(π/N)*1.3 */
+  const CARD_W = 340;
+  const CARD_H = 460;
+
   useEffect(() => {
-    const update = () => {
-      const w = window.innerWidth;
-      const faceW = w < 640 ? 240 : w < 1024 ? 290 : 340;
-      setRadius(Math.round(faceW / (2 * Math.tan(Math.PI / N))));
+    const compute = () => {
+      radius.current = Math.round(
+        (CARD_W / 2) / Math.tan(Math.PI / N) * 1.3
+      );
     };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
   }, [N]);
 
-  const spring = useMemo(
-    () =>
-      reduced
-        ? { duration: 0.2 }
-        : { type: "spring", stiffness: 180, damping: 26, mass: 0.95 },
-    [reduced]
-  );
+  /* Sync target when activeIndex changes externally */
+  useEffect(() => {
+    if (isDragging.current) return;
+    const base = -activeIndex * theta;
+    const cur  = currentRotY.current;
+    let diff   = base - (cur % 360);
+    if (diff >  180) diff -= 360;
+    if (diff < -180) diff += 360;
+    targetRotY.current = cur + diff;
+  }, [activeIndex, theta]);
 
-  const swipe = useCallback(
-    (dx) => {
-      if (Math.abs(dx) < 44) return;
-      onChange(dx < 0 ? activeIndex + 1 : activeIndex - 1);
-      onInteract();
-    },
-    [activeIndex, onChange, onInteract]
-  );
+  /* rAF loop — exact port of HTML animate() */
+  useEffect(() => {
+    const loop = () => {
+      if (isIdle.current && !isDragging.current) {
+        targetRotY.current += 0.05;
+      }
+
+      currentRotY.current +=
+        (targetRotY.current - currentRotY.current) * 0.08;
+
+      const r = radius.current;
+      if (carouselRef.current) {
+        carouselRef.current.style.transform =
+          `translateZ(-${r}px) rotateY(${currentRotY.current}deg)`;
+      }
+
+      /* Per-face visual update */
+      const faces = carouselRef.current?.querySelectorAll(".ci-face");
+      let minDist = Infinity;
+      let nearestIdx = 0;
+
+      faces?.forEach((face, i) => {
+        const angle      = (i * theta + currentRotY.current) % 360;
+        const normalized = ((angle % 360) + 360) % 360;
+        const distance   = Math.min(normalized, 360 - normalized);
+
+        if (distance < minDist) { minDist = distance; nearestIdx = i; }
+
+        const opacity = Math.max(0.15, 1 - (distance / 180) * 0.85);
+        const blur    = (distance / 180) * 9;
+        const imgScale = 1.12 - (distance / 180) * 0.42;
+
+        face.style.opacity = opacity;
+        face.style.filter  = `blur(${blur}px)`;
+        const img = face.querySelector("img");
+        if (img) img.style.transform = `scale(${imgScale})`;
+      });
+
+      if (nearestIdx !== prevIdx.current) {
+        onChange(nearestIdx);
+        prevIdx.current = nearestIdx;
+      }
+
+      rafId.current = requestAnimationFrame(loop);
+    };
+
+    rafId.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId.current);
+  }, [theta, onChange]);
+
+  /* Rotate to a specific index smoothly */
+  const rotateTo = useCallback((i) => {
+    const base = -i * theta;
+    const cur  = currentRotY.current;
+    let diff   = base - (cur % 360);
+    if (diff >  180) diff -= 360;
+    if (diff < -180) diff += 360;
+    targetRotY.current = cur + diff;
+    isIdle.current = false;
+    onInteract();
+    setTimeout(() => { isIdle.current = true; }, 3000);
+  }, [theta, onInteract]);
+
+  /* Mouse */
+  const onMouseDown = useCallback((e) => {
+    isDragging.current = true;
+    isIdle.current     = false;
+    startX.current     = e.pageX;
+    e.preventDefault();
+  }, []);
+
+  const onMouseMove = useCallback((e) => {
+    if (!isDragging.current) return;
+    targetRotY.current += (e.pageX - startX.current) * 0.4;
+    startX.current = e.pageX;
+  }, []);
+
+  const onMouseUp = useCallback(() => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    onInteract();
+    targetRotY.current = Math.round(targetRotY.current / theta) * theta;
+    setTimeout(() => { isIdle.current = true; }, 3000);
+  }, [theta, onInteract]);
+
+  /* Touch */
+  const onTouchStart = useCallback((e) => {
+    isDragging.current = true;
+    isIdle.current     = false;
+    startX.current     = e.touches[0].pageX;
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    if (!isDragging.current) return;
+    targetRotY.current += (e.touches[0].pageX - startX.current) * 0.4;
+    startX.current = e.touches[0].pageX;
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    onInteract();
+    targetRotY.current = Math.round(targetRotY.current / theta) * theta;
+    setTimeout(() => { isIdle.current = true; }, 3000);
+  }, [theta, onInteract]);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup",   onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup",   onMouseUp);
+    };
+  }, [onMouseMove, onMouseUp]);
+
+  useEffect(() => () => cancelAnimationFrame(rafId.current), []);
 
   const active = products[activeIndex];
 
   return (
-    <div className="relative w-full select-none" style={{ perspective: "1000px" }}>
-      {/* Ambient glow behind active card */}
+    <div className="relative w-full select-none">
+
+      {/* Ambient glow */}
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[45%] h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[90px]"
-        style={{ background: `radial-gradient(circle, ${active.glow} 0%, transparent 68%)` }}
-        animate={
-          reduced ? { opacity: 0.5 } : { opacity: [0.35, 0.65, 0.35], scale: [0.95, 1.08, 0.95] }
-        }
-        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute left-1/2 top-[38%] h-[440px] w-[440px]
+                   -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]"
+        style={{
+          background: `radial-gradient(circle, ${active.glow} 0%, transparent 68%)`,
+        }}
+        animate={reduced ? { opacity: 0.45 } : { opacity: [0.28, 0.58, 0.28], scale: [0.92, 1.1, 0.92] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Carousel viewport */}
+      {/*
+        ── CRITICAL ──
+        perspective must be on THIS wrapper, not on the carousel itself.
+        No overflow:hidden — it clips the 3D side cards.
+        transformStyle preserve-3d must NOT be interrupted by any wrapper
+        that has overflow:hidden, opacity, or filter between here and .ci-face
+      */}
       <div
-        className="relative mx-auto h-[340px] sm:h-[400px] lg:h-[480px]"
-        onTouchStart={(event) => {
-          touchX.current = event.touches[0].clientX;
+        ref={sceneRef}
+        className="relative mx-auto cursor-grab active:cursor-grabbing"
+        style={{
+          height:            "clamp(440px, 72vw, 580px)",
+          perspective:       "1400px",
+          perspectiveOrigin: "50% 50%",
+          overflow:          "visible",   /* MUST be visible */
         }}
-        onTouchEnd={(event) => {
-          swipe(event.changedTouches[0].clientX - touchX.current);
-        }}
+        onMouseDown={onMouseDown}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
-        {/* 3D rotating prism — the whole container rotates */}
-        <motion.div
-          className="absolute inset-0"
-          style={{ transformStyle: "preserve-3d" }}
-          animate={{ rotateY: -activeIndex * theta }}
-          transition={spring}
+        {/*
+          Carousel hub — sits at dead centre of scene.
+          translateZ(-r) pulls it back so front face is at Z=0.
+          rotateY spins the whole prism.
+          transformStyle preserve-3d is mandatory here.
+        */}
+        <div
+          ref={carouselRef}
+          style={{
+            position:        "absolute",
+            left:            "50%",
+            top:             "50%",
+            width:           `${CARD_W}px`,
+            height:          `${CARD_H}px`,
+            marginLeft:      `${-CARD_W / 2}px`,
+            marginTop:       `${-CARD_H / 2}px`,
+            transformStyle:  "preserve-3d",   /* CRITICAL */
+            transform:       `translateZ(-${radius.current}px) rotateY(0deg)`,
+            willChange:      "transform",
+          }}
         >
-          {products.map((product, index) => {
-            const rel = relPos(index, activeIndex, N);
-            const absRel = Math.abs(rel);
-            const isActive = rel === 0;
-            const faceAngle = index * theta;
-
-            /* Blur & brightness based on distance from active face */
-            const blur = isActive ? 0 : absRel === 1 ? 6 : 12;
-            const brightness = isActive ? 1 : absRel === 1 ? 0.7 : 0.4;
-
-            return (
+          {products.map((product, i) => (
+            <div
+              key={product.id}
+              className="ci-face"
+              style={{
+                position:         "absolute",
+                inset:            0,
+                borderRadius:     "24px",
+                overflow:         "hidden",
+                background:       "rgba(255,255,255,0.06)",
+                border:           "1px solid rgba(255,255,255,0.10)",
+                boxShadow:        "0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.10)",
+                backdropFilter:   "blur(12px)",
+                /*
+                  Each face: static rotateY + translateZ.
+                  This is what creates the actual 3D prism.
+                  The PARENT rotates — faces stay put relative to parent.
+                */
+                transform:        `rotateY(${i * theta}deg) translateZ(${radius.current}px)`,
+                backfaceVisibility: "hidden",
+                cursor:           "pointer",
+                /* opacity & filter driven by rAF loop, not CSS transition on transform */
+                transition:       "opacity 0.15s linear, filter 0.15s linear",
+              }}
+              onClick={() => {
+                if (!isDragging.current) rotateTo(i);
+              }}
+            >
+              {/* Bottom-left vignette */}
               <div
-                key={product.id}
-                className="absolute left-1/2 top-1/2 cursor-pointer"
+                aria-hidden="true"
                 style={{
-                  width: "clamp(240px, 48vw, 340px)",
-                  height: "clamp(300px, 62vw, 430px)",
-                  transform: `translate(-50%, -50%) rotateY(${faceAngle}deg) translateZ(${radius}px)`,
-                  backfaceVisibility: "hidden",
-                  filter: `blur(${blur}px) brightness(${brightness})`,
-                  transition: "filter 0.5s ease, box-shadow 0.5s ease",
+                  position:      "absolute",
+                  inset:         0,
+                  background:    "linear-gradient(to top right, rgba(0,0,0,0.45), transparent 55%)",
+                  zIndex:        2,
+                  pointerEvents: "none",
+                  borderRadius:  "inherit",
                 }}
-                onClick={() => {
-                  onChange(index);
-                  onInteract();
+              />
+
+              <img
+                src={product.image}
+                alt={product.name}
+                draggable={false}
+                style={{
+                  width:      "100%",
+                  height:     "100%",
+                  objectFit:  "cover",
+                  display:    "block",
+                  filter:     "saturate(1.1) contrast(1.05)",
+                  transition: "transform 0.15s linear",
                 }}
-                role="button"
-                tabIndex={0}
-                aria-label={`View ${product.name}`}
+              />
+
+              {/* Floor reflection */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position:      "absolute",
+                  top:           "100%",
+                  left:          0,
+                  right:         0,
+                  height:        "44%",
+                  overflow:      "hidden",
+                  pointerEvents: "none",
+                  zIndex:        3,
+                }}
               >
-                {/* Card panel — light bg with rounded corners */}
-                <div
-                  className="relative h-full w-full overflow-hidden rounded-2xl"
+                <img
+                  src={product.image}
+                  alt=""
+                  draggable={false}
                   style={{
-                    background: "linear-gradient(160deg, #f5f5f5 0%, #e8e8e8 50%, #d5d5d5 100%)",
-                    boxShadow: isActive
-                      ? "0 32px 64px rgba(0,0,0,0.55), 0 8px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.4)"
-                      : "0 16px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+                    width:           "100%",
+                    height:          "100%",
+                    objectFit:       "cover",
+                    objectPosition:  "center top",
+                    transform:       "scaleY(-1)",
+                    opacity:         0.3,
+                    filter:          "blur(2px) brightness(0.45)",
                   }}
-                >
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    loading="lazy"
-                    draggable={false}
-                    className="h-full w-full object-contain p-5 sm:p-6"
-                    style={{
-                      filter: isActive
-                        ? "drop-shadow(0 12px 24px rgba(0,0,0,0.25))"
-                        : "drop-shadow(0 6px 12px rgba(0,0,0,0.15))",
-                    }}
-                  />
-                </div>
-
-                {/* Reflection under the active card */}
-                {isActive && (
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2"
-                    style={{
-                      width: "80%",
-                      height: "40px",
-                      background:
-                        "radial-gradient(ellipse at center, rgba(255,255,255,0.08) 0%, transparent 70%)",
-                      filter: "blur(8px)",
-                    }}
-                  />
-                )}
+                />
+                <div style={{
+                  position:   "absolute",
+                  inset:      0,
+                  background: "linear-gradient(to bottom, rgba(11,18,32,0.0) 0%, rgba(11,18,32,0.7) 55%, rgba(11,18,32,1) 100%)",
+                }} />
               </div>
-            );
-          })}
-        </motion.div>
-
-        {/* Navigation arrows */}
-        <button
-          type="button"
-          aria-label="Previous product"
-          onClick={() => {
-            onChange(activeIndex - 1);
-            onInteract();
-          }}
-          className="absolute left-0 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-white/70 backdrop-blur-sm transition hover:bg-white/15 hover:text-white md:flex"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-
-        <button
-          type="button"
-          aria-label="Next product"
-          onClick={() => {
-            onChange(activeIndex + 1);
-            onInteract();
-          }}
-          className="absolute right-0 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-white/70 backdrop-blur-sm transition hover:bg-white/15 hover:text-white md:flex"
-        >
-          <ArrowRight className="h-5 w-5" />
-        </button>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Pagination dots */}
-      <div className="mt-4 flex items-center justify-center gap-2">
-        {products.map((product, index) => (
+      {/* Dots */}
+      <div className="mt-16 flex items-center justify-center gap-2">
+        {products.map((_, index) => (
           <button
-            key={product.id}
+            key={index}
             type="button"
-            aria-label={`Go to ${product.name}`}
-            onClick={() => {
-              onChange(index);
-              onInteract();
-            }}
+            onClick={() => rotateTo(index)}
             className={`cursor-pointer rounded-full transition-all duration-300 ${
-              index === activeIndex ? "h-2 w-8 bg-white" : "h-2 w-2 bg-white/35 hover:bg-white/60"
+              index === activeIndex
+                ? "h-2 w-8 bg-white"
+                : "h-2 w-2 bg-white/35 hover:bg-white/60"
             }`}
           />
         ))}
@@ -316,7 +460,7 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
       >
         <ChevronDown className="h-3.5 w-3.5 rotate-[-90deg]" />
-        Swipe to explore products
+        Drag to explore
         <ChevronDown className="h-3.5 w-3.5 rotate-90" />
       </motion.p>
     </div>
