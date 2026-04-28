@@ -24,10 +24,10 @@ export default function QuickActionCard({
                 <Icon size={22} />
             </div>
             <span
+                className="text-slate-900 dark:text-[#c8c6c5]"
                 style={{
                     fontSize: 13,
                     fontWeight: 600,
-                    color: "#c8c6c5",
                 }}
             >
                 {label}

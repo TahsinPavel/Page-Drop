@@ -87,16 +87,16 @@ export default function LeadsPage() {
 
             <div className="db-animate-in" style={{ marginBottom: 28 }}>
                 <h1
+                    className="text-slate-900 dark:text-[#e5e2e1]"
                     style={{
                         fontSize: 24,
                         fontWeight: 700,
-                        color: "#e5e2e1",
                         fontFamily: "var(--font-syne), sans-serif",
                     }}
                 >
                     WhatsApp Leads
                 </h1>
-                <p style={{ fontSize: 14, color: "#908fa0", marginTop: 4 }}>
+                <p className="text-slate-600 dark:text-[#908fa0]" style={{ fontSize: 14, marginTop: 4 }}>
                     Track inquiries and leads from your landing pages.
                 </p>
             </div>
@@ -107,35 +107,13 @@ export default function LeadsPage() {
                 style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 24 }}
             >
                 <span
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "8px 16px",
-                        borderRadius: 9999,
-                        background: "rgba(99,102,241,0.08)",
-                        border: "1px solid rgba(99,102,241,0.18)",
-                        color: "#a5b4fc",
-                        fontSize: 13,
-                        fontWeight: 500,
-                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/20"
                 >
                     <MessageCircle size={14} />
                     {totalClicks} Total WhatsApp Clicks
                 </span>
                 <span
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "8px 16px",
-                        borderRadius: 9999,
-                        background: "rgba(52,211,153,0.08)",
-                        border: "1px solid rgba(52,211,153,0.18)",
-                        color: "#6ee7b7",
-                        fontSize: 13,
-                        fontWeight: 500,
-                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
                 >
                     <Clock size={14} />
                     {mockLeads.length} Recent Inquiries
@@ -152,31 +130,12 @@ export default function LeadsPage() {
                     flexWrap: "wrap",
                 }}
             >
-                <div
-                    style={{
-                        flex: 1,
-                        minWidth: 200,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "8px 14px",
-                        borderRadius: 10,
-                        background: "rgba(32,31,31,0.6)",
-                        border: "1px solid rgba(70,69,84,0.15)",
-                    }}
-                >
-                    <Search size={16} style={{ color: "#908fa0" }} />
+                <div className="flex flex-1 min-w-[200px] items-center gap-2 px-4 py-2 rounded-[10px] bg-white dark:bg-[#201f1f]/60 border border-slate-200 dark:border-[#464554]/15">
+                    <Search size={16} className="text-slate-400 dark:text-[#908fa0]" />
                     <input
                         type="text"
                         placeholder="Search leads..."
-                        style={{
-                            background: "transparent",
-                            border: "none",
-                            outline: "none",
-                            color: "#e5e2e1",
-                            fontSize: 13,
-                            width: "100%",
-                        }}
+                        className="bg-transparent border-none outline-none text-slate-900 dark:text-[#e5e2e1] text-[13px] w-full placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     />
                 </div>
                 <button className="db-btn-outline" style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -219,7 +178,7 @@ export default function LeadsPage() {
                                             {lead.source}
                                         </span>
                                     </td>
-                                    <td style={{ color: "#908fa0" }}>{lead.time}</td>
+                                    <td className="text-slate-500 dark:text-[#908fa0]">{lead.time}</td>
                                     <td>
                                         <span
                                             style={{
@@ -247,7 +206,7 @@ export default function LeadsPage() {
 
             {/* Note */}
             <div
-                className="db-animate-in db-animate-delay-4"
+                className="db-animate-in db-animate-delay-4 text-slate-600 dark:text-[#908fa0]"
                 style={{
                     marginTop: 16,
                     padding: "12px 16px",
@@ -255,7 +214,6 @@ export default function LeadsPage() {
                     background: "rgba(99,102,241,0.05)",
                     border: "1px solid rgba(99,102,241,0.12)",
                     fontSize: 12,
-                    color: "#908fa0",
                 }}
             >
                 💡 Leads tracking is based on WhatsApp click data from your pages. Full CRM integration coming soon.

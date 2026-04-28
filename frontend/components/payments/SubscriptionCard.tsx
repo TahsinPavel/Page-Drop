@@ -74,14 +74,7 @@ export default function SubscriptionCard({
     /* ── FREE PLAN ── */
     if (isFree) {
         return (
-            <div
-                style={{
-                    background: "var(--pd-bg-secondary)",
-                    border: "1px solid var(--pd-border)",
-                    borderRadius: 16,
-                    padding: 24,
-                }}
-            >
+            <div className="bg-white dark:bg-[#1f2020] border border-slate-200 dark:border-[#353534] rounded-2xl p-6">
                 <div
                     style={{
                         display: "flex",
@@ -92,37 +85,13 @@ export default function SubscriptionCard({
                     }}
                 >
                     <div>
-                        <span
-                            style={{
-                                fontSize: 11,
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.08em",
-                                padding: "4px 10px",
-                                borderRadius: 9999,
-                                background: "rgba(255,255,255,0.06)",
-                                color: "var(--pd-text-tertiary)",
-                            }}
-                        >
+                        <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-[#908fa0]">
                             Free Plan
                         </span>
-                        <h3
-                            style={{
-                                fontSize: 16,
-                                fontWeight: 600,
-                                color: "var(--pd-text-primary)",
-                                marginTop: 12,
-                            }}
-                        >
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-[#e5e2e1] mt-3">
                             Upgrade for advanced analytics
                         </h3>
-                        <p
-                            style={{
-                                fontSize: 13,
-                                color: "var(--pd-text-secondary)",
-                                marginTop: 4,
-                            }}
-                        >
+                        <p className="text-[13px] text-slate-600 dark:text-[#908fa0] mt-1">
                             Unlock traffic charts, referrer data, and more
                         </p>
                     </div>
@@ -136,33 +105,13 @@ export default function SubscriptionCard({
                     >
                         <button
                             onClick={() => onUpgradeClick("pro")}
-                            style={{
-                                padding: "10px 20px",
-                                borderRadius: 10,
-                                border: "none",
-                                background: "var(--pd-accent-primary)",
-                                color: "white",
-                                fontWeight: 600,
-                                fontSize: 13,
-                                cursor: "pointer",
-                                whiteSpace: "nowrap",
-                            }}
+                            className="px-5 py-2.5 rounded-[10px] border-none bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-[13px] cursor-pointer whitespace-nowrap transition-colors"
                         >
                             Upgrade to Pro — $12/mo
                         </button>
                         <button
                             onClick={() => onUpgradeClick("business")}
-                            style={{
-                                padding: "10px 20px",
-                                borderRadius: 10,
-                                border: "1px solid var(--pd-border-accent)",
-                                background: "transparent",
-                                color: "var(--pd-text-secondary)",
-                                fontWeight: 600,
-                                fontSize: 13,
-                                cursor: "pointer",
-                                whiteSpace: "nowrap",
-                            }}
+                            className="px-5 py-2.5 rounded-[10px] border border-slate-200 dark:border-[#353534] bg-transparent text-slate-700 dark:text-[#908fa0] font-semibold text-[13px] cursor-pointer whitespace-nowrap hover:bg-slate-50 dark:hover:bg-[#252525] transition-colors"
                         >
                             Upgrade to Business — $29/mo
                         </button>
@@ -182,14 +131,7 @@ export default function SubscriptionCard({
         statusColors[subscription.status] ?? statusColors.active;
 
     return (
-        <div
-            style={{
-                background: "var(--pd-bg-secondary)",
-                border: "1px solid var(--pd-border)",
-                borderRadius: 16,
-                padding: 24,
-            }}
-        >
+        <div className="bg-white dark:bg-[#1f2020] border border-slate-200 dark:border-[#353534] rounded-2xl p-6">
             {/* Top row: badges */}
             <div
                 style={{
@@ -199,21 +141,7 @@ export default function SubscriptionCard({
                     flexWrap: "wrap",
                 }}
             >
-                <span
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        padding: "4px 12px",
-                        borderRadius: 9999,
-                        background: "rgba(99,102,241,0.12)",
-                        color: "#818CF8",
-                    }}
-                >
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-[#818CF8]">
                     <Crown size={12} />
                     {subscription.plan.toUpperCase()} PLAN
                 </span>
@@ -242,47 +170,20 @@ export default function SubscriptionCard({
                 }}
             >
                 <div>
-                    <p
-                        style={{
-                            fontSize: 11,
-                            color: "var(--pd-text-tertiary)",
-                            textTransform: "uppercase",
-                        }}
-                    >
+                    <p className="text-[11px] text-slate-500 dark:text-[#908fa0] uppercase">
                         Provider
                     </p>
-                    <p
-                        style={{
-                            fontSize: 14,
-                            color: "var(--pd-text-primary)",
-                            fontWeight: 500,
-                            marginTop: 2,
-                            textTransform: "capitalize",
-                        }}
-                    >
+                    <p className="text-sm text-slate-900 dark:text-[#e5e2e1] font-medium mt-0.5 capitalize">
                         {subscription.payment_provider ?? "—"}
                     </p>
                 </div>
                 <div>
-                    <p
-                        style={{
-                            fontSize: 11,
-                            color: "var(--pd-text-tertiary)",
-                            textTransform: "uppercase",
-                        }}
-                    >
+                    <p className="text-[11px] text-slate-500 dark:text-[#908fa0] uppercase">
                         {subscription.status === "cancelled"
                             ? "Access until"
                             : "Renews"}
                     </p>
-                    <p
-                        style={{
-                            fontSize: 14,
-                            color: "var(--pd-text-primary)",
-                            fontWeight: 500,
-                            marginTop: 2,
-                        }}
-                    >
+                    <p className="text-sm text-slate-900 dark:text-[#e5e2e1] font-medium mt-0.5">
                         {formatDate(subscription.current_period_end)}
                     </p>
                 </div>
@@ -310,22 +211,7 @@ export default function SubscriptionCard({
             {subscription.status === "active" && !showCancelConfirm && (
                 <button
                     onClick={() => setShowCancelConfirm(true)}
-                    style={{
-                        marginTop: 16,
-                        background: "none",
-                        border: "none",
-                        fontSize: 12,
-                        color: "var(--pd-text-tertiary)",
-                        cursor: "pointer",
-                        transition: "color 200ms",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.color = "#EF4444";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.color =
-                            "var(--pd-text-tertiary)";
-                    }}
+                    className="mt-4 bg-transparent border-none text-xs text-slate-500 dark:text-[#908fa0] cursor-pointer hover:text-red-500 dark:hover:text-red-400 transition-colors"
                 >
                     Cancel subscription
                 </button>
@@ -333,32 +219,11 @@ export default function SubscriptionCard({
 
             {/* Cancel confirmation dialog */}
             {showCancelConfirm && (
-                <div
-                    style={{
-                        marginTop: 16,
-                        padding: 16,
-                        borderRadius: 12,
-                        background: "rgba(239,68,68,0.05)",
-                        border: "1px solid rgba(239,68,68,0.15)",
-                    }}
-                >
-                    <p
-                        style={{
-                            fontWeight: 600,
-                            color: "var(--pd-text-primary)",
-                            fontSize: 14,
-                        }}
-                    >
+                <div className="mt-4 p-4 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/15">
+                    <p className="font-semibold text-slate-900 dark:text-[#e5e2e1] text-sm">
                         Cancel subscription?
                     </p>
-                    <p
-                        style={{
-                            fontSize: 13,
-                            color: "var(--pd-text-secondary)",
-                            marginTop: 4,
-                            lineHeight: 1.5,
-                        }}
-                    >
+                    <p className="text-[13px] text-slate-600 dark:text-[#908fa0] mt-1 leading-relaxed">
                         You&apos;ll keep access until{" "}
                         {formatDate(subscription.current_period_end)}. You
                         must also cancel your payment on Gumroad or
