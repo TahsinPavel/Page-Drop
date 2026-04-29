@@ -10,8 +10,11 @@ import {
     Share2,
     X,
     Star,
-    ExternalLink
+    ExternalLink,
+    Zap
 } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { trackWhatsAppClick, trackPageEvent } from "@/lib/api";
 import type { BusinessHours, Product, PublicPage } from "@/types";
 
@@ -197,6 +200,7 @@ type MappedProduct = {
 };
 
 function PokerFan({ images, isActive, accentHue, isMobile }: { images: string[]; isActive: boolean; accentHue: number; isMobile: boolean }) {
+  const { theme } = useTheme();
   const [centerIdx, setCenterIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [tapped, setTapped] = useState(false);
@@ -268,8 +272,12 @@ function PokerFan({ images, isActive, accentHue, isMobile }: { images: string[];
         const zIdx = 10 - absOff;
 
         const shadow = isCenter
-          ? `0 40px 92px rgba(0,0,0,0.94), 0 0 34px hsla(${accentHue}, 62%, 36%, 0.15)`
-          : "0 20px 56px rgba(0,0,0,0.84)";
+          ? theme === "dark" 
+            ? `0 40px 92px rgba(0,0,0,0.94), 0 0 34px hsla(${accentHue}, 62%, 36%, 0.15)`
+            : `0 30px 60px rgba(0,0,0,0.12), 0 0 20px hsla(${accentHue}, 62%, 50%, 0.1)`
+          : theme === "dark"
+            ? "0 20px 56px rgba(0,0,0,0.84)"
+            : "0 10px 30px rgba(0,0,0,0.08)";
 
         return (
           <div
@@ -289,11 +297,12 @@ function PokerFan({ images, isActive, accentHue, isMobile }: { images: string[];
               boxShadow: shadow,
               cursor: isActive && !isCenter ? "pointer" : "default",
               border: isCenter
-                ? "1px solid rgba(255,255,255,0.11)"
-                : "1px solid rgba(255,255,255,0.05)",
-              background:
-                "linear-gradient(180deg, #17181b 0%, #0e0f11 45%, #07080a 100%)",
-              opacity: isCenter ? 1 : 0.62,
+                ? theme === "dark" ? "1px solid rgba(255,255,255,0.11)" : "1px solid rgba(0,0,0,0.08)"
+                : theme === "dark" ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(0,0,0,0.04)",
+              background: theme === "dark"
+                ? "linear-gradient(180deg, #17181b 0%, #0e0f11 45%, #07080a 100%)"
+                : "linear-gradient(180deg, #ffffff 0%, #fcfcfd 45%, #f9fafb 100%)",
+              opacity: isCenter ? 1 : theme === "dark" ? 0.62 : 0.85,
             }}
           >
             <div
@@ -345,7 +354,7 @@ function PokerFan({ images, isActive, accentHue, isMobile }: { images: string[];
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background: "rgba(6,6,12,0.3)",
+                  background: theme === "dark" ? "rgba(6,6,12,0.3)" : "rgba(255,255,255,0.15)",
                   pointerEvents: "none",
                 }}
               />
@@ -360,7 +369,7 @@ function PokerFan({ images, isActive, accentHue, isMobile }: { images: string[];
                   fontSize: isMobile ? "10px" : "12px",
                   fontWeight: 600,
                   letterSpacing: "0.15em",
-                  color: "#10B981",
+                  color: theme === "dark" ? "#10B981" : "#059669",
                   textTransform: "uppercase",
                   fontFamily: "'Space Grotesk', sans-serif",
                   whiteSpace: "nowrap",
@@ -377,6 +386,7 @@ function PokerFan({ images, isActive, accentHue, isMobile }: { images: string[];
 }
 
 function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }: { products: MappedProduct[]; activeIndex: number; onChangeIndex: (idx: number) => void; isMobile: boolean }) {
+  const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartX = useRef(0);
   const dragOffset = useRef(0);
@@ -505,6 +515,7 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }: { p
 }
 
 function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: MappedProduct | null; isMobile: boolean; openWhatsApp: (msg?: string) => void }) {
+  const { theme } = useTheme();
   if (!product) return null;
 
   return (
@@ -513,12 +524,18 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
       style={{
         width: "100%",
         maxWidth: isMobile ? "100%" : "408px",
-        background: "linear-gradient(170deg, rgba(22,24,31,.84) 0%, rgba(11,12,18,.92) 100%)",
-        border: `1px solid hsla(${product.accentHue}, 48%, 62%, .2)`,
+        background: theme === "dark" 
+          ? "linear-gradient(170deg, rgba(22,24,31,.84) 0%, rgba(11,12,18,.92) 100%)"
+          : "linear-gradient(170deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.98) 100%)",
+        border: theme === "dark"
+          ? `1px solid hsla(${product.accentHue}, 48%, 62%, .2)`
+          : `1px solid hsla(${product.accentHue}, 48%, 40%, .15)`,
         borderRadius: "24px",
         padding: isMobile ? "24px" : "28px",
         backdropFilter: "blur(22px)",
-        boxShadow: "0 24px 70px rgba(0,0,0,.48)",
+        boxShadow: theme === "dark"
+          ? "0 24px 70px rgba(0,0,0,.48)"
+          : "0 20px 60px rgba(0,0,0,0.08)",
         animation: "lp3FadeUp .5s ease",
       }}
     >
@@ -528,8 +545,8 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
           alignItems: "center",
           gap: "7px",
           marginBottom: "14px",
-          background: `${product.badgeColor}14`,
-          border: `1px solid ${product.badgeColor}33`,
+          background: theme === "dark" ? `${product.badgeColor}14` : `${product.badgeColor}10`,
+          border: theme === "dark" ? `1px solid ${product.badgeColor}33` : `1px solid ${product.badgeColor}22`,
           borderRadius: "999px",
           padding: "6px 12px",
         }}
@@ -562,7 +579,7 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
           margin: "0 0 6px",
           fontSize: isMobile ? "31px" : "36px",
           lineHeight: 1.04,
-          color: "#f8f4ec",
+          color: theme === "dark" ? "#f8f4ec" : "#0f172a",
           fontWeight: 700,
           fontFamily: "'Cormorant Garamond', serif",
         }}
@@ -574,7 +591,7 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
         style={{
           margin: "0 0 8px",
           fontSize: "14px",
-          color: "rgba(245, 242, 235, .84)",
+          color: theme === "dark" ? "rgba(245, 242, 235, .84)" : "rgba(15, 23, 42, .8)",
           fontWeight: 600,
           lineHeight: 1.5,
           fontFamily: "'Manrope', sans-serif",
@@ -587,7 +604,7 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
         style={{
           margin: "0 0 18px",
           fontSize: "12px",
-          color: "rgba(245, 242, 235, .54)",
+          color: theme === "dark" ? "rgba(245, 242, 235, .54)" : "rgba(15, 23, 42, .65)",
           lineHeight: 1.7,
           fontFamily: "'Manrope', sans-serif",
           display: "-webkit-box",
@@ -611,7 +628,7 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
           style={{
             fontSize: "34px",
             lineHeight: 1,
-            color: "#fff",
+            color: theme === "dark" ? "#fff" : "#0f172a",
             letterSpacing: "-.02em",
             fontWeight: 700,
             fontFamily: "'Space Grotesk', sans-serif",
@@ -627,7 +644,7 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
         style={{
           margin: "10px 0 14px",
           fontSize: "11px",
-          color: "rgba(245, 242, 235, .44)",
+          color: theme === "dark" ? "rgba(245, 242, 235, .44)" : "rgba(15, 23, 42, .55)",
           textAlign: "center",
           fontFamily: "'Manrope', sans-serif",
         }}
@@ -646,13 +663,17 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
           <div
             key={item}
             style={{
-              border: "1px solid rgba(255,255,255,.08)",
-              background: "rgba(255,255,255,.03)",
+              border: theme === "dark" 
+                ? "1px solid rgba(255,255,255,.08)" 
+                : "1px solid rgba(0,0,0,0.06)",
+              background: theme === "dark" 
+                ? "rgba(255,255,255,.03)" 
+                : "rgba(0,0,0,0.02)",
               borderRadius: "10px",
               padding: "8px 9px",
               textAlign: "center",
               fontSize: "10px",
-              color: "rgba(245,242,235,.74)",
+              color: theme === "dark" ? "rgba(245,242,235,.74)" : "rgba(15, 23, 42, .8)",
               fontWeight: 600,
               fontFamily: "'Manrope', sans-serif",
               letterSpacing: ".01em",
@@ -684,7 +705,7 @@ function ProductInfoPanel({ product, isMobile, openWhatsApp }: { product: Mapped
         <span
           style={{
             fontSize: "11px",
-            color: "rgba(245,242,235,.54)",
+            color: theme === "dark" ? "rgba(245,242,235,.54)" : "rgba(15, 23, 42, .7)",
             fontFamily: "'Manrope', sans-serif",
           }}
         >
@@ -700,6 +721,7 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
     const [selectedProduct, setSelectedProduct] = useState<ProductModalState | null>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [activeProductIdx, setActiveProductIdx] = useState(0);
+    const { theme } = useTheme();
 
     const businessHours = page.business_hours ?? null;
     const showHours = Boolean(businessHours) && !page.is_online_only;
@@ -776,10 +798,8 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
     const activeProduct = mappedProducts[activeProductIdx] || null;
 
     return (
-        <div className="min-h-screen text-[#f8f4ec] font-sans selection:bg-[#25D366]/30" style={{
-            background: "radial-gradient(1300px 620px at 50% -6%, rgba(255,255,255,.06), transparent 48%), linear-gradient(176deg, #11141b 0%, #0a0d13 52%, #06070b 100%)",
-            backgroundAttachment: "fixed"
-        }}>
+        <div className="min-h-screen text-gray-900 dark:text-[#f8f4ec] font-sans selection:bg-[#6366F1]/30 dark:selection:bg-[#25D366]/30 transition-colors duration-500 bg-slate-50 dark:bg-[#050508]">
+            <ThemeToggle />
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
                 @keyframes lp3FadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
@@ -801,13 +821,15 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
             <header className="absolute top-0 left-0 w-full p-6 sm:p-8 flex items-center justify-between z-50">
                 <div className="flex items-center gap-3">
                     {page.logo_url ? (
-                        <Image src={page.logo_url} alt="Logo" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                        <Image src={page.logo_url} alt="Logo" width={40} height={40} className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-white/10" />
                     ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 font-serif font-bold text-lg">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900/10 dark:bg-white/10 font-serif font-bold text-lg text-gray-900 dark:text-white">
                             {page.business_name.charAt(0)}
                         </div>
                     )}
-                    <span className="font-sans font-bold tracking-widest uppercase text-sm">{page.business_name}</span>
+                    <span className="font-sans font-bold tracking-widest uppercase text-sm text-gray-900 dark:text-white">
+                        {page.business_name}
+                    </span>
                 </div>
                 {page.phone_number && (
                     <a href={`tel:${page.phone_number}`} className="hidden sm:inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-[#25D366] hover:text-[#10b981] transition-colors">
@@ -821,15 +843,15 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
             <div className="relative min-h-screen flex flex-col pt-32 pb-16">
                 <div className="flex-1 flex flex-col items-center justify-center w-full px-4 sm:px-8 max-w-[1400px] mx-auto">
                     
-                    <div style={{ textAlign: "center", marginBottom: isMobile ? "24px" : "48px", animation: "lp3FadeUp 0.6s ease" }}>
-                        <p style={{ margin: "0 0 10px", fontSize: "11px", letterSpacing: ".22em", textTransform: "uppercase", color: "rgba(245,242,235,.46)", fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>
+                    <div className="text-center mb-6 sm:mb-12 animation-lp3FadeUp">
+                        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400 font-mono">
                             {getCategoryTitle(page.category)}
                         </p>
-                        <h2 style={{ margin: "0", color: "#f7f3ec", fontSize: "clamp(36px, 5vw, 64px)", lineHeight: 0.95, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif" }}>
+                        <h2 className="m-0 text-gray-900 dark:text-[#f7f3ec] leading-[0.95] font-bold font-serif" style={{ fontSize: "clamp(36px, 5vw, 64px)" }}>
                             {page.ai_headline || "Discover Premium Quality"}
                         </h2>
                         {page.ai_about && (
-                            <p style={{ margin: "16px auto 0", maxWidth: "62ch", color: "rgba(245,242,235,.6)", lineHeight: 1.65, fontSize: "15px", fontFamily: "'Manrope', sans-serif" }}>
+                            <p className="mt-4 mx-auto max-w-[62ch] text-gray-600 dark:text-[rgba(245,242,235,.6)] leading-relaxed text-[15px] font-sans">
                                 {page.ai_about}
                             </p>
                         )}
@@ -856,14 +878,14 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                                                     width: idx === activeProductIdx ? "20px" : "6px",
                                                     height: "6px",
                                                     borderRadius: "3px",
-                                                    background: idx === activeProductIdx ? "#10B981" : "rgba(255,255,255,0.15)",
+                                                    background: idx === activeProductIdx ? "#10B981" : theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
                                                     transition: "all 0.3s ease",
                                                     cursor: "pointer",
                                                 }}
                                             />
                                         ))}
                                     </div>
-                                    <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.15em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", fontFamily: "'Space Grotesk', sans-serif" }}>
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 dark:text-white/40 font-mono">
                                         Swipe to explore
                                     </span>
                                 </div>
@@ -893,10 +915,10 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                     opacity: 0.6,
                     animation: "lp3Hint 2.5s ease-in-out infinite",
                 }}>
-                    <span style={{ fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 600, color: "#fff", fontFamily: "'Space Grotesk', sans-serif" }}>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-900 dark:text-white font-mono">
                         Scroll
                     </span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="stroke-gray-900 dark:stroke-white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 5v14M19 12l-7 7-7-7"/>
                     </svg>
                 </div>
@@ -906,14 +928,12 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
             <section className="mx-auto max-w-7xl px-4 sm:px-8 py-24">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {WHY_CHOOSE_US.map((item, i) => (
-                        <div key={i} className="rounded-[18px] p-6" style={{
-                            border: "1px solid rgba(255,255,255,.08)",
-                            background: "linear-gradient(180deg, rgba(255,255,255,.035) 0%, rgba(255,255,255,.016) 100%)",
+                        <div key={i} className="rounded-[18px] p-6 border border-gray-200/50 dark:border-white/10 bg-white/80 dark:bg-white/[0.02] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-none transition-transform hover:scale-[1.02]" style={{
                             animation: `lp3FadeUp 0.6s ease ${i * 0.1}s both`
                         }}>
                             <div className="text-3xl mb-4">{item.icon}</div>
-                            <h4 className="font-sans font-bold text-[#f8f4ec] text-lg mb-2">{item.title}</h4>
-                            <p className="font-sans text-sm text-[rgba(245,242,235,.6)] leading-relaxed">{item.description}</p>
+                            <h4 className="font-sans font-bold text-gray-900 dark:text-[#f8f4ec] text-lg mb-2">{item.title}</h4>
+                            <p className="font-sans text-sm text-gray-600 dark:text-white/60 leading-relaxed">{item.description}</p>
                         </div>
                     ))}
                 </div>
@@ -924,31 +944,29 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
                     {SOCIAL_STATS.map((stat, i) => (
                         <div key={i} className="text-center" style={{ animation: `lp3FadeUp 0.6s ease ${i * 0.1}s both` }}>
-                            <div className="font-serif font-bold text-5xl sm:text-6xl text-[#f8f4ec] mb-3">{stat.value}</div>
+                            <div className="font-serif font-bold text-5xl sm:text-6xl text-gray-900 dark:text-[#f8f4ec] mb-3">{stat.value}</div>
                             <div className="font-mono text-sm uppercase tracking-widest text-[#25D366] mb-2">{stat.label}</div>
-                            <div className="font-sans text-sm text-[rgba(245,242,235,.5)]">{stat.note}</div>
+                            <div className="font-sans text-sm text-gray-500 dark:text-white/50">{stat.note}</div>
                         </div>
                     ))}
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {TESTIMONIALS.map((t, i) => (
-                        <div key={i} className="p-8 rounded-[24px]" style={{
-                            background: "linear-gradient(170deg, rgba(22,24,31,.6) 0%, rgba(11,12,18,.8) 100%)",
-                            border: "1px solid rgba(255,255,255,.05)",
+                        <div key={i} className="p-8 rounded-[24px] border border-gray-200/60 dark:border-white/10 bg-white/70 dark:bg-white/[0.02] shadow-[0_10px_40px_rgb(0,0,0,0.03)] dark:shadow-none" style={{
                             animation: `lp3FadeUp 0.6s ease ${i * 0.1}s both`
                         }}>
                             <div className="flex text-[#25D366] mb-6">
                                 {[...Array(5)].map((_, j) => <Star key={j} className="h-4 w-4 fill-current" />)}
                             </div>
-                            <p className="font-serif italic text-xl text-[rgba(245,242,235,.9)] mb-8 leading-relaxed">"{t.quote}"</p>
+                            <p className="font-serif italic text-xl text-gray-800 dark:text-white/90 mb-8 leading-relaxed">"{t.quote}"</p>
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center font-bold text-indigo-300 text-lg">
+                                <div className="w-12 h-12 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-300 text-lg">
                                     {t.name[0]}
                                 </div>
                                 <div>
-                                    <div className="font-bold text-[15px] text-[#f8f4ec]">{t.name}</div>
-                                    <div className="text-sm text-[rgba(245,242,235,.5)] mt-0.5">{t.role}</div>
+                                    <div className="font-bold text-[15px] text-gray-900 dark:text-[#f8f4ec]">{t.name}</div>
+                                    <div className="text-sm text-gray-500 dark:text-white/50 mt-0.5">{t.role}</div>
                                 </div>
                             </div>
                         </div>
@@ -959,10 +977,8 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
             {/* HOURS AND LOCATION */}
             {(showHours || showLocation) ? (
                 <section className="mx-auto max-w-4xl px-4 py-8 sm:px-8">
-                    <div className="rounded-[32px] border border-white/10 p-6 sm:p-10" style={{
-                        background: "linear-gradient(170deg, rgba(22,24,31,.84) 0%, rgba(11,12,18,.92) 100%)",
-                        backdropFilter: "blur(22px)",
-                    }}>
+                    <div className="rounded-[32px] border border-gray-200 dark:border-white/10 p-6 sm:p-10 shadow-sm dark:shadow-none bg-white/80 dark:bg-white/[0.02] backdrop-blur-2xl">
+
                         {showHours && businessHours && (
                             <div className="mb-10">
                                 <p className="font-mono text-xs font-bold uppercase tracking-[0.15em] text-[#25D366] mb-6">BUSINESS HOURS</p>
@@ -973,10 +989,10 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                                             {openState.isOpen ? "Open now" : "Closed now"}
                                         </span>
                                         {openState.isOpen && openState.closesAt && (
-                                            <span className="text-[rgba(245,242,235,.6)]">· Closes at {openState.closesAt}</span>
+                                            <span className="text-gray-500 dark:text-white/60">· Closes at {openState.closesAt}</span>
                                         )}
                                         {!openState.isOpen && openState.nextOpen && (
-                                            <span className="text-[rgba(245,242,235,.6)]">· Opens {openState.nextOpen.day} at {openState.nextOpen.open}</span>
+                                            <span className="text-gray-500 dark:text-white/60">· Opens {openState.nextOpen.day} at {openState.nextOpen.open}</span>
                                         )}
                                     </div>
                                 ) : null}
@@ -986,11 +1002,11 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                                         const entry = businessHours[item.key];
                                         const isToday = getWeekIndexFromDayKey(item.key) === currentDayIndex;
                                         return (
-                                            <div key={item.key} className="flex items-center justify-between py-2 border-b border-white/5">
-                                                <span className={`font-sans text-[15px] ${isToday ? "font-bold text-[#f8f4ec]" : "text-[rgba(245,242,235,.7)]"}`}>
+                                            <div key={item.key} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-white/5">
+                                                <span className={`font-sans text-[15px] ${isToday ? "font-bold text-gray-900 dark:text-[#f8f4ec]" : "text-gray-500 dark:text-white/70"}`}>
                                                     {item.label} {isToday && <span className="ml-2 text-[10px] uppercase tracking-wider text-[#25D366] bg-[#25D366]/10 px-2 py-0.5 rounded-full">Today</span>}
                                                 </span>
-                                                <span className={`font-mono text-sm ${isToday ? "text-[#f8f4ec]" : "text-[rgba(245,242,235,.5)]"}`}>
+                                                <span className={`font-mono text-sm ${isToday ? "text-gray-900 dark:text-[#f8f4ec]" : "text-gray-400 dark:text-white/50"}`}>
                                                     {entry && !entry.closed ? `${entry.open} - ${entry.close}` : "Closed"}
                                                 </span>
                                             </div>
@@ -1003,11 +1019,11 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                         {showLocation && (
                             <div>
                                 <p className="font-mono text-xs font-bold uppercase tracking-[0.15em] text-[#25D366] mb-4">LOCATION</p>
-                                <div className="flex items-start gap-4 p-5 rounded-2xl bg-white/5 border border-white/5">
+                                <div className="flex items-start gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
                                     <MapPin className="h-6 w-6 text-[#25D366] shrink-0 mt-0.5" />
                                     <div>
-                                        <p className="font-sans text-base font-medium text-[#f8f4ec] leading-relaxed mb-2">{page.location}</p>
-                                        <a href={`https://maps.google.com/?q=${encodeURIComponent(page.location ?? "")}`} target="_blank" rel="noopener noreferrer" className="font-sans inline-flex items-center gap-1 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+                                        <p className="font-sans text-base font-medium text-gray-900 dark:text-[#f8f4ec] leading-relaxed mb-2">{page.location}</p>
+                                        <a href={`https://maps.google.com/?q=${encodeURIComponent(page.location ?? "")}`} target="_blank" rel="noopener noreferrer" className="font-sans inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors">
                                             Get Directions <ExternalLink className="h-3.5 w-3.5" />
                                         </a>
                                     </div>
@@ -1020,39 +1036,37 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
 
             {/* FINAL CTA */}
             <section className="mx-auto max-w-[920px] px-4 sm:px-8 py-20 pb-32">
-                <div className="text-center p-8 sm:p-16 rounded-[32px]" style={{
-                    background: "linear-gradient(165deg, rgba(28,31,40,.9) 0%, rgba(12,14,20,.96) 52%, rgba(8,9,14,.98) 100%)",
-                    border: "1px solid rgba(255,255,255,.08)"
-                }}>
+                <div className="text-center p-8 sm:p-16 rounded-[32px] border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-white/[0.02] shadow-sm dark:shadow-none">
+
                     <div className="font-mono text-xs font-bold uppercase tracking-widest text-[#25D366] mb-4">FINAL STEP</div>
-                    <h2 className="font-serif font-bold text-[#f8f4ec] mb-6" style={{ fontSize: "clamp(34px, 5vw, 58px)", lineHeight: 1.1 }}>
+                    <h2 className="font-serif font-bold text-gray-900 dark:text-[#f8f4ec] mb-6" style={{ fontSize: "clamp(34px, 5vw, 58px)", lineHeight: 1.1 }}>
                         Found your style?<br/>Order instantly now.
                     </h2>
-                    <p className="font-sans text-[rgba(245,242,235,.7)] mb-10 max-w-lg mx-auto leading-relaxed">
+                    <p className="font-sans text-gray-600 dark:text-white/70 mb-10 max-w-lg mx-auto leading-relaxed">
                         Connect directly on WhatsApp to confirm details, arrange payment, and schedule delivery. No automated bots, just real people helping you.
                     </p>
                     <div className="max-w-xs mx-auto mb-8">
                         <WhatsAppCTA productName={null} openWhatsApp={openWhatsApp} isLarge />
                     </div>
-                    <div className="font-sans text-xs font-semibold text-[rgba(245,242,235,.4)]">
+                    <div className="font-sans text-xs font-semibold text-gray-400 dark:text-white/40">
                         Fast Delivery • Cash On Delivery • Easy Returns
                     </div>
                 </div>
             </section>
 
             {/* FOOTER */}
-            <footer className="border-t border-white/10 bg-[#0a0d13]/80 px-6 py-8 text-center font-sans text-sm text-[rgba(245,242,235,.4)] sm:px-8">
+            <footer className="border-t border-gray-200 dark:border-white/10 bg-white/50 dark:bg-[#0a0d13]/80 px-6 py-8 text-center font-sans text-sm text-gray-500 dark:text-white/40 sm:px-8">
                 Powered by {" "}
-                <Link href="/" className="font-semibold text-[rgba(245,242,235,.7)] transition-colors hover:text-[#f8f4ec]">
+                <Link href="/" className="font-semibold text-gray-700 dark:text-white/70 transition-colors hover:text-gray-900 dark:hover:text-[#f8f4ec]">
                     PageDrop
                 </Link>
             </footer>
 
             {/* MOBILE BOTTOM BAR */}
-            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0a0d13]/90 px-5 py-3 backdrop-blur-xl lg:hidden" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 dark:border-white/10 bg-white/90 dark:bg-[#0a0d13]/90 px-5 py-3 backdrop-blur-xl lg:hidden" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
                 <div className="flex items-center gap-3">
                     <div className="flex-1">
-                        <p className="line-clamp-1 font-serif text-lg font-bold text-[#f8f4ec]">{page.business_name}</p>
+                        <p className="line-clamp-1 font-serif text-lg font-bold text-gray-900 dark:text-[#f8f4ec]">{page.business_name}</p>
                     </div>
                     <WhatsAppCTA productName={null} openWhatsApp={openWhatsApp} />
                 </div>
@@ -1071,7 +1085,7 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                         />
 
                         <div
-                            className="pointer-events-auto relative z-10 max-h-[85vh] w-full max-w-[520px] overflow-y-auto rounded-[24px] border border-white/10 bg-[#11141b] shadow-2xl"
+                            className="pointer-events-auto relative z-10 max-h-[85vh] w-full max-w-[520px] overflow-y-auto rounded-[24px] border border-gray-200 dark:border-white/10 bg-white dark:bg-[#11141b] shadow-2xl"
                             style={{ animation: "lp3FadeUp 250ms ease forwards" }}
                         >
                             <button
@@ -1099,7 +1113,7 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
 
                             <div className="space-y-6 p-6 sm:p-8">
                                 <div>
-                                    <h3 className="font-serif text-3xl font-bold text-[#f8f4ec] mb-2">
+                                    <h3 className="font-serif text-3xl font-bold text-gray-900 dark:text-[#f8f4ec] mb-2">
                                         {selectedProduct.product.name}
                                     </h3>
                                     {selectedProduct.product.price && (
@@ -1109,7 +1123,7 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                                     )}
                                 </div>
 
-                                <p className="font-sans text-base leading-relaxed text-[rgba(245,242,235,.8)]">
+                                <p className="font-sans text-base leading-relaxed text-gray-700 dark:text-white/80">
                                     {getProductDescription(page, selectedProduct.product, selectedProduct.index) ||
                                         "Ask us on WhatsApp for full details and customization options."}
                                 </p>
@@ -1137,7 +1151,7 @@ export default function PremiumPage({ page }: { page: PublicPage }) {
                                                 });
                                             } catch {}
                                         }}
-                                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 py-3.5 font-sans text-sm font-semibold text-[rgba(245,242,235,.7)] transition-colors hover:bg-white/5 hover:text-[#f8f4ec]"
+                                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 py-3.5 font-sans text-sm font-semibold text-gray-600 dark:text-white/70 transition-colors hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-[#f8f4ec]"
                                     >
                                         <Share2 className="h-4 w-4" />
                                         Share this item

@@ -1,176 +1,187 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
-import { Zap, ArrowRight, Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight, Zap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 const NAV_LINKS = [
-    { href: "/#features", label: "Features" },
-    { href: "/#how-it-works", label: "How It Works" },
-    { href: "/pricing", label: "Pricing" },
-    { href: "/about", label: "About" },
+    { label: "Templates", href: "#templates" },
+    { label: "Features", href: "#features" },
+    { label: "Reviews", href: "#reviews" },
+    { label: "Pricing", href: "#pricing" },
+    { label: "Resources", href: "#resources" },
 ];
 
 export default function Navbar() {
-    const pathname = usePathname();
-    const { isAuthenticated, logout } = useAuth();
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState("");
+    const { isAuthenticated, logout } = useAuth();
+    const pathname = usePathname();
 
     useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener("scroll", onScroll, { passive: true });
-        return () => window.removeEventListener("scroll", onScroll);
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+
+            // Active section detection
+            const sections = NAV_LINKS.map(link => link.href.substring(1));
+            let current = "";
+            
+            for (const section of sections) {
+                const el = document.getElementById(section);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    // If the top of the section is near the top of viewport
+                    if (rect.top <= 200) {
+                        current = section;
+                    }
+                }
+            }
+            
+            setActiveSection(current ? "#" + current : "");
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     const isActive = (href: string) => {
-        if (href.startsWith("/#")) return pathname === "/";
+        if (href.startsWith("#")) return activeSection === href;
         return pathname === href;
     };
 
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-                        ? "bg-[#0A0A0F]/80 backdrop-blur-xl shadow-lg shadow-black/20"
-                        : "bg-transparent backdrop-blur-sm"
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+                        ? "bg-white/90 dark:bg-[#0A0A0F]/90 backdrop-blur-xl shadow-xl shadow-black/5 dark:shadow-black/40 border-b border-gray-200/50 dark:border-white/10 py-2"
+                        : "bg-transparent backdrop-blur-sm py-4"
                     }`}
-                style={{ borderBottom: "1px solid var(--pd-border)" }}
             >
-                <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-5 sm:px-6">
+                <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 lg:px-12">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2">
-                        <Zap className="h-5 w-5 text-[#6366F1]" />
-                        <span
-                            className="text-[22px] font-bold pd-gradient-text"
-                            style={{ fontFamily: "var(--font-syne), sans-serif" }}
-                        >
-                            PageDrop
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#6366F1] transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg shadow-[#6366F1]/20 pd-glow-button">
+                            <Zap className="h-6 w-6 text-white fill-white" />
+                        </div>
+                        <span className="text-2xl font-heading tracking-tight text-gray-900 dark:text-white">
+                            Page<span className="text-[#6366F1]">Drop</span>
                         </span>
                     </Link>
 
-                    {/* Center nav — desktop */}
-                    <nav className="hidden items-center gap-8 md:flex">
+                    {/* Desktop Nav */}
+                    <nav className="hidden items-center gap-10 lg:flex">
                         {NAV_LINKS.map((link) => (
                             <Link
-                                key={link.href}
+                                key={link.label}
                                 href={link.href}
-                                className={`relative text-sm font-medium transition-colors duration-200 ${isActive(link.href)
+                                className={`relative text-[15px] font-bold tracking-wide transition-all duration-300 hover:scale-105 ${isActive(link.href)
                                         ? "text-[#6366F1]"
-                                        : "text-[#9090B0] hover:text-[#F0F0FF]"
+                                        : "text-gray-700 hover:text-gray-900 dark:text-white/60 dark:hover:text-white"
                                     }`}
                             >
                                 {link.label}
                                 {isActive(link.href) && (
-                                    <span className="absolute -bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#6366F1]" />
+                                    <motion.div 
+                                        layoutId="nav-active"
+                                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#6366F1] rounded-full"
+                                    />
                                 )}
                             </Link>
                         ))}
                     </nav>
 
-                    {/* Right side CTAs — desktop */}
-                    <div className="hidden items-center gap-3 md:flex">
+                    {/* Desktop Actions */}
+                    <div className="hidden items-center gap-6 lg:flex">
                         {isAuthenticated ? (
-                            <>
+                            <div className="flex items-center gap-8">
                                 <Link
                                     href="/dashboard"
-                                    className="text-sm font-medium text-[#9090B0] transition-colors duration-200 hover:text-[#F0F0FF]"
+                                    className="text-[15px] font-bold text-gray-800 hover:text-[#6366F1] dark:text-white/80 dark:hover:text-white transition-all group"
                                 >
                                     Dashboard
                                 </Link>
                                 <button
-                                    onClick={logout}
-                                    className="text-sm font-medium text-[#9090B0] transition-colors duration-200 hover:text-[#F0F0FF]"
+                                    onClick={() => logout()}
+                                    className="text-[15px] font-bold text-gray-500 hover:text-red-500 dark:text-white/40 dark:hover:text-red-400 transition-all"
                                 >
                                     Logout
                                 </button>
-                            </>
+                            </div>
                         ) : (
                             <>
                                 <Link
                                     href="/login"
-                                    className="text-sm font-medium text-[#9090B0] transition-colors duration-200 hover:text-[#F0F0FF]"
+                                    className="text-[15px] font-bold text-gray-700 hover:text-gray-900 dark:text-white/60 dark:hover:text-white transition-all"
                                 >
                                     Log In
                                 </Link>
                                 <Link
                                     href="/signup"
-                                    className="group flex items-center gap-1.5 rounded-lg bg-[#6366F1] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#4F46E5] pd-glow-button"
+                                    className="group flex items-center gap-2 rounded-2xl bg-[#6366F1] px-7 py-3 text-[15px] font-bold text-white transition-all duration-300 hover:bg-[#4F46E5] hover:scale-105 shadow-xl shadow-[#6366F1]/20 pd-glow-button"
                                 >
-                                    Get Started Free
-                                    <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                                    Get Started
+                                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                                 </Link>
                             </>
                         )}
                     </div>
 
-                    {/* Mobile hamburger */}
+                    {/* Mobile Toggle */}
                     <button
-                        className="flex items-center justify-center md:hidden"
+                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 dark:border-white/10 md:hidden"
                         onClick={() => setMobileOpen(!mobileOpen)}
                         aria-label="Toggle menu"
                     >
                         {mobileOpen ? (
-                            <X className="h-6 w-6 text-[#F0F0FF]" />
+                            <X className="h-6 w-6 text-gray-900 dark:text-[#F0F0FF]" />
                         ) : (
-                            <Menu className="h-6 w-6 text-[#F0F0FF]" />
+                            <Menu className="h-6 w-6 text-gray-900 dark:text-[#F0F0FF]" />
                         )}
                     </button>
                 </div>
-            </header>
 
-            {/* Mobile drawer */}
-            <div
-                className={`fixed inset-0 z-40 transition-all duration-300 md:hidden ${mobileOpen ? "visible opacity-100" : "invisible opacity-0"
-                    }`}
-            >
-                {/* Overlay */}
+                {/* Mobile Menu */}
                 <div
-                    className="absolute inset-0 bg-black/60"
-                    onClick={() => setMobileOpen(false)}
-                />
-                {/* Panel */}
-                <div
-                    className={`absolute top-16 left-0 right-0 border-b transition-all duration-300 ${mobileOpen
+                    className={`absolute top-16 left-0 right-0 border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#0A0A0F] transition-all duration-300 ${mobileOpen
                             ? "translate-y-0 opacity-100"
-                            : "-translate-y-4 opacity-0"
+                            : "-translate-y-4 opacity-0 pointer-events-none"
                         }`}
-                    style={{
-                        background: "var(--pd-bg-secondary)",
-                        borderColor: "var(--pd-border)",
-                    }}
                 >
-                    <nav className="flex flex-col px-6 py-4 gap-1">
+                    <nav className="flex flex-col px-6 py-6 gap-2">
                         {NAV_LINKS.map((link) => (
                             <Link
                                 key={link.href}
                                 href={link.href}
                                 onClick={() => setMobileOpen(false)}
-                                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${isActive(link.href)
+                                className={`rounded-2xl px-4 py-4 text-base font-bold transition-all duration-200 ${isActive(link.href)
                                         ? "text-[#6366F1] bg-[#6366F1]/10"
-                                        : "text-[#9090B0] hover:text-[#F0F0FF] hover:bg-[#1A1A26]"
+                                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/5"
                                     }`}
                             >
                                 {link.label}
                             </Link>
                         ))}
 
-                        <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--pd-border)" }}>
+                        <div className="mt-4 border-t border-gray-100 dark:border-white/5 pt-6 flex flex-col gap-3">
                             {isAuthenticated ? (
                                 <>
                                     <Link
                                         href="/dashboard"
                                         onClick={() => setMobileOpen(false)}
-                                        className="block rounded-lg px-3 py-2.5 text-sm font-medium text-[#9090B0] hover:text-[#F0F0FF]"
+                                        className="rounded-2xl px-4 py-4 text-base font-bold text-gray-800 hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/5"
                                     >
                                         Dashboard
                                     </Link>
                                     <button
                                         onClick={() => { logout(); setMobileOpen(false); }}
-                                        className="block w-full text-left rounded-lg px-3 py-2.5 text-sm font-medium text-[#9090B0] hover:text-[#F0F0FF]"
+                                        className="flex items-center gap-3 rounded-2xl px-4 py-4 text-base font-bold text-gray-500 hover:bg-gray-100 dark:text-white/40 dark:hover:bg-white/5"
                                     >
+                                        <div className="p-2 rounded-xl bg-gray-100 dark:bg-white/5">
+                                            <X className="h-5 w-5" />
+                                        </div>
                                         Logout
                                     </button>
                                 </>
@@ -179,24 +190,31 @@ export default function Navbar() {
                                     <Link
                                         href="/login"
                                         onClick={() => setMobileOpen(false)}
-                                        className="block rounded-lg px-3 py-2.5 text-sm font-medium text-[#9090B0] hover:text-[#F0F0FF]"
+                                        className="rounded-2xl px-4 py-4 text-base font-bold text-gray-700 hover:bg-gray-100 dark:text-white/60 dark:hover:bg-white/5"
                                     >
                                         Log In
                                     </Link>
                                     <Link
                                         href="/signup"
                                         onClick={() => setMobileOpen(false)}
-                                        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#6366F1] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4F46E5]"
+                                        className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#6366F1] px-6 py-4 text-base font-bold text-white transition-all hover:bg-[#4F46E5] shadow-lg shadow-[#6366F1]/20"
                                     >
                                         Get Started Free
-                                        <ArrowRight className="h-3.5 w-3.5" />
+                                        <ArrowRight className="h-5 w-5" />
                                     </Link>
                                 </>
                             )}
                         </div>
                     </nav>
                 </div>
-            </div>
+            </header>
+            {/* Backdrop overlay */}
+            {mobileOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/20 dark:bg-black/60 backdrop-blur-sm md:hidden"
+                    onClick={() => setMobileOpen(false)}
+                />
+            )}
         </>
     );
 }
