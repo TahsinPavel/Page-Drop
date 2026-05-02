@@ -70,8 +70,9 @@ function SignupContent() {
       login(res.access_token, res.user);
       toast.success("Account created successfully!");
       router.push("/dashboard");
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Registration failed");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      toast.error(error?.response?.data?.detail || "Registration failed");
     } finally {
       setLoading(false);
     }
