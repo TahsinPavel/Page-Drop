@@ -1,17 +1,27 @@
 # PageDrop — Frontend
 
-> Next.js 14 frontend for PageDrop — AI-powered landing pages for small businesses.
+> Next.js 16 frontend for PageDrop — AI-powered landing pages for small businesses, featuring premium 3D showrooms and high-converting designs.
+
+## Features
+
+- **Premium 3D Showrooms**: Immersive 3D product carousels (floating stacks, poker-style fans, rotating cubes) built with Three.js.
+- **High-Converting Landing Pages**: 8+ meticulously crafted, pixel-perfect public page templates focused on emotional persuasion and lifestyle messaging.
+- **Advanced Animations**: Smooth page transitions, inertia-based scrolling, and complex animations powered by Framer Motion, GSAP, and Lenis.
+- **Robust Dashboard**: Manage generated pages, track conversions, and view analytics via Recharts.
+- **Streamlined Creation Flow**: Multi-step forms for generating new AI-powered landing pages.
+- **Proxy/Middleware**: Secure route protection and API proxying.
 
 ## Tech Stack
 
-- **Next.js 14** (App Router, TypeScript, strict mode)
-- **Tailwind CSS** v4 + **shadcn/ui** components
-- **React Hook Form** + **Zod** validation
-- **@tanstack/react-query** for data fetching
-- **Zustand** for auth state
-- **Axios** for API calls
-- **Lucide React** icons
-- **react-hot-toast** for notifications
+- **Framework**: **Next.js 16** (App Router, strict mode, React Compiler)
+- **Styling**: **Tailwind CSS v4** + **shadcn/ui** components
+- **State Management**: **Zustand** (global/auth state)
+- **Data Fetching**: **@tanstack/react-query** (query caching) + **Axios** (API client)
+- **Forms**: **React Hook Form** + **Zod** (schema validation)
+- **3D & Graphics**: **Three.js**, **@react-three/fiber**, **@react-three/drei**
+- **Animations & UX**: **Framer Motion**, **GSAP**, **@studio-freight/lenis** (smooth scrolling)
+- **Charts**: **Recharts**
+- **Icons & UI**: **Lucide React**, **react-hot-toast** (notifications)
 
 ---
 
@@ -43,17 +53,17 @@ Open **http://localhost:3000**.
 
 ---
 
-## Pages
+## Routing & Pages
 
 | Path | Description |
 |---|---|
 | `/` | Marketing landing page |
 | `/login` | Login |
 | `/signup` | Registration |
-| `/dashboard` | User dashboard (list pages) |
+| `/dashboard` | User dashboard (list pages, analytics) |
 | `/dashboard/create` | Multi-step create page form |
 | `/dashboard/pages/[id]` | Edit existing page |
-| `/[slug]` | Public landing page (SSR) |
+| `/[slug]` | Public landing page (SSR & Dynamic Routes) |
 
 ---
 
@@ -61,18 +71,25 @@ Open **http://localhost:3000**.
 
 ```
 frontend/
-├── app/                    # Next.js App Router pages
-│   ├── (auth)/             # Login & signup
+├── app/                    # Next.js 16 App Router pages
+│   ├── (auth)/             # Login & signup routes
+│   ├── [slug]/             # Public landing pages
+│   ├── about/              # About page
+│   ├── contact/            # Contact page
 │   ├── dashboard/          # Protected dashboard routes
-│   └── [slug]/             # Public landing pages (SSR)
+│   ├── demo-landing-page*/ # Demo landing pages (1-8)
+│   └── pricing/            # Pricing page
 ├── components/
-│   ├── ui/                 # shadcn/ui components
-│   ├── layout/             # Navbar, Sidebar, Footer
-│   ├── forms/              # CreatePageForm, EditPageForm
-│   ├── dashboard/          # PageCard, StatsCard
-│   └── public-page/        # 4 theme components
-├── lib/                    # API client, auth store, utils
-├── hooks/                  # useAuth, usePages
-├── types/                  # TypeScript interfaces
-└── middleware.ts            # Route protection
+│   ├── analytics/          # Analytics components
+│   ├── dashboard/          # Dashboard components
+│   ├── forms/              # Reusable form components
+│   ├── layout/             # Layout components (Navbar, Footer, etc.)
+│   ├── payments/           # Payment-related components
+│   ├── public-page/        # Premium 3D components & 8+ Landing Page templates
+│   ├── three/              # 3D canvas and elements (Three.js/Fiber)
+│   └── ui/                 # shadcn/ui generic components
+├── hooks/                  # Custom React hooks (auth, themes, lenis, 3D)
+├── lib/                    # Utilities, API client, Three.js assets
+├── types/                  # TypeScript interfaces and types
+└── proxy.ts                # Route protection and proxy logic
 ```
