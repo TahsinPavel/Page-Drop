@@ -3,7 +3,6 @@
 import { useParams } from "next/navigation";
 import { usePageById } from "@/hooks/usePages";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import EditPageForm from "@/components/forms/EditPageForm";
 
 export default function EditPage() {
     const params = useParams();
@@ -66,7 +65,7 @@ export default function EditPage() {
             </div>
 
             <div className="db-section-card db-animate-in db-animate-delay-2">
-                <EditPageForm page={page} />
+                {/* <EditPageForm page={page} /> */}
             </div>
         </>
     );
