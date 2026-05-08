@@ -475,7 +475,21 @@ function useGlobalStyles() {
   }, []);
 }
 
-function SpotlightSlider({ products, activeIndex, onChangeIndex, accentColor }: any) {
+interface SpotlightProduct {
+  id: string | number;
+  name: string;
+  image: string;
+  [key: string]: unknown;
+}
+
+interface SpotlightSliderProps {
+  products: SpotlightProduct[];
+  activeIndex: number;
+  onChangeIndex: (index: number) => void;
+  accentColor?: string;
+}
+
+function SpotlightSlider({ products, activeIndex, onChangeIndex, accentColor }: SpotlightSliderProps) {
   const pointerStartX = useRef(0);
   const dragging = useRef(false);
 
@@ -513,12 +527,12 @@ function SpotlightSlider({ products, activeIndex, onChangeIndex, accentColor }: 
     [activeIndex, normalizeOffset]
   );
 
-  const onPointerDown = (event: any) => {
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     dragging.current = true;
     pointerStartX.current = event.clientX;
   };
 
-  const onPointerUp = (event: any) => {
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging.current) return;
     const delta = event.clientX - pointerStartX.current;
     dragging.current = false;
@@ -543,7 +557,7 @@ function SpotlightSlider({ products, activeIndex, onChangeIndex, accentColor }: 
 
       <div className="lp1-shadow-pad" />
 
-      {products.map((item: any, index: number) => {
+      {products.map((item: SpotlightProduct, index: number) => {
         const motion = getMotion(index);
         const isActive = index === activeIndex;
         const isVisible = Math.abs(motion.offset) <= 1;
@@ -579,7 +593,7 @@ function SpotlightSlider({ products, activeIndex, onChangeIndex, accentColor }: 
       </button>
 
       <div className="lp1-dot-row">
-        {products.map((item: any, index: number) => (
+        {products.map((item: SpotlightProduct, index: number) => (
           <button
             key={item.id}
             type="button"

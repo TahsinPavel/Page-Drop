@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import Link from "next/link";
 import { FooterConfig } from "../schema";
 
 function useFooterStyles() {
@@ -153,7 +154,7 @@ export default function DefaultFooter({ config }: { config: FooterConfig; isPrev
                     </span>
                     {config.showPoweredBy && (
                         <span className="blk-foot-powered">
-                            • Built with <a href="/">PageDrop</a>
+                            • Built with <Link href="/">PageDrop</Link>
                         </span>
                     )}
                 </div>
