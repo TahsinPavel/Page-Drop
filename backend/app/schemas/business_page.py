@@ -56,6 +56,7 @@ class PageCreate(BaseModel):
     is_online_only: bool = True
     products: list[ProductItem] | None = None
     theme: str = Field(default="default")
+    layout_config: dict[str, Any] | None = None
 
     @field_validator("phone_number")
     @classmethod
@@ -114,6 +115,7 @@ class PageUpdate(BaseModel):
     products: list[ProductItem] | None = None
     theme: str | None = None
     logo_url: str | None = None
+    layout_config: dict[str, Any] | None = None
     ai_headline: str | None = None
     ai_subheadline: str | None = None
     ai_about: str | None = None
@@ -208,6 +210,7 @@ class PageResponse(BaseModel):
     business_hours: dict[str, Any] | None = None
     is_online_only: bool = True
     products: Any | None
+    layout_config: Any | None
     ai_headline: str | None
     ai_subheadline: str | None
     ai_about: str | None
@@ -237,6 +240,7 @@ class PublicPageResponse(BaseModel):
     location: str | None
     logo_url: str | None
     products: Any | None
+    layout_config: Any | None
     ai_headline: str | None
     ai_subheadline: str | None
     ai_about: str | None

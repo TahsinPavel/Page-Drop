@@ -58,6 +58,9 @@ class BusinessPage(Base):
     # ]
     products: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
+    # Builder Configuration
+    layout_config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
     # AI-generated content
     ai_headline: Mapped[str | None] = mapped_column(String, nullable=True)
     ai_subheadline: Mapped[str | None] = mapped_column(String, nullable=True)

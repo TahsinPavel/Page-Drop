@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, use } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Clock, AlertCircle, BarChart2, Copy } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -22,7 +22,7 @@ import DeviceSplit from "@/components/analytics/DeviceSplit";
 import AcquisitionSources from "@/components/analytics/AcquisitionSources";
 import type { PageAnalyticsData, DashboardSummary, RecentEvent } from "@/types";
 
-export default function PageAnalyticsPage() {
+export default function PageAnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
     useAuth(true);
 
     const [days, setDays] = useState(30);
@@ -34,8 +34,10 @@ export default function PageAnalyticsPage() {
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([]);
     const [eventsLoading, setEventsLoading] = useState(true);
-    const params = useParams<{ id: string }>();
-    const id = params.id;
+    
+    // Unwrap the params Promise passed as a prop
+    const resolvedParams = use(params);
+    const id = resolvedParams.id;
     const { isPro } = usePlan();
     const router = useRouter();
 

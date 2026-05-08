@@ -71,6 +71,7 @@ async def create_page(
         is_online_only=page_data.is_online_only,
         products=[p.model_dump() for p in page_data.products] if page_data.products else None,
         theme=page_data.theme,
+        layout_config=page_data.layout_config,
     )
     db.add(page)
     await db.flush()

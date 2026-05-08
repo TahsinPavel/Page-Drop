@@ -1,12 +1,12 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { use } from "react";
 import { usePageById } from "@/hooks/usePages";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
-export default function EditPage() {
-    const params = useParams();
-    const pageId = params.id as string;
+export default function EditPage({ params }: { params: Promise<{ id: string }> }) {
+    const resolvedParams = use(params);
+    const pageId = resolvedParams.id;
     const { data: page, isLoading, error } = usePageById(pageId);
 
     if (isLoading) {

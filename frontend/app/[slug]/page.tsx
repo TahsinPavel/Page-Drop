@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PremiumPage from "@/components/public-page/PremiumPage";
+import BuilderRenderer from "@/components/builder/renderer/BuilderRenderer";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -11,7 +12,7 @@ interface Props {
 async function fetchPage(slug: string) {
     try {
         const res = await fetch(`${API_URL}/pages/public/${slug}`, {
-            cache: "no-store",
+            next: { revalidate: 60 },
         });
         if (!res.ok) return null;
         return res.json();
@@ -43,6 +44,10 @@ export default async function PublicPageRoute({ params }: Props) {
     const { slug } = await params;
     const page = await fetchPage(slug);
     if (!page) notFound();
+
+    if (page.layout_config && page.layout_config.blocks && page.layout_config.blocks.length > 0) {
+        return <BuilderRenderer page={page} />;
+    }
 
     return <PremiumPage page={page} />;
 }

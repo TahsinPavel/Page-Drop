@@ -145,7 +145,7 @@ export default function DashboardPage() {
                 <QuickActionCard
                     icon={PlusCircle}
                     label="Add New Page"
-                    onClick={() => toast("Page creation is currently disabled.", { icon: "ℹ️" })}
+                    href="/dashboard/build/new"
                     delay={3}
                 />
                 <QuickActionCard
@@ -224,16 +224,16 @@ export default function DashboardPage() {
                                     Create your first landing page and go live in seconds.
                                 </p>
                             </div>
-                            <button 
+                            <Link 
+                                href="/dashboard/build/new"
                                 className="db-btn-primary"
-                                onClick={() => toast("Page creation is currently disabled.", { icon: "ℹ️" })}
                             >
                                 <PlusCircle
                                     size={15}
                                     style={{ marginRight: 6, display: "inline" }}
                                 />
                                 Create Your First Page
-                            </button>
+                            </Link>
                         </div>
                     )}
                 </div>

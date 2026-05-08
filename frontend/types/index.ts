@@ -47,6 +47,7 @@ export interface BusinessPage {
     business_hours?: BusinessHours | null;
     is_online_only: boolean;
     products: Product[] | null;
+    layout_config?: Record<string, unknown> | null;
     ai_headline: string | null;
     ai_subheadline: string | null;
     ai_about: string | null;
@@ -76,6 +77,7 @@ export interface PublicPage {
     business_hours?: BusinessHours | null;
     is_online_only: boolean;
     products: Product[] | null;
+    layout_config?: Record<string, unknown> | null;
     ai_headline: string | null;
     ai_subheadline: string | null;
     ai_about: string | null;
@@ -110,6 +112,7 @@ export interface CreatePageInput {
     products?: Product[];
     theme: string;
     banner_image_url?: string | null;
+    layout_config?: Record<string, unknown>;
 }
 
 export interface UpdatePageInput {
@@ -124,6 +127,7 @@ export interface UpdatePageInput {
     theme?: string;
     logo_url?: string;
     banner_image_url?: string | null;
+    layout_config?: Record<string, unknown>;
 }
 
 export interface LoginInput {
