@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { LayoutTemplate, Layers, Settings, Plus, ChevronUp, ChevronDown, Trash2, Lock } from "lucide-react";
+import { LayoutTemplate, Layers, Plus, ChevronUp, ChevronDown, Trash2, Lock } from "lucide-react";
 import { registry } from "@/lib/builder/registry";
 import { useBuilderStore } from "@/lib/builder/store";
 import toast from "react-hot-toast";
 
 export default function BuilderSidebar() {
-    const [activeTab, setActiveTab] = useState<"add" | "layers" | "global">("add");
+    const [activeTab, setActiveTab] = useState<"add" | "layers">("add");
     const {
         addBlock,
         blocks,
@@ -13,10 +13,6 @@ export default function BuilderSidebar() {
         setSelectedBlock,
         removeBlock,
         reorderBlocks,
-        pageDetails,
-        updatePageDetails,
-        globalSettings,
-        updateGlobalSettings,
         userPlan,
     } = useBuilderStore();
 
@@ -44,12 +40,6 @@ export default function BuilderSidebar() {
                         </span>
                     )}
                 </button>
-                <button
-                    onClick={() => setActiveTab("global")}
-                    className={`flex-1 py-3 text-xs font-medium flex items-center justify-center gap-2 border-b-2 transition-colors ${activeTab === "global" ? "border-indigo-500 text-white" : "border-transparent text-slate-500 hover:text-slate-300"}`}
-                >
-                    <Settings size={14} /> Page Info
-                </button>
             </div>
 
             {/* Content Area */}
@@ -67,7 +57,7 @@ export default function BuilderSidebar() {
                                     <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{cat}</h3>
                                     <div className="grid grid-cols-2 gap-2">
                                         {catBlocks.map((block) => {
-                                            const isLocked = block.isPremium && userPlan === "free"; // Phase 4D gating
+                                            const isLocked = block.isPremium && userPlan === "free";
                                             return (
                                                 <button
                                                     key={block.type}
@@ -171,119 +161,6 @@ export default function BuilderSidebar() {
                                 );
                             })
                         )}
-                    </div>
-                )}
-
-                {/* ── PAGE INFO TAB ── */}
-                {activeTab === "global" && (
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">
-                                Business Name <span className="text-red-400">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={pageDetails.businessName}
-                                onChange={(e) => updatePageDetails({ businessName: e.target.value })}
-                                className="w-full bg-[#1a1a1c] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                                placeholder="e.g. My Awesome Store"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">Page Slug (URL)</label>
-                            <input
-                                type="text"
-                                value={pageDetails.slug}
-                                onChange={(e) => updatePageDetails({ slug: e.target.value })}
-                                className="w-full bg-[#1a1a1c] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                                placeholder="auto-generated-from-name"
-                            />
-                            <p className="text-[10px] text-slate-500 mt-1">Leave blank to auto-generate from business name.</p>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">
-                                WhatsApp Number <span className="text-red-400">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={pageDetails.whatsappNumber}
-                                onChange={(e) => updatePageDetails({ whatsappNumber: e.target.value })}
-                                className="w-full bg-[#1a1a1c] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                                placeholder="+1234567890"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">
-                                Category <span className="text-red-400">*</span>
-                            </label>
-                            <select
-                                value={pageDetails.category}
-                                onChange={(e) => updatePageDetails({ category: e.target.value })}
-                                className="w-full bg-[#1a1a1c] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                            >
-                                <option value="Ecommerce">Ecommerce</option>
-                                <option value="Services">Services</option>
-                                <option value="Portfolio">Portfolio</option>
-                                <option value="Restaurant">Restaurant</option>
-                                <option value="Fashion">Fashion</option>
-                                <option value="Electronics">Electronics</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-
-                        <div className="pt-4 border-t border-[#2a2a2c]">
-                            <p className="text-xs text-slate-500 mb-4">
-                                Fields marked with <span className="text-red-400">*</span> are required before publishing.
-                            </p>
-                            
-                            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Global Theme Settings</h3>
-                            
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-400 mb-1">Theme</label>
-                                    <select
-                                        value={globalSettings.theme}
-                                        onChange={(e) => updateGlobalSettings({ theme: e.target.value as "light" | "dark" })}
-                                        className="w-full bg-[#1a1a1c] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                                    >
-                                        <option value="dark">Dark</option>
-                                        <option value="light">Light</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-400 mb-1">Primary Color (Hex)</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="color"
-                                            value={globalSettings.primaryColor}
-                                            onChange={(e) => updateGlobalSettings({ primaryColor: e.target.value })}
-                                            className="w-10 h-10 rounded border border-[#2a2a2c] bg-transparent cursor-pointer p-0"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={globalSettings.primaryColor}
-                                            onChange={(e) => updateGlobalSettings({ primaryColor: e.target.value })}
-                                            className="flex-1 bg-[#1a1a1c] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                                        />
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-400 mb-1">Font Family</label>
-                                    <select
-                                        value={globalSettings.fontFamily}
-                                        onChange={(e) => updateGlobalSettings({ fontFamily: e.target.value })}
-                                        className="w-full bg-[#1a1a1c] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                                    >
-                                        <option value="inter">Inter</option>
-                                        <option value="roboto">Roboto</option>
-                                        <option value="outfit">Outfit</option>
-                                        <option value="playfair">Playfair Display</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 )}
             </div>

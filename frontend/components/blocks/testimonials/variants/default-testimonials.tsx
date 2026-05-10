@@ -125,6 +125,20 @@ function useTestimonialsStyles() {
         font-size: 13px;
         font-weight: 700;
       }
+
+      .preview-mobile .lp1-proof-wrap {
+        padding: 28px 18px 70px;
+      }
+
+      .preview-mobile .lp1-proof-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .preview-mobile .lp1-proof-nav {
+        width: 100%;
+        justify-content: flex-start;
+      }
     `;
 
     document.head.appendChild(styleTag);

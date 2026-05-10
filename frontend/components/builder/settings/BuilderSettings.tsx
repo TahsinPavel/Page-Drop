@@ -1,213 +1,696 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
+import { Settings2, ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useBuilderStore } from "@/lib/builder/store";
-import { Settings2, MoreVertical, Edit3, Image as ImageIcon, SlidersHorizontal, UploadCloud, Trash2, Check } from "lucide-react";
+
+// ─── Reusable field components ────────────────────────────────────────────────
+
+function FieldLabel({ label, hint }: { label: string; hint?: string }) {
+  return (
+    <div className="mb-1.5">
+      <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        {label}
+      </label>
+      {hint && <p className="text-[10px] text-slate-600 mt-0.5">{hint}</p>}
+    </div>
+  );
+}
+
+function TextInput({
+  label, value, onChange, placeholder, hint,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; hint?: string;
+}) {
+  return (
+    <div>
+      <FieldLabel label={label} hint={hint} />
+      <input
+        type="text"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-[#0a0a0b] border border-[#2a2a2c] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-700"
+      />
+    </div>
+  );
+}
+
+function TextAreaInput({
+  label, value, onChange, placeholder, hint,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; hint?: string;
+}) {
+  return (
+    <div>
+      <FieldLabel label={label} hint={hint} />
+      <textarea
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={3}
+        className="w-full bg-[#0a0a0b] border border-[#2a2a2c] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-700 resize-none"
+      />
+    </div>
+  );
+}
+
+function ColorInput({
+  label, value, onChange,
+}: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <FieldLabel label={label} />
+      <div className="flex gap-2 items-center">
+        <input
+          type="color"
+          value={value ?? "#000000"}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-9 h-9 rounded-md border border-[#2a2a2c] bg-transparent cursor-pointer p-0.5"
+        />
+        <input
+          type="text"
+          value={value ?? ""}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 bg-[#0a0a0b] border border-[#2a2a2c] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+          placeholder="#000000"
+        />
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({
+  title, expanded, onToggle,
+}: { title: string; expanded: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between px-5 py-3 hover:bg-[#111112] transition-colors border-b border-[#1f1f22]"
+    >
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{title}</span>
+      {expanded
+        ? <ChevronDown size={12} className="text-slate-500" />
+        : <ChevronRight size={12} className="text-slate-500" />}
+    </button>
+  );
+}
+
+// ─── Product list editor ──────────────────────────────────────────────────────
+
+type Product = {
+  id: string | number;
+  name: string;
+  tagline: string;
+  price: string;
+  badge: string;
+  badgeColor: string;
+  image: string;
+};
+
+function ProductListEditor({
+  products,
+  onChange,
+}: { products: Product[]; onChange: (products: Product[]) => void }) {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(0);
+
+  const update = (idx: number, key: keyof Product, val: string) => {
+    const next = products.map((p, i) =>
+      i === idx ? { ...p, [key]: val } : p
+    );
+    onChange(next);
+  };
+
+  const add = () => {
+    const blank: Product = {
+      id: Date.now(),
+      name: "New Product",
+      tagline: "Product description here",
+      price: "$0",
+      badge: "NEW",
+      badgeColor: "#6366f1",
+      image: "",
+    };
+    onChange([...products, blank]);
+    setExpandedIdx(products.length);
+  };
+
+  const remove = (idx: number) => {
+    onChange(products.filter((_, i) => i !== idx));
+    if (expandedIdx === idx) setExpandedIdx(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      {products.map((p, idx) => (
+        <div key={p.id} className="border border-[#2a2a2c] rounded-lg overflow-hidden">
+          {/* Product row header */}
+          <div
+            className="flex items-center gap-2 px-3 py-2.5 bg-[#111112] cursor-pointer hover:bg-[#1a1a1c] transition-colors"
+            onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+          >
+            {p.image ? (
+              <img
+                src={p.image}
+                alt={p.name}
+                className="w-7 h-7 rounded object-contain bg-[#0a0a0b] shrink-0"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            ) : (
+              <div className="w-7 h-7 rounded bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-[10px] font-bold shrink-0">
+                {idx + 1}
+              </div>
+            )}
+            <span className="flex-1 text-xs font-semibold text-slate-200 truncate">{p.name || "Untitled"}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); remove(idx); }}
+              className="text-slate-600 hover:text-red-400 transition-colors p-1 shrink-0"
+            >
+              <Trash2 size={12} />
+            </button>
+            {expandedIdx === idx
+              ? <ChevronDown size={12} className="text-slate-500 shrink-0" />
+              : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
+          </div>
+
+          {/* Product fields */}
+          {expandedIdx === idx && (
+            <div className="p-3 space-y-3 bg-[#0d0d0f] border-t border-[#2a2a2c]">
+              <TextInput
+                label="Product Name"
+                value={p.name}
+                onChange={(v) => update(idx, "name", v)}
+                placeholder="e.g. Aura Studio Pro"
+              />
+              <TextAreaInput
+                label="Description"
+                value={p.tagline}
+                onChange={(v) => update(idx, "tagline", v)}
+                placeholder="Short product description"
+              />
+              <TextInput
+                label="Price"
+                value={p.price}
+                onChange={(v) => update(idx, "price", v)}
+                placeholder="$349"
+              />
+              <TextInput
+                label="Product Image URL"
+                value={p.image}
+                onChange={(v) => update(idx, "image", v)}
+                placeholder="/demo/product.png"
+                hint="Paste a URL or a path from /public"
+              />
+              {p.image && (
+                <img
+                  src={p.image}
+                  alt="preview"
+                  className="w-full h-24 object-contain bg-[#111112] rounded-lg border border-[#2a2a2c]"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <TextInput
+                  label="Badge Text"
+                  value={p.badge}
+                  onChange={(v) => update(idx, "badge", v)}
+                  placeholder="IN STOCK"
+                />
+                <ColorInput
+                  label="Badge Color"
+                  value={p.badgeColor}
+                  onChange={(v) => update(idx, "badgeColor", v)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <button
+        onClick={add}
+        className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-[#2a2a2c] rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:border-[#3a3a3c] transition-colors"
+      >
+        <Plus size={13} /> Add Product
+      </button>
+    </div>
+  );
+}
+
+// ─── Feature list editor ──────────────────────────────────────────────────────
+
+type Feature = {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+};
+
+function FeatureListEditor({
+  features,
+  onChange,
+}: { features: Feature[]; onChange: (f: Feature[]) => void }) {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(0);
+
+  const update = (idx: number, key: keyof Feature, val: string) => {
+    onChange(features.map((f, i) => i === idx ? { ...f, [key]: val } : f));
+  };
+
+  const add = () => {
+    const blank: Feature = {
+      id: String(Date.now()),
+      icon: "◆",
+      title: "New Feature",
+      description: "Feature description here",
+    };
+    onChange([...features, blank]);
+    setExpandedIdx(features.length);
+  };
+
+  const remove = (idx: number) => {
+    onChange(features.filter((_, i) => i !== idx));
+    if (expandedIdx === idx) setExpandedIdx(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      {features.map((f, idx) => (
+        <div key={f.id} className="border border-[#2a2a2c] rounded-lg overflow-hidden">
+          <div
+            className="flex items-center gap-2 px-3 py-2.5 bg-[#111112] cursor-pointer hover:bg-[#1a1a1c] transition-colors"
+            onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+          >
+            <span className="text-base shrink-0">{f.icon || "◆"}</span>
+            <span className="flex-1 text-xs font-semibold text-slate-200 truncate">{f.title || "Untitled"}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); remove(idx); }}
+              className="text-slate-600 hover:text-red-400 transition-colors p-1 shrink-0"
+            >
+              <Trash2 size={12} />
+            </button>
+            {expandedIdx === idx
+              ? <ChevronDown size={12} className="text-slate-500 shrink-0" />
+              : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
+          </div>
+          {expandedIdx === idx && (
+            <div className="p-3 space-y-3 bg-[#0d0d0f] border-t border-[#2a2a2c]">
+              <TextInput label="Icon / Emoji" value={f.icon} onChange={(v) => update(idx, "icon", v)} placeholder="◆" />
+              <TextInput label="Title" value={f.title} onChange={(v) => update(idx, "title", v)} placeholder="Feature title" />
+              <TextAreaInput label="Description" value={f.description} onChange={(v) => update(idx, "description", v)} placeholder="Feature description" />
+            </div>
+          )}
+        </div>
+      ))}
+      <button
+        onClick={add}
+        className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-[#2a2a2c] rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:border-[#3a3a3c] transition-colors"
+      >
+        <Plus size={13} /> Add Feature
+      </button>
+    </div>
+  );
+}
+
+// ─── Review list editor ───────────────────────────────────────────────────────
+
+type Review = { name: string; text: string };
+
+function ReviewListEditor({
+  reviews,
+  onChange,
+}: { reviews: Review[]; onChange: (r: Review[]) => void }) {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(0);
+
+  const update = (idx: number, key: keyof Review, val: string) => {
+    onChange(reviews.map((r, i) => i === idx ? { ...r, [key]: val } : r));
+  };
+
+  const add = () => {
+    onChange([...reviews, { name: "Customer Name", text: "Review text here" }]);
+    setExpandedIdx(reviews.length);
+  };
+
+  const remove = (idx: number) => {
+    onChange(reviews.filter((_, i) => i !== idx));
+    if (expandedIdx === idx) setExpandedIdx(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      {reviews.map((r, idx) => (
+        <div key={idx} className="border border-[#2a2a2c] rounded-lg overflow-hidden">
+          <div
+            className="flex items-center gap-2 px-3 py-2.5 bg-[#111112] cursor-pointer hover:bg-[#1a1a1c] transition-colors"
+            onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+          >
+            <span className="text-xs text-yellow-400 shrink-0">⭐</span>
+            <span className="flex-1 text-xs font-semibold text-slate-200 truncate">{r.name || "Reviewer"}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); remove(idx); }}
+              className="text-slate-600 hover:text-red-400 transition-colors p-1 shrink-0"
+            >
+              <Trash2 size={12} />
+            </button>
+            {expandedIdx === idx
+              ? <ChevronDown size={12} className="text-slate-500 shrink-0" />
+              : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
+          </div>
+          {expandedIdx === idx && (
+            <div className="p-3 space-y-3 bg-[#0d0d0f] border-t border-[#2a2a2c]">
+              <TextInput label="Customer Name" value={r.name} onChange={(v) => update(idx, "name", v)} />
+              <TextAreaInput label="Review Text" value={r.text} onChange={(v) => update(idx, "text", v)} />
+            </div>
+          )}
+        </div>
+      ))}
+      <button
+        onClick={add}
+        className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-[#2a2a2c] rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:border-[#3a3a3c] transition-colors"
+      >
+        <Plus size={13} /> Add Review
+      </button>
+    </div>
+  );
+}
+
+// ─── Badge list editor ────────────────────────────────────────────────────────
+
+function BadgeListEditor({
+  badges,
+  onChange,
+}: { badges: string[]; onChange: (b: string[]) => void }) {
+  const [draft, setDraft] = useState("");
+
+  const add = () => {
+    if (!draft.trim()) return;
+    onChange([...badges, draft.trim()]);
+    setDraft("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {badges.map((b, idx) => (
+          <span
+            key={idx}
+            className="inline-flex items-center gap-1.5 bg-[#1a1a1c] border border-[#2a2a2c] rounded-full px-3 py-1 text-xs text-slate-300"
+          >
+            {b}
+            <button
+              onClick={() => onChange(badges.filter((_, i) => i !== idx))}
+              className="text-slate-600 hover:text-red-400 transition-colors"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+          placeholder="Add badge, press Enter"
+          className="flex-1 bg-[#0a0a0b] border border-[#2a2a2c] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-700"
+        />
+        <button
+          onClick={add}
+          className="px-3 py-2 bg-[#1a1a1c] border border-[#2a2a2c] rounded-lg text-slate-400 hover:text-white hover:border-[#3a3a3c] transition-colors"
+        >
+          <Plus size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Per-block settings panels ────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function HeroSettings({ config, update }: { config: Record<string, any>; update: (k: string, v: unknown) => void }) {
+  const [sections, setSections] = useState({ brand: true, copy: true, carousel: true, cta: true });
+  const toggle = (k: keyof typeof sections) => setSections(s => ({ ...s, [k]: !s[k] }));
+
+  return (
+    <>
+      {/* Brand */}
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="Brand" expanded={sections.brand} onToggle={() => toggle("brand")} />
+        {sections.brand && (
+          <div className="p-4 space-y-3">
+            <TextInput label="Brand Name" value={config.brandName} onChange={v => update("brandName", v)} placeholder="AURA" />
+            <TextInput label="Logo Symbol" value={config.brandLogoText} onChange={v => update("brandLogoText", v)} placeholder="✦" hint="Single character shown in the brand mark" />
+            <TextInput label="Trust Badge Text" value={config.trustedText} onChange={v => update("trustedText", v)} placeholder="⭐ Trusted by 1,000+ customers" />
+          </div>
+        )}
+      </div>
+
+      {/* Copy */}
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="Headlines & Copy" expanded={sections.copy} onToggle={() => toggle("copy")} />
+        {sections.copy && (
+          <div className="p-4 space-y-3">
+            <TextInput label="Kicker Text" value={config.kickerText} onChange={v => update("kickerText", v)} placeholder="LIMITED EDITION DROP" hint="Small uppercase label above the headline" />
+            <TextInput label="Main Headline" value={config.headline} onChange={v => update("headline", v)} placeholder="Your main headline" />
+            <TextAreaInput label="Sub-headline" value={config.subheadline} onChange={v => update("subheadline", v)} placeholder="Supporting text below headline" />
+          </div>
+        )}
+      </div>
+
+      {/* 3D Carousel Products */}
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="🎠 3D Carousel — Products" expanded={sections.carousel} onToggle={() => toggle("carousel")} />
+        {sections.carousel && (
+          <div className="p-4">
+            <p className="text-[10px] text-slate-500 mb-3">Each product appears as a card in the 3D carousel. Click a product to expand and edit.</p>
+            <ProductListEditor
+              products={config.products ?? []}
+              onChange={v => update("products", v)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* CTA */}
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="CTA / WhatsApp" expanded={sections.cta} onToggle={() => toggle("cta")} />
+        {sections.cta && (
+          <div className="p-4 space-y-3">
+            <TextInput
+              label="WhatsApp Number"
+              value={config.whatsappNumber}
+              onChange={v => update("whatsappNumber", v)}
+              placeholder="+1234567890"
+              hint="Include country code. Customers tap to open WhatsApp."
+            />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function FeaturesSettings({ config, update }: { config: Record<string, any>; update: (k: string, v: unknown) => void }) {
+  const [sections, setSections] = useState({ copy: true, items: true });
+  const toggle = (k: keyof typeof sections) => setSections(s => ({ ...s, [k]: !s[k] }));
+
+  return (
+    <>
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="Section Copy" expanded={sections.copy} onToggle={() => toggle("copy")} />
+        {sections.copy && (
+          <div className="p-4 space-y-3">
+            <TextInput label="Section Label" value={config.kickerText} onChange={v => update("kickerText", v)} placeholder="WHY CHOOSE US" />
+            <TextInput label="Title" value={config.title} onChange={v => update("title", v)} placeholder="Section title" />
+            <TextAreaInput label="Subtitle" value={config.subtitle} onChange={v => update("subtitle", v)} placeholder="Section subtitle" />
+          </div>
+        )}
+      </div>
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="Feature Cards" expanded={sections.items} onToggle={() => toggle("items")} />
+        {sections.items && (
+          <div className="p-4">
+            <FeatureListEditor
+              features={config.features ?? []}
+              onChange={v => update("features", v)}
+            />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CTASettings({ config, update }: { config: Record<string, any>; update: (k: string, v: unknown) => void }) {
+  const [sections, setSections] = useState({ copy: true, button: true, badges: true });
+  const toggle = (k: keyof typeof sections) => setSections(s => ({ ...s, [k]: !s[k] }));
+
+  return (
+    <>
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="Copy" expanded={sections.copy} onToggle={() => toggle("copy")} />
+        {sections.copy && (
+          <div className="p-4 space-y-3">
+            <TextInput label="Section Label" value={config.kickerText} onChange={v => update("kickerText", v)} />
+            <TextInput label="Headline" value={config.headline} onChange={v => update("headline", v)} />
+            <TextAreaInput label="Sub-headline" value={config.subheadline} onChange={v => update("subheadline", v)} />
+          </div>
+        )}
+      </div>
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="WhatsApp Button" expanded={sections.button} onToggle={() => toggle("button")} />
+        {sections.button && (
+          <div className="p-4 space-y-3">
+            <TextInput label="Button Text" value={config.buttonText} onChange={v => update("buttonText", v)} placeholder="Order on WhatsApp" />
+            <TextInput label="WhatsApp Number" value={config.whatsappNumber} onChange={v => update("whatsappNumber", v)} placeholder="+1234567890" />
+            <TextAreaInput label="Pre-filled Message" value={config.whatsappMessage} onChange={v => update("whatsappMessage", v)} hint="Message user sees when WhatsApp opens" />
+          </div>
+        )}
+      </div>
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="Trust Badges" expanded={sections.badges} onToggle={() => toggle("badges")} />
+        {sections.badges && (
+          <div className="p-4">
+            <BadgeListEditor
+              badges={config.badges ?? []}
+              onChange={v => update("badges", v)}
+            />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function FooterSettings({ config, update }: { config: Record<string, any>; update: (k: string, v: unknown) => void }) {
+  return (
+    <div className="p-4 space-y-3">
+      <TextInput label="Brand Name" value={config.brandName} onChange={v => update("brandName", v)} />
+      <TextInput label="Tagline" value={config.tagline} onChange={v => update("tagline", v)} />
+      <TextInput label="WhatsApp Number" value={config.whatsappNumber} onChange={v => update("whatsappNumber", v)} />
+      <TextInput label="Copyright Text" value={config.copyrightText} onChange={v => update("copyrightText", v)} />
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function TestimonialsSettings({ config, update }: { config: Record<string, any>; update: (k: string, v: unknown) => void }) {
+  const [sections, setSections] = useState({ copy: true, reviews: true });
+  const toggle = (k: keyof typeof sections) => setSections(s => ({ ...s, [k]: !s[k] }));
+
+  return (
+    <>
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="Section Copy" expanded={sections.copy} onToggle={() => toggle("copy")} />
+        {sections.copy && (
+          <div className="p-4 space-y-3">
+            <TextInput label="Section Label" value={config.kickerText} onChange={v => update("kickerText", v)} />
+            <TextInput label="Title" value={config.title} onChange={v => update("title", v)} />
+          </div>
+        )}
+      </div>
+      <div className="border-b border-[#1f1f22]">
+        <SectionHeader title="Reviews" expanded={sections.reviews} onToggle={() => toggle("reviews")} />
+        {sections.reviews && (
+          <div className="p-4">
+            <ReviewListEditor
+              reviews={config.reviews ?? []}
+              onChange={v => update("reviews", v)}
+            />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ─── Generic fallback for unrecognised block types ────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function GenericSettings({ config, update }: { config: Record<string, any>; update: (k: string, v: unknown) => void }) {
+  return (
+    <div className="p-4 space-y-3">
+      {Object.entries(config).map(([key, value]) => {
+        if (typeof value === "string") {
+          if (value.length > 80) {
+            return <TextAreaInput key={key} label={key} value={value} onChange={v => update(key, v)} />;
+          }
+          return <TextInput key={key} label={key} value={value} onChange={v => update(key, v)} />;
+        }
+        return null;
+      })}
+    </div>
+  );
+}
+
+// ─── Main BuilderSettings component ──────────────────────────────────────────
 
 export default function BuilderSettings() {
-    const { selectedBlockId, blocks } = useBuilderStore();
+  const { selectedBlockId, blocks, updateBlockConfig } = useBuilderStore();
+  const selectedBlock = blocks.find(b => b.id === selectedBlockId);
 
-    const selectedBlock = blocks.find(b => b.id === selectedBlockId);
-
-    if (!selectedBlock) {
-        return (
-            <div className="w-[325px] border-r border-[#2a2a2c] bg-[#0a0a0b] hidden lg:flex flex-col shrink-0 z-10 items-center justify-center text-slate-500 text-sm p-8 text-center">
-                <Settings2 size={32} className="mb-4 opacity-50" />
-                <p>Select a block on the canvas to edit its properties.</p>
-            </div>
-        );
-    }
-
+  if (!selectedBlock) {
     return (
-        <div className="w-[325px] border-r border-[#2a2a2c] bg-[#0a0a0b] hidden lg:flex flex-col shrink-0 z-10">
-            {/* Header */}
-            <div className="p-5 border-b border-[#1f1f22] flex items-center justify-between">
-                <div>
-                    <h2 className="text-base font-bold text-white tracking-tight">3D Carousel Hero</h2>
-                    <p className="text-xs text-slate-500 mt-0.5">Hero Section Configuration</p>
-                </div>
-                <button className="text-slate-500 hover:text-white transition-colors">
-                    <MoreVertical size={18} />
-                </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto custom-scrollbar pb-10">
-                {/* Style Variant */}
-                <div className="p-5 border-b border-[#1f1f22]">
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Style Variant</span>
-                        <button className="text-[10px] px-2 py-1 bg-[#1a1a1c] text-slate-300 rounded hover:bg-[#2a2a2c] transition-colors">
-                            Live Prev
-                        </button>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                        {/* Demo 7 - Selected */}
-                        <div className="border border-indigo-500/50 bg-indigo-500/5 rounded-xl p-3 flex gap-3 cursor-pointer transition-all hover:border-indigo-500/70">
-                            <div className="w-14 h-14 bg-white rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden shadow-sm">
-                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent" />
-                                <div className="flex gap-0.5">
-                                    <div className="w-4 h-6 bg-indigo-500 rounded-sm rounded-r-none" />
-                                    <div className="w-4 h-6 bg-pink-500 rounded-sm rounded-l-none" />
-                                </div>
-                            </div>
-                            <div className="flex-1 flex flex-col justify-center">
-                                <h3 className="text-xs font-bold text-white leading-tight mb-1">Deep Carousel (Demo 7)</h3>
-                                <div className="self-start px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 text-[8px] font-bold tracking-wider uppercase rounded mb-1.5">
-                                    Best for conversions
-                                </div>
-                                <p className="text-[10px] text-slate-400 leading-tight">
-                                    Smooth circular rotation with 3 main product focuses.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Demo 8 */}
-                        <div className="border border-[#2a2a2c] bg-[#111112] rounded-xl p-3 flex gap-3 cursor-pointer transition-all hover:border-[#3a3a3c]">
-                            <div className="w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center shrink-0 border border-white/5">
-                                <div className="w-6 h-6 bg-indigo-500 rounded-full" />
-                            </div>
-                            <div className="flex-1 flex flex-col justify-center">
-                                <h3 className="text-xs font-bold text-white leading-tight mb-1">Floating Orbit (Demo 8)</h3>
-                                <div className="self-start px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[8px] font-bold tracking-wider uppercase rounded mb-1.5">
-                                    Luxury feel
-                                </div>
-                                <p className="text-[10px] text-slate-400 leading-tight">
-                                    Floating elements with dynamic lighting and parallax.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Demo 9 */}
-                        <div className="border border-[#2a2a2c] bg-[#111112] rounded-xl p-3 flex gap-3 cursor-pointer transition-all hover:border-[#3a3a3c]">
-                            <div className="w-14 h-14 bg-white/5 rounded-lg flex items-center justify-center shrink-0 border border-white/5">
-                                <div className="w-6 h-8 bg-slate-800 rounded-sm -rotate-12 border border-slate-700" />
-                            </div>
-                            <div className="flex-1 flex flex-col justify-center">
-                                <h3 className="text-xs font-bold text-white leading-tight mb-1">Explosion View (Demo 9)</h3>
-                                <div className="self-start px-1.5 py-0.5 bg-orange-500/10 text-orange-400 text-[8px] font-bold tracking-wider uppercase rounded mb-1.5">
-                                    Story driven
-                                </div>
-                                <p className="text-[10px] text-slate-400 leading-tight">
-                                    Deconstruct your product to show every detail.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Typography & Copy */}
-                <div className="p-5 border-b border-[#1f1f22]">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Edit3 size={14} className="text-slate-400" />
-                        <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Typography & Copy</span>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-[11px] text-slate-400 mb-1.5">Primary Headline</label>
-                            <input
-                                type="text"
-                                defaultValue="Experience sound in a new dimension."
-                                className="w-full bg-[#111112] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[11px] text-slate-400 mb-1.5">Description Text</label>
-                            <textarea
-                                defaultValue="The all-new Aura Pro combines spatial audio with an ultra-lightweight design. Perfect for creators, audiophiles, and everyday listeners."
-                                className="w-full bg-[#111112] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors min-h-[80px] resize-none"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-[11px] text-slate-400 mb-1.5">Price Display</label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                                    <input
-                                        type="text"
-                                        defaultValue="299"
-                                        className="w-full bg-[#111112] border border-[#2a2a2c] rounded-md pl-7 pr-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-[11px] text-slate-400 mb-1.5">Button Text</label>
-                                <input
-                                    type="text"
-                                    defaultValue="Pre-order Now"
-                                    className="w-full bg-[#111112] border border-[#2a2a2c] rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 3D Assets */}
-                <div className="p-5 border-b border-[#1f1f22]">
-                    <div className="flex items-center gap-2 mb-4">
-                        <ImageIcon size={14} className="text-slate-400" />
-                        <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">3D Assets</span>
-                    </div>
-
-                    <div className="border border-dashed border-[#2a2a2c] rounded-xl bg-[#111112] p-5 flex flex-col items-center justify-center text-center">
-                        <div className="w-10 h-10 rounded-full bg-[#1a1a1c] flex items-center justify-center mb-3">
-                            <UploadCloud size={18} className="text-slate-400" />
-                        </div>
-                        <h4 className="text-sm font-semibold text-white mb-1">Upload GLTF/GLB or Image</h4>
-                        <p className="text-[10px] text-slate-500 mb-4">Supported files: .glb, .png, .jpg (Max 20MB)</p>
-
-                        <div className="w-full bg-[#1a1a1c] border border-[#2a2a2c] rounded-md p-2 flex items-center justify-between">
-                            <div className="flex items-center gap-2 overflow-hidden">
-                                <div className="bg-indigo-500/20 text-indigo-400 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase shrink-0">
-                                    3D
-                                </div>
-                                <span className="text-xs text-slate-300 truncate">headphone_aura.glb</span>
-                            </div>
-                            <button className="text-slate-500 hover:text-red-400 transition-colors shrink-0 ml-2">
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Display Settings */}
-                <div className="p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                        <SlidersHorizontal size={14} className="text-slate-400" />
-                        <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Display Settings</span>
-                    </div>
-
-                    <div className="space-y-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="text-xs font-semibold text-white mb-0.5">Show Trust Badge</h4>
-                                <p className="text-[10px] text-slate-500">Displays "Top Rated" pill above headline</p>
-                            </div>
-                            <div className="w-9 h-5 bg-indigo-500 rounded-full flex items-center px-0.5 cursor-pointer">
-                                <div className="w-4 h-4 bg-white rounded-full translate-x-4 shadow-sm" />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="text-xs font-semibold text-white mb-0.5">Show Star Rating</h4>
-                                <p className="text-[10px] text-slate-500">Displays review stars under description</p>
-                            </div>
-                            <div className="w-9 h-5 bg-indigo-500 rounded-full flex items-center px-0.5 cursor-pointer">
-                                <div className="w-4 h-4 bg-white rounded-full translate-x-4 shadow-sm" />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="text-xs font-semibold text-white mb-0.5">Auto-rotate 3D Model</h4>
-                                <p className="text-[10px] text-slate-500">Spins asset continuously on page load</p>
-                            </div>
-                            <div className="w-9 h-5 bg-indigo-500 rounded-full flex items-center px-0.5 cursor-pointer">
-                                <div className="w-4 h-4 bg-white rounded-full translate-x-4 shadow-sm" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div className="w-[300px] border-r border-[#2a2a2c] bg-[#0a0a0b] hidden lg:flex flex-col shrink-0 z-10 items-center justify-center text-slate-500 text-sm p-8 text-center">
+        <Settings2 size={32} className="mb-4 opacity-40" />
+        <p className="font-medium text-slate-400 mb-1">No block selected</p>
+        <p className="text-xs text-slate-600 mt-1">Click any section on the canvas to edit its content.</p>
+      </div>
     );
+  }
+
+  // Single update function — directly calls store
+  const update = (key: string, value: unknown) => {
+    updateBlockConfig(selectedBlock.id, { [key]: value });
+  };
+
+  const blockTypeLabel: Record<string, string> = {
+    hero: "Hero Section",
+    features: "Features Grid",
+    cta: "WhatsApp CTA",
+    footer: "Footer",
+    testimonials: "Testimonials",
+  };
+
+  return (
+    <div className="w-[300px] border-r border-[#2a2a2c] bg-[#0a0a0b] hidden lg:flex flex-col shrink-0 z-10">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-[#2a2a2c] shrink-0">
+        <h2 className="text-sm font-bold text-white">
+          {blockTypeLabel[selectedBlock.type] ?? selectedBlock.type}
+        </h2>
+        <p className="text-[10px] text-slate-500 mt-0.5">
+          Changes update the preview instantly
+        </p>
+      </div>
+
+      {/* Dynamic settings based on block type */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-10">
+        {selectedBlock.type === "hero" && (
+          <HeroSettings config={selectedBlock.config} update={update} />
+        )}
+        {selectedBlock.type === "features" && (
+          <FeaturesSettings config={selectedBlock.config} update={update} />
+        )}
+        {selectedBlock.type === "cta" && (
+          <CTASettings config={selectedBlock.config} update={update} />
+        )}
+        {selectedBlock.type === "footer" && (
+          <FooterSettings config={selectedBlock.config} update={update} />
+        )}
+        {selectedBlock.type === "testimonials" && (
+          <TestimonialsSettings config={selectedBlock.config} update={update} />
+        )}
+        {!["hero", "features", "cta", "footer", "testimonials"].includes(selectedBlock.type) && (
+          <GenericSettings config={selectedBlock.config} update={update} />
+        )}
+      </div>
+    </div>
+  );
 }

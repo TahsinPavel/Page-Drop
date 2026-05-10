@@ -11,11 +11,14 @@ export default function PreviewContainer({ children }: PreviewContainerProps) {
     const isMobile = deviceMode === "mobile";
 
     return (
-        <div className={`relative mx-auto transition-all duration-300 ease-in-out origin-top flex flex-col ${
-            isMobile 
-                ? "w-[375px] min-h-[812px] bg-white rounded-[3rem] shadow-2xl overflow-hidden border-[8px] border-[#1a1a1c] my-8" 
-                : "w-full h-full max-w-[1200px] rounded-xl border border-[#2a2a2c] bg-[#111112] shadow-2xl overflow-hidden"
-        }`}>
+        <div
+            data-device={isMobile ? "mobile" : "desktop"}
+            className={`relative mx-auto transition-all duration-300 ease-in-out origin-top flex flex-col ${
+                isMobile
+                    ? "preview-mobile w-[375px] min-h-[812px] bg-white rounded-[3rem] shadow-2xl overflow-hidden border-[8px] border-[#1a1a1c] my-8"
+                    : "preview-desktop w-full h-full max-w-[1200px] rounded-xl border border-[#2a2a2c] bg-[#111112] shadow-2xl overflow-hidden"
+            }`}
+        >
             {/* Mobile Notch Simulation */}
             {isMobile && (
                 <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-50 pointer-events-none">
@@ -41,7 +44,7 @@ export default function PreviewContainer({ children }: PreviewContainerProps) {
                 </div>
             )}
             
-            <div className={`w-full flex-1 relative ${isMobile ? 'overflow-y-auto custom-scrollbar' : 'overflow-y-auto custom-scrollbar bg-white'}`}>
+            <div className={`w-full flex-1 relative ${isMobile ? "overflow-y-auto custom-scrollbar" : "overflow-y-auto custom-scrollbar bg-white"}`}>
                 {children}
             </div>
         </div>

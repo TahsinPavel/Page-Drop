@@ -469,6 +469,79 @@ function useGlobalStyles() {
           font-size: 29px;
         }
       }
+
+      .preview-mobile .lp1-root {
+        --lp1-step: 165px;
+        --lp1-card-size: 236px;
+      }
+
+      .preview-mobile .lp1-hero {
+        padding: 14px 12px 44px;
+      }
+
+      .preview-mobile .lp1-topbar {
+        border-radius: 16px;
+        padding: 12px 14px;
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .preview-mobile .lp1-top-trust {
+        white-space: normal;
+      }
+
+      .preview-mobile .lp1-headline {
+        margin: 24px auto 18px;
+      }
+
+      .preview-mobile .lp1-kicker {
+        font-size: 9px;
+        letter-spacing: 0.14em;
+      }
+
+      .preview-mobile .lp1-hero-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .preview-mobile .lp1-spotlight-wrap {
+        padding: 16px 12px 12px;
+        min-height: 372px;
+        border-radius: 20px;
+      }
+
+      .preview-mobile .lp1-stage {
+        height: 286px;
+      }
+
+      .preview-mobile .lp1-slider-nav {
+        display: none;
+      }
+
+      .preview-mobile .lp1-spot-glow {
+        width: 270px;
+        height: 180px;
+      }
+
+      .preview-mobile .lp1-shadow-pad {
+        width: 174px;
+        bottom: 33px;
+      }
+
+      .preview-mobile .lp1-cta-card {
+        justify-self: stretch;
+        max-width: 100%;
+        padding: 18px;
+        border-radius: 18px;
+      }
+
+      .preview-mobile .lp1-card-title {
+        font-size: 28px;
+      }
+
+      .preview-mobile .lp1-price {
+        font-size: 29px;
+      }
     `;
 
     document.head.appendChild(styleTag);
