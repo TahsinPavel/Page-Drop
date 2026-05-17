@@ -453,12 +453,30 @@ function HeroCTA({ product, reducedMotion, onOrder }) {
   );
 }
 
-export default function DemoLandingPage7() {
+export default function DemoLandingPage7({ config } = {}) {
   const reducedMotion = useReducedMotion();
+
+  // Merge config into local data
+  const products = config?.products
+    ? config.products.map((p, i) => ({
+        ...PRODUCTS[i % PRODUCTS.length],
+        name: p.name || PRODUCTS[i % PRODUCTS.length].name,
+        hook: p.tagline || PRODUCTS[i % PRODUCTS.length].hook,
+        price: p.price || PRODUCTS[i % PRODUCTS.length].price,
+        badge: p.badge || PRODUCTS[i % PRODUCTS.length].badge,
+        image: p.image || PRODUCTS[i % PRODUCTS.length].image,
+      }))
+    : PRODUCTS;
+  const brandName = config?.businessName ?? "VARIANT";
+  const headline = config?.headline ?? "Own the Premium Piece Everyone Wants \u2014 Before It\u2019s Gone";
+  const subheadline = config?.subheadline ?? "Hand-picked premium products with free express delivery and pay-on-delivery confidence. Swipe, choose, and order via WhatsApp in 60 seconds.";
+  const kickerText = config?.kickerText ?? "Limited Drop \u2014 Ends When Stock Runs Out";
+  const trustedText = config?.trustedText ?? "Premium Picks";
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
-  const total = PRODUCTS.length;
-  const activeProduct = PRODUCTS[activeIndex];
+  const total = products.length;
+  const activeProduct = products[activeIndex];
 
   useEffect(() => {
     if (!autoplay) return;
@@ -488,11 +506,11 @@ export default function DemoLandingPage7() {
             <div className="grid h-10 w-10 place-items-center rounded-xl border border-white/15 bg-white/[0.07]">
               <Sparkles className="h-5 w-5 text-emerald-300" />
             </div>
-            <span className="text-sm font-bold tracking-[0.2em] text-white/90">VARIANT</span>
+            <span className="text-sm font-bold tracking-[0.2em] text-white/90">{brandName}</span>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-medium text-white/80 sm:text-sm">
             <BadgeCheck className="h-4 w-4 text-emerald-300" />
-            Premium Picks
+            {trustedText}
           </span>
         </header>
 
@@ -504,7 +522,7 @@ export default function DemoLandingPage7() {
             className="inline-flex items-center gap-2 rounded-full border border-rose-300/25 bg-rose-300/10 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.24em] text-rose-100"
           >
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-rose-300" />
-            Limited Drop — Ends When Stock Runs Out
+            {kickerText}
           </motion.p>
 
           <motion.h1
@@ -513,7 +531,7 @@ export default function DemoLandingPage7() {
             transition={{ duration: 0.5, delay: 0.08 }}
             className="mt-5 text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl"
           >
-            Own the Premium Piece Everyone Wants — Before It's Gone
+            {headline}
           </motion.h1>
 
           <motion.p
@@ -522,14 +540,14 @@ export default function DemoLandingPage7() {
             transition={{ duration: 0.5, delay: 0.16 }}
             className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/65 sm:text-lg"
           >
-            Hand-picked premium products with free express delivery and pay-on-delivery confidence. Swipe, choose, and order via WhatsApp in 60 seconds.
+            {subheadline}
           </motion.p>
         </div>
 
         <div className="mx-auto mt-10 flex w-full max-w-6xl flex-col gap-8 lg:mt-12 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
           <div className="w-full lg:w-[58%]">
             <Coverflow
-              products={PRODUCTS}
+              products={products}
               activeIndex={activeIndex}
               onChange={changeProduct}
               onInteract={pauseAutoplay}

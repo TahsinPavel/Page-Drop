@@ -411,12 +411,30 @@ function HeroCTA({ product, reducedMotion, onOrder }) {
   );
 }
 
-export default function DemoLandingPage8() {
+export default function DemoLandingPage8({ config } = {}) {
   const reducedMotion = useReducedMotion();
+
+  // Merge config into local data
+  const products = config?.products
+    ? config.products.map((p, i) => ({
+        ...PRODUCTS[i % PRODUCTS.length],
+        name: p.name || PRODUCTS[i % PRODUCTS.length].name,
+        hook: p.tagline || PRODUCTS[i % PRODUCTS.length].hook,
+        price: p.price || PRODUCTS[i % PRODUCTS.length].price,
+        badge: p.badge || PRODUCTS[i % PRODUCTS.length].badge,
+        image: p.image || PRODUCTS[i % PRODUCTS.length].image,
+      }))
+    : PRODUCTS;
+  const brandName = config?.businessName ?? "SHOWROOM";
+  const headline = config?.headline ?? "Upgrade Your Everyday Style with Premium Products";
+  const subheadline = config?.subheadline ?? "Crafted for comfort, designed for confidence, delivered fast. Explore our curated collection and order in seconds.";
+  const kickerText = config?.kickerText ?? "PREMIUM PICKS";
+  const trustedText = config?.trustedText ?? "Premium Picks";
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
-  const total = PRODUCTS.length;
-  const activeProduct = PRODUCTS[activeIndex];
+  const total = products.length;
+  const activeProduct = products[activeIndex];
 
   useEffect(() => {
     if (!autoplay) return;
@@ -446,11 +464,11 @@ export default function DemoLandingPage8() {
             <div className="grid h-10 w-10 place-items-center rounded-xl border border-white/15 bg-white/[0.07]">
               <Sparkles className="h-5 w-5 text-emerald-300" />
             </div>
-            <span className="text-sm font-bold tracking-[0.2em] text-white/90">SHOWROOM</span>
+            <span className="text-sm font-bold tracking-[0.2em] text-white/90">{brandName}</span>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-medium text-white/80 sm:text-sm">
             <BadgeCheck className="h-4 w-4 text-emerald-300" />
-            Premium Picks
+            {trustedText}
           </span>
         </header>
 
@@ -462,7 +480,7 @@ export default function DemoLandingPage8() {
             className="inline-flex items-center gap-2 rounded-full border border-indigo-300/25 bg-indigo-300/10 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.24em] text-indigo-100"
           >
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-300" />
-            PREMIUM PICKS
+            {kickerText}
           </motion.p>
 
           <motion.h1
@@ -471,7 +489,7 @@ export default function DemoLandingPage8() {
             transition={{ duration: 0.5, delay: 0.08 }}
             className="mt-5 text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl"
           >
-            Upgrade Your Everyday Style with Premium Products
+            {headline}
           </motion.h1>
 
           <motion.p
@@ -480,14 +498,14 @@ export default function DemoLandingPage8() {
             transition={{ duration: 0.5, delay: 0.16 }}
             className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/65 sm:text-lg"
           >
-            Crafted for comfort, designed for confidence, delivered fast. Explore our curated collection and order in seconds.
+            {subheadline}
           </motion.p>
         </div>
 
         <div className="mx-auto mt-10 flex w-full max-w-6xl flex-col gap-8 lg:mt-12 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
           <div className="w-full lg:w-[58%]">
             <Coverflow
-              products={PRODUCTS}
+              products={products}
               activeIndex={activeIndex}
               onChange={changeProduct}
               onInteract={pauseAutoplay}

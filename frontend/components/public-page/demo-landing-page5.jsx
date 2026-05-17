@@ -317,13 +317,31 @@ function PedestalShowcase({ products, activeIndex, onChange, onInteract }) {
   );
 }
 
-export default function DemoLandingPage5() {
+export default function DemoLandingPage5({ config } = {}) {
   const reducedMotion = useReducedMotion();
+
+  // Merge config into local data
+  const products = config?.products
+    ? config.products.map((p, i) => ({
+        ...PRODUCTS[i % PRODUCTS.length],
+        name: p.name || PRODUCTS[i % PRODUCTS.length].name,
+        tagline: p.tagline || PRODUCTS[i % PRODUCTS.length].tagline,
+        price: p.price || PRODUCTS[i % PRODUCTS.length].price,
+        badge: p.badge || PRODUCTS[i % PRODUCTS.length].badge,
+        image: p.image || PRODUCTS[i % PRODUCTS.length].image,
+      }))
+    : PRODUCTS;
+  const brandName = config?.businessName ?? "LUXORA";
+  const headline = config?.headline ?? "Luxury crafted for everyday elegance.";
+  const subheadline = config?.subheadline ?? "Discover premium quality products crafted to elevate your style instantly with a luxury showroom pedestal experience.";
+  const kickerText = config?.kickerText ?? "Premium Collection";
+  const trustedText = config?.trustedText ?? "Trusted Luxury Quality";
+
   const [activeProduct, setActiveProduct] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
 
-  const total = PRODUCTS.length;
-  const active = PRODUCTS[activeProduct];
+  const total = products.length;
+  const active = products[activeProduct];
 
   useEffect(() => {
     if (!autoplay) return undefined;
@@ -354,32 +372,32 @@ export default function DemoLandingPage5() {
               <div className="grid h-10 w-10 place-items-center rounded-xl border border-amber-100/25 bg-amber-100/10">
                 <Crown className="h-5 w-5 text-amber-200" />
               </div>
-              <p className="text-sm font-semibold tracking-[0.18em] text-amber-100">LUXORA</p>
+              <p className="text-sm font-semibold tracking-[0.18em] text-amber-100">{brandName}</p>
             </div>
 
             <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-100/25 bg-amber-100/10 px-4 py-2 text-sm text-amber-50/95">
               <BadgeCheck className="h-4 w-4 text-amber-200" />
-              Trusted Luxury Quality
+              {trustedText}
             </div>
           </div>
         </div>
 
         <div className="mx-auto mt-10 max-w-4xl text-center sm:mt-12">
           <p className="inline-flex items-center rounded-full border border-amber-100/35 bg-amber-100/12 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-100">
-            Premium Collection
+            {kickerText}
           </p>
           <h1 className="mt-5 font-serif text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-            Luxury crafted for everyday elegance.
+            {headline}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/72 sm:text-lg">
-            Discover premium quality products crafted to elevate your style instantly with a luxury showroom pedestal experience.
+            {subheadline}
           </p>
         </div>
 
         <div className="mx-auto mt-10 grid max-w-7xl grid-cols-1 items-center gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(330px,1fr)] lg:gap-8">
           <div className="rounded-3xl border border-amber-100/20 bg-white/[0.05] px-3 py-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-md sm:px-5 sm:py-6">
             <PedestalShowcase
-              products={PRODUCTS}
+              products={products}
               activeIndex={activeProduct}
               onChange={handleChange}
               onInteract={pauseAutoplay}

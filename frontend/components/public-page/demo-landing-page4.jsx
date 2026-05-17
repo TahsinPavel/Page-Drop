@@ -224,12 +224,30 @@ function CTACard({ product, reduced }) {
 
 /* ── Main Page Component ─────────────────────────────────────────────── */
 
-export default function DemoLandingPage4() {
+export default function DemoLandingPage4({ config } = {}) {
   const reduced = useReducedMotion();
+
+  // Merge config into local data
+  const products = config?.products
+    ? config.products.map((p, i) => ({
+        ...PRODUCTS[i % PRODUCTS.length],
+        name: p.name || PRODUCTS[i % PRODUCTS.length].name,
+        hook: p.tagline || PRODUCTS[i % PRODUCTS.length].hook,
+        price: p.price || PRODUCTS[i % PRODUCTS.length].price,
+        badge: p.badge || PRODUCTS[i % PRODUCTS.length].badge,
+        image: p.image || PRODUCTS[i % PRODUCTS.length].image,
+      }))
+    : PRODUCTS;
+  const brandName = config?.businessName ?? "LUXEFLOW";
+  const headline = config?.headline ?? "Discover the Style Everyone Wants";
+  const subheadline = config?.subheadline ?? "Premium quality products designed to stand out \u2014 browse, explore, and order instantly in seconds.";
+  const kickerText = config?.kickerText ?? "Exclusive Collection";
+  const trustedText = config?.trustedText ?? "Trusted by 1,200+ customers";
+
   const [activeIdx, setActiveIdx] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
-  const total = PRODUCTS.length;
-  const active = PRODUCTS[activeIdx];
+  const total = products.length;
+  const active = products[activeIdx];
 
   useEffect(() => {
     if (!autoplay) return;
@@ -255,11 +273,11 @@ export default function DemoLandingPage4() {
             <div className="grid h-10 w-10 place-items-center rounded-xl border border-white/15 bg-white/[0.07]">
               <Sparkles className="h-5 w-5 text-emerald-400" />
             </div>
-            <span className="text-sm font-bold tracking-[0.2em] text-white/90">LUXEFLOW</span>
+            <span className="text-sm font-bold tracking-[0.2em] text-white/90">{brandName}</span>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-medium text-white/80 sm:text-sm">
             <BadgeCheck className="h-4 w-4 text-emerald-400" />
-            <span className="hidden sm:inline">Trusted by 1,200+ customers</span>
+            <span className="hidden sm:inline">{trustedText}</span>
             <span className="sm:hidden">1,200+ trusted</span>
           </div>
         </header>
@@ -272,7 +290,7 @@ export default function DemoLandingPage4() {
             transition={{ duration: 0.4 }}
             className="inline-block rounded-full border border-emerald-300/25 bg-emerald-400/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-200"
           >
-            Exclusive Collection
+            {kickerText}
           </motion.span>
           <motion.h1
             initial={reduced ? false : { opacity: 0, y: 14 }}
@@ -280,7 +298,7 @@ export default function DemoLandingPage4() {
             transition={{ duration: 0.5, delay: 0.08 }}
             className="mt-5 text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl"
           >
-            Discover the Style Everyone Wants
+            {headline}
           </motion.h1>
           <motion.p
             initial={reduced ? false : { opacity: 0, y: 12 }}
@@ -288,7 +306,7 @@ export default function DemoLandingPage4() {
             transition={{ duration: 0.5, delay: 0.16 }}
             className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg"
           >
-            Premium quality products designed to stand out — browse, explore, and order instantly in seconds.
+            {subheadline}
           </motion.p>
         </div>
 
@@ -296,7 +314,7 @@ export default function DemoLandingPage4() {
         <div className="mx-auto mt-10 flex max-w-7xl flex-col items-center gap-8 lg:mt-12 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
           {/* Coverflow */}
           <div className="w-full max-w-3xl flex-1">
-            <Coverflow products={PRODUCTS} activeIndex={activeIdx} onChange={change} onInteract={pause} />
+            <Coverflow products={products} activeIndex={activeIdx} onChange={change} onInteract={pause} />
           </div>
           {/* CTA Card */}
           <div className="flex w-full max-w-md shrink-0 justify-center lg:mt-6 lg:w-auto">

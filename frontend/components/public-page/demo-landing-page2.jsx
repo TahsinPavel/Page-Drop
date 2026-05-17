@@ -248,11 +248,30 @@ function WatchCarousel({ watches, activeIndex, onChangeIndex }) {
 // ═══════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════
-export default function DemoLandingPage2() {
+export default function DemoLandingPage2({ config } = {}) {
   useGlobalStyles();
+
+  // Merge config into local data
+  const watches = config?.products
+    ? config.products.map((p, i) => ({
+        ...WATCHES[i % WATCHES.length],
+        name: p.name || WATCHES[i % WATCHES.length].name,
+        tagline: p.tagline || WATCHES[i % WATCHES.length].tagline,
+        price: p.price || WATCHES[i % WATCHES.length].price,
+        badge: p.badge || WATCHES[i % WATCHES.length].badge,
+        badgeColor: p.badgeColor || WATCHES[i % WATCHES.length].badgeColor,
+        image: p.image || WATCHES[i % WATCHES.length].image,
+      }))
+    : WATCHES;
+  const brandName = config?.businessName ?? "AURA CHRONOS";
+  const headline = config?.headline ?? "Find the Style Everyone Wants";
+  const subheadline = config?.subheadline ?? "Premium quality. Limited stock. Instant WhatsApp ordering with no payment required now.";
+  const kickerText = config?.kickerText ?? "LIMITED EDITION DROP";
+  const trustedText = config?.trustedText ?? "Trusted by 1,200+ customers";
+
   const [activeWatch, setActiveWatch] = useState(1); // Start with Nebula Blue
   const [autoplay, setAutoplay] = useState(true);
-  const total = WATCHES.length;
+  const total = watches.length;
 
   useEffect(() => {
     if (!autoplay) return;
@@ -266,7 +285,7 @@ export default function DemoLandingPage2() {
     setTimeout(() => setAutoplay(true), 10000);
   }, [total]);
 
-  const watch = WATCHES[activeWatch];
+  const watch = watches[activeWatch];
   const urgencyNote =
     watch.badge === "LIMITED EDITION"
       ? "Limited drop. Stock updates hourly."
@@ -366,7 +385,7 @@ export default function DemoLandingPage2() {
                 whiteSpace: "nowrap",
               }}
             >
-              Trusted by 1,200+ customers
+              {trustedText}
             </div>
           </div>
 
@@ -389,7 +408,7 @@ export default function DemoLandingPage2() {
                   color: "#d6b760",
                 }}
               >
-                LIMITED EDITION DROP
+                {kickerText}
               </p>
               <h1
                 style={{
@@ -402,7 +421,7 @@ export default function DemoLandingPage2() {
                   color: "#f5f1e9",
                 }}
               >
-                Find the Style Everyone Wants
+                {headline}
               </h1>
               <p
                 style={{
@@ -413,7 +432,7 @@ export default function DemoLandingPage2() {
                   color: "rgba(243,239,232,0.66)",
                 }}
               >
-                Premium quality. Limited stock. Instant WhatsApp ordering with no payment required now.
+                {subheadline}
               </p>
             </div>
           </Fade>

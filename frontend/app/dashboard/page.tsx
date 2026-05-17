@@ -145,7 +145,7 @@ export default function DashboardPage() {
                 <QuickActionCard
                     icon={PlusCircle}
                     label="Add New Page"
-                    href="/dashboard/build/new"
+                    href="/dashboard/build"
                     delay={3}
                 />
                 <QuickActionCard
@@ -157,7 +157,7 @@ export default function DashboardPage() {
                 <QuickActionCard
                     icon={Layout}
                     label="Edit Landing Page"
-                    href={pages?.[0] ? `/dashboard/pages/${pages[0].id}` : "/dashboard/create"}
+                    href={pages?.[0] ? `/dashboard/build?pageId=${pages[0].id}` : "/dashboard/build"}
                     delay={5}
                 />
                 <QuickActionCard
@@ -225,7 +225,7 @@ export default function DashboardPage() {
                                 </p>
                             </div>
                             <Link 
-                                href="/dashboard/build/new"
+                                href="/dashboard/build"
                                 className="db-btn-primary"
                             >
                                 <PlusCircle

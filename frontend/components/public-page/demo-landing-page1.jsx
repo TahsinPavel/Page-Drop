@@ -968,13 +968,31 @@ function Fade({ children, delay = 0 }) {
   );
 }
 
-export default function DemoLandingPage1() {
+export default function DemoLandingPage1({ config } = {}) {
   useGlobalStyles();
+
+  // Merge config into local data
+  const products = config?.products
+    ? config.products.map((p, i) => ({
+        ...PRODUCTS[i % PRODUCTS.length],
+        name: p.name || PRODUCTS[i % PRODUCTS.length].name,
+        tagline: p.tagline || PRODUCTS[i % PRODUCTS.length].tagline,
+        price: p.price || PRODUCTS[i % PRODUCTS.length].price,
+        badge: p.badge || PRODUCTS[i % PRODUCTS.length].badge,
+        badgeColor: p.badgeColor || PRODUCTS[i % PRODUCTS.length].badgeColor,
+        image: p.image || PRODUCTS[i % PRODUCTS.length].image,
+      }))
+    : PRODUCTS;
+  const brandName = config?.businessName ?? "AURA";
+  const headline = config?.headline ?? "Find the style that matches you best.";
+  const subheadline = config?.subheadline ?? "Premium quality. Limited stock. Instant ordering with a focused product spotlight built to convert.";
+  const kickerText = config?.kickerText ?? "LIMITED EDITION DROP";
+  const trustedText = config?.trustedText ?? "⭐ Trusted by 1,200+ customers";
 
   const [activeProduct, setActiveProduct] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
   const testimonialRef = useRef(null);
-  const total = PRODUCTS.length;
+  const total = products.length;
 
   useEffect(() => {
     if (!autoplay) return undefined;
@@ -993,7 +1011,7 @@ export default function DemoLandingPage1() {
     [total]
   );
 
-  const current = PRODUCTS[activeProduct];
+  const current = products[activeProduct];
   const badgeTone = {
     color: current.badgeColor,
     background: hexToRgba(current.badgeColor, 0.16),
@@ -1014,20 +1032,20 @@ export default function DemoLandingPage1() {
         <div className="lp1-topbar">
           <div className="lp1-brand">
             <span className="lp1-brand-mark">✦</span>
-            <span>AURA</span>
+            <span>{brandName}</span>
           </div>
-          <div className="lp1-top-trust">⭐ Trusted by 1,200+ customers</div>
+          <div className="lp1-top-trust">{trustedText}</div>
         </div>
 
         <div className="lp1-headline">
-          <span className="lp1-kicker">LIMITED EDITION DROP</span>
-          <h1>Find the style that matches you best.</h1>
-          <p className="lp1-subheadline">Premium quality. Limited stock. Instant ordering with a focused product spotlight built to convert.</p>
+          <span className="lp1-kicker">{kickerText}</span>
+          <h1>{headline}</h1>
+          <p className="lp1-subheadline">{subheadline}</p>
         </div>
 
         <div className="lp1-hero-grid">
           <div className="lp1-spotlight-wrap">
-            <SpotlightSlider products={PRODUCTS} activeIndex={activeProduct} onChangeIndex={goTo} accentColor={current.badgeColor} />
+            <SpotlightSlider products={products} activeIndex={activeProduct} onChangeIndex={goTo} accentColor={current.badgeColor} />
             <div className="lp1-swipe-hint">Swipe to explore products</div>
           </div>
 

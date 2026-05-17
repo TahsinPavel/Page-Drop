@@ -154,12 +154,30 @@ function FloatingStack({ products, activeIndex, onChange, onInteract }) {
 
 /* ── Main Page ───────────────────────────────────────────────────── */
 
-export default function DemoLandingPage6() {
+export default function DemoLandingPage6({ config } = {}) {
   const reduced = useReducedMotion();
+
+  // Merge config into local data
+  const products = config?.products
+    ? config.products.map((p, i) => ({
+        ...PRODUCTS[i % PRODUCTS.length],
+        name: p.name || PRODUCTS[i % PRODUCTS.length].name,
+        hook: p.tagline || PRODUCTS[i % PRODUCTS.length].hook,
+        price: p.price || PRODUCTS[i % PRODUCTS.length].price,
+        badge: p.badge || PRODUCTS[i % PRODUCTS.length].badge,
+        image: p.image || PRODUCTS[i % PRODUCTS.length].image,
+      }))
+    : PRODUCTS;
+  const brandName = config?.businessName ?? "REVEALUX";
+  const headline = config?.headline ?? "Reveal Premium Picks Designed for You";
+  const subheadline = config?.subheadline ?? "Swipe through our curated premium collection and reveal your perfect pick.";
+  const kickerText = config?.kickerText ?? "Reveal the Collection";
+  const trustedText = config?.trustedText ?? "Best Seller Collection";
+
   const [activeIdx, setActiveIdx] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
-  const total = PRODUCTS.length;
-  const active = PRODUCTS[activeIdx];
+  const total = products.length;
+  const active = products[activeIdx];
 
   useEffect(() => {
     if (!autoplay) return;
@@ -182,11 +200,11 @@ export default function DemoLandingPage6() {
             <div className="grid h-10 w-10 place-items-center rounded-xl border border-white/15 bg-white/[0.06]">
               <Sparkles className="h-5 w-5 text-violet-400" />
             </div>
-            <span className="text-sm font-bold tracking-[0.2em] text-white/90">REVEALUX</span>
+            <span className="text-sm font-bold tracking-[0.2em] text-white/90">{brandName}</span>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-xs font-medium text-white/75 sm:text-sm">
             <BadgeCheck className="h-4 w-4 text-violet-400" />
-            <span className="hidden sm:inline">Best Seller Collection</span>
+            <span className="hidden sm:inline">{trustedText}</span>
             <span className="sm:hidden">Best Sellers</span>
           </div>
         </header>
@@ -195,18 +213,18 @@ export default function DemoLandingPage6() {
         <div className="mx-auto mt-10 max-w-2xl text-center sm:mt-14">
           <motion.span initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
             className="inline-block rounded-full border border-violet-300/25 bg-violet-400/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.26em] text-violet-200"
-          >Reveal the Collection</motion.span>
+          >{kickerText}</motion.span>
           <motion.h1 initial={reduced ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.08 }}
             className="mt-5 font-serif text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.5rem]"
-          >Reveal Premium Picks Designed for You</motion.h1>
+          >{headline}</motion.h1>
           <motion.p initial={reduced ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.16 }}
             className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-white/55 sm:text-lg"
-          >Swipe through our curated premium collection and reveal your perfect pick.</motion.p>
+          >{subheadline}</motion.p>
         </div>
 
         {/* Stack + CTA centered */}
         <div className="mx-auto mt-10 flex w-full max-w-6xl flex-1 flex-col items-center justify-center gap-10 lg:mt-8">
-          <FloatingStack products={PRODUCTS} activeIndex={activeIdx} onChange={change} onInteract={pause} />
+          <FloatingStack products={products} activeIndex={activeIdx} onChange={change} onInteract={pause} />
 
           {/* Reveal CTA Block */}
           <AnimatePresence mode="wait">

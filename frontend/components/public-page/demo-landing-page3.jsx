@@ -784,13 +784,31 @@ function SectionIntro({ eyebrow, title, subtitle }) {
   );
 }
 
-export default function DemoLandingPage3() {
+export default function DemoLandingPage3({ config } = {}) {
   useGlobalStyles();
+
+  // Merge config into local data (preserve accentHue and images from defaults)
+  const products = config?.products
+    ? config.products.map((p, i) => ({
+        ...PRODUCTS[i % PRODUCTS.length],
+        name: p.name || PRODUCTS[i % PRODUCTS.length].name,
+        tagline: p.tagline || PRODUCTS[i % PRODUCTS.length].tagline,
+        price: p.price || PRODUCTS[i % PRODUCTS.length].price,
+        badge: p.badge || PRODUCTS[i % PRODUCTS.length].badge,
+        badgeColor: p.badgeColor || PRODUCTS[i % PRODUCTS.length].badgeColor,
+        image: p.image || PRODUCTS[i % PRODUCTS.length].images?.[0],
+      }))
+    : PRODUCTS;
+  const brandName = config?.businessName ?? "Poker Showroom";
+  const headline = config?.headline ?? "Choose the Style That Fits You Best";
+  const subheadline = config?.subheadline ?? "Premium quality. Limited stock. Instant ordering through WhatsApp in under a minute.";
+  const kickerText = config?.kickerText ?? "Limited Edition Drop";
+  const trustedText = config?.trustedText ?? "Trusted by 1,200+ customers";
 
   const isMobile = useMediaQuery("(max-width: 1024px)");
   const [activeProduct, setActiveProduct] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
-  const total = PRODUCTS.length;
+  const total = products.length;
 
   useEffect(() => {
     if (!autoplay) return undefined;
@@ -811,7 +829,7 @@ export default function DemoLandingPage3() {
     [total]
   );
 
-  const product = PRODUCTS[activeProduct];
+  const product = products[activeProduct];
 
   return (
     <div
@@ -894,7 +912,7 @@ export default function DemoLandingPage3() {
                   fontFamily: "'Space Grotesk', sans-serif",
                 }}
               >
-                Poker Showroom
+                {brandName}
               </span>
             </div>
 
@@ -915,7 +933,7 @@ export default function DemoLandingPage3() {
               }}
             >
               <span style={{ color: "#fbbf24" }}>★</span>
-              Trusted by 1,200+ customers
+              {trustedText}
             </div>
           </div>
 
@@ -938,7 +956,7 @@ export default function DemoLandingPage3() {
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
-              Limited Edition Drop
+              {kickerText}
             </p>
 
             <h1
@@ -953,7 +971,7 @@ export default function DemoLandingPage3() {
                 marginInline: "auto",
               }}
             >
-              Choose the Style That Fits You Best
+              {headline}
             </h1>
 
             <p
@@ -966,7 +984,7 @@ export default function DemoLandingPage3() {
                 fontFamily: "'Manrope', sans-serif",
               }}
             >
-              Premium quality. Limited stock. Instant ordering through WhatsApp in under a minute.
+              {subheadline}
             </p>
           </div>
 
