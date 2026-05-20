@@ -12,6 +12,7 @@ export interface TemplateProduct {
   badge: string;
   badgeColor: string;
   image: string;
+  images?: string[];
 }
 
 export interface TemplateConfig {

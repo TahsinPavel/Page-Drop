@@ -255,6 +255,7 @@ export default function DemoLandingPage2({ config } = {}) {
   const watches = config?.products
     ? config.products.map((p, i) => ({
         ...WATCHES[i % WATCHES.length],
+        id: p.id || `p-${i}`,
         name: p.name || WATCHES[i % WATCHES.length].name,
         tagline: p.tagline || WATCHES[i % WATCHES.length].tagline,
         price: p.price || WATCHES[i % WATCHES.length].price,
@@ -459,11 +460,11 @@ export default function DemoLandingPage2({ config } = {}) {
                 }}
               >
                 <div style={{ height: "460px", maxWidth: "820px", margin: "0 auto" }}>
-                  <WatchCarousel watches={WATCHES} activeIndex={activeWatch} onChangeIndex={goTo} />
+                  <WatchCarousel watches={watches} activeIndex={activeWatch} onChangeIndex={goTo} />
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
-                  {WATCHES.map((w, i) => (
+                  {watches.map((w, i) => (
                     <button
                       key={w.id}
                       onClick={() => goTo(i)}

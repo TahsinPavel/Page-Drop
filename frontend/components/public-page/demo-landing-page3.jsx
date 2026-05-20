@@ -791,12 +791,17 @@ export default function DemoLandingPage3({ config } = {}) {
   const products = config?.products
     ? config.products.map((p, i) => ({
         ...PRODUCTS[i % PRODUCTS.length],
+        id: p.id || `p-${i}`,
         name: p.name || PRODUCTS[i % PRODUCTS.length].name,
         tagline: p.tagline || PRODUCTS[i % PRODUCTS.length].tagline,
         price: p.price || PRODUCTS[i % PRODUCTS.length].price,
         badge: p.badge || PRODUCTS[i % PRODUCTS.length].badge,
         badgeColor: p.badgeColor || PRODUCTS[i % PRODUCTS.length].badgeColor,
-        image: p.image || PRODUCTS[i % PRODUCTS.length].images?.[0],
+        images: (p.images && p.images.filter(Boolean).length > 0)
+          ? p.images.filter(Boolean)
+          : p.image
+            ? [p.image]
+            : PRODUCTS[i % PRODUCTS.length].images,
       }))
     : PRODUCTS;
   const brandName = config?.businessName ?? "Poker Showroom";
@@ -1042,7 +1047,7 @@ export default function DemoLandingPage3({ config } = {}) {
                 }}
               >
                 <ProductCarousel
-                  products={PRODUCTS}
+                  products={products}
                   activeIndex={activeProduct}
                   onChangeIndex={goTo}
                   isMobile={isMobile}
@@ -1072,7 +1077,7 @@ export default function DemoLandingPage3({ config } = {}) {
                     marginTop: isMobile ? "8px" : "4px",
                   }}
                 >
-                  {PRODUCTS.map((p, i) => (
+                  {products.map((p, i) => (
                     <button
                       key={p.id}
                       onClick={() => goTo(i)}

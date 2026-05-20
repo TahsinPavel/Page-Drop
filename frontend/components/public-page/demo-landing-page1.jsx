@@ -975,6 +975,7 @@ export default function DemoLandingPage1({ config } = {}) {
   const products = config?.products
     ? config.products.map((p, i) => ({
         ...PRODUCTS[i % PRODUCTS.length],
+        id: p.id || `p-${i}`,
         name: p.name || PRODUCTS[i % PRODUCTS.length].name,
         tagline: p.tagline || PRODUCTS[i % PRODUCTS.length].tagline,
         price: p.price || PRODUCTS[i % PRODUCTS.length].price,

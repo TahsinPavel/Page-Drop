@@ -418,6 +418,7 @@ export default function DemoLandingPage8({ config } = {}) {
   const products = config?.products
     ? config.products.map((p, i) => ({
         ...PRODUCTS[i % PRODUCTS.length],
+        id: p.id || `p-${i}`,
         name: p.name || PRODUCTS[i % PRODUCTS.length].name,
         hook: p.tagline || PRODUCTS[i % PRODUCTS.length].hook,
         price: p.price || PRODUCTS[i % PRODUCTS.length].price,
