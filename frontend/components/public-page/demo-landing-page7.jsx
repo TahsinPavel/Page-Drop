@@ -141,8 +141,16 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
   const prevIdx = useRef(-1);
   const radius = useRef(320);
 
-  const CARD_W = 340;
-  const CARD_H = 460;
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const CARD_W = isMobile ? 220 : 340;
+  const CARD_H = isMobile ? 300 : 460;
 
   /* FIXED: update face transforms whenever radius changes */
   useEffect(() => {
@@ -274,15 +282,44 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
     }, 3000);
   }, [theta, onInteract]);
 
+  const onTouchStart = useCallback((e) => {
+    isDragging.current = true;
+    isIdle.current = false;
+    startX.current = e.touches[0].pageX;
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    if (!isDragging.current) return;
+    targetRotY.current += (e.touches[0].pageX - startX.current) * 0.4;
+    startX.current = e.touches[0].pageX;
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!isDragging.current) return;
+
+    isDragging.current = false;
+    onInteract();
+
+    targetRotY.current = Math.round(targetRotY.current / theta) * theta;
+
+    setTimeout(() => {
+      isIdle.current = true;
+    }, 3000);
+  }, [theta, onInteract]);
+
   useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("touchmove", onTouchMove);
+    window.addEventListener("touchend", onTouchEnd);
 
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [onMouseMove, onMouseUp]);
+  }, [onMouseMove, onMouseUp, onTouchMove, onTouchEnd]);
 
   const active = products[activeIndex];
 
@@ -290,9 +327,12 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
     <div className="relative w-full select-none">
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[38%] h-[440px] w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]"
+        className="pointer-events-none absolute left-1/2 top-[38%] rounded-full blur-[100px]"
         style={{
+          width: isMobile ? "240px" : "440px",
+          height: isMobile ? "240px" : "440px",
           background: `radial-gradient(circle, ${active.glow} 0%, transparent 68%)`,
+          transform: "translate(-50%, -50%)",
         }}
         animate={
           reduced
@@ -312,12 +352,13 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
       <div
         className="relative mx-auto cursor-grab active:cursor-grabbing"
         style={{
-          height: "clamp(440px, 72vw, 580px)",
+          height: isMobile ? "320px" : "clamp(440px, 72vw, 580px)",
           perspective: "1800px",
           perspectiveOrigin: "50% 50%",
           overflow: "visible",
         }}
         onMouseDown={onMouseDown}
+        onTouchStart={onTouchStart}
       >
         <div
           ref={carouselRef}
@@ -545,7 +586,7 @@ export default function DemoLandingPage7({ config } = {}) {
           </motion.p>
         </div>
 
-        <div className="mx-auto mt-10 flex w-full max-w-6xl flex-col gap-8 lg:mt-12 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+        <div className="mx-auto mt-6 flex w-full max-w-6xl flex-col gap-5 lg:mt-12 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
           <div className="w-full lg:w-[58%]">
             <Coverflow
               products={products}

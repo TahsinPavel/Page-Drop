@@ -54,6 +54,14 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
   const reduced = useReducedMotion();
   const touchX = useRef(0);
   const spring = useMemo(() => reduced ? { duration: 0.2 } : { type: "spring", stiffness: 240, damping: 26, mass: 0.85 }, [reduced]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const swipe = useCallback((dx) => {
     if (Math.abs(dx) < 44) return;
@@ -76,7 +84,7 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
       <div className="pointer-events-none absolute bottom-4 left-1/2 h-6 w-[200px] -translate-x-1/2 rounded-full bg-black/40 blur-xl" />
 
       {/* Products */}
-      <div className="relative mx-auto h-[300px] sm:h-[360px] lg:h-[420px]"
+      <div className="relative mx-auto h-[230px] sm:h-[360px] lg:h-[420px]"
         style={{ transformStyle: "preserve-3d" }}
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
         onTouchEnd={(e) => { swipe(e.changedTouches[0].clientX - touchX.current); }}
@@ -87,7 +95,7 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
           const isActive = rel === 0;
           const visible = abs <= 2;
 
-          const x = rel * 200;
+          const x = rel * (isMobile ? 120 : 200);
           const y = isActive ? -10 : abs === 1 ? 6 : 18;
           const sc = isActive ? 1 : abs === 1 ? 0.72 : 0.55;
           const ry = isActive ? 0 : rel < 0 ? 45 : -45;
@@ -99,7 +107,7 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
           return (
             <motion.button key={p.id} type="button" aria-label={`View ${p.name}`}
               onClick={() => { onChange(i); onInteract(); }}
-              className="absolute left-1/2 top-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 border-none bg-transparent p-0 sm:h-[250px] sm:w-[250px] lg:h-[310px] lg:w-[310px]"
+              className="absolute left-1/2 top-1/2 h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2 border-none bg-transparent p-0 sm:h-[250px] sm:w-[250px] lg:h-[310px] lg:w-[310px]"
               initial={false}
               animate={{ x, y, scale: sc, rotateY: ry, z, opacity: visible ? op : 0, filter: `brightness(${br}) blur(${bl}px)` }}
               transition={spring}
@@ -312,7 +320,7 @@ export default function DemoLandingPage4({ config } = {}) {
         </div>
 
         {/* Hero Layout: Coverflow + CTA */}
-        <div className="mx-auto mt-10 flex max-w-7xl flex-col items-center gap-8 lg:mt-12 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
+        <div className="mx-auto mt-8 flex max-w-7xl flex-col items-center gap-6 lg:mt-12 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
           {/* Coverflow */}
           <div className="w-full max-w-3xl flex-1">
             <Coverflow products={products} activeIndex={activeIdx} onChange={change} onInteract={pause} />

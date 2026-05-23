@@ -119,6 +119,14 @@ function relativeOffset(index, activeIndex, length) {
 function PedestalShowcase({ products, activeIndex, onChange, onInteract }) {
   const reducedMotion = useReducedMotion();
   const touchStartX = useRef(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const transition = useMemo(
     () =>
@@ -148,7 +156,7 @@ function PedestalShowcase({ products, activeIndex, onChange, onInteract }) {
   return (
     <div className="relative w-full">
       <div
-        className="relative h-[360px] sm:h-[420px] lg:h-[500px]"
+        className="relative h-[270px] sm:h-[420px] lg:h-[500px]"
         style={{ perspective: "1700px", transformStyle: "preserve-3d" }}
         onTouchStart={(e) => {
           touchStartX.current = e.touches[0].clientX;
@@ -184,7 +192,7 @@ function PedestalShowcase({ products, activeIndex, onChange, onInteract }) {
           const isActive = rel === 0;
           const isVisible = abs <= 1;
 
-          const x = rel * 210;
+          const x = rel * (isMobile ? 120 : 210);
           const y = isActive ? -24 : 8 + abs * 20;
           const scale = isActive ? 1 : 0.66;
           const rotateY = isActive ? 0 : rel < 0 ? 34 : -34;
@@ -202,7 +210,7 @@ function PedestalShowcase({ products, activeIndex, onChange, onInteract }) {
                 onChange(index);
                 onInteract();
               }}
-              className="absolute left-1/2 top-[48%] h-[220px] w-[220px] -translate-x-1/2 -translate-y-1/2 border-none bg-transparent p-0 sm:h-[270px] sm:w-[270px] lg:h-[330px] lg:w-[330px]"
+              className="absolute left-1/2 top-[42%] h-[170px] w-[170px] -translate-x-1/2 -translate-y-1/2 border-none bg-transparent p-0 sm:h-[270px] sm:w-[270px] lg:h-[330px] lg:w-[330px]"
               initial={false}
               animate={{
                 x,

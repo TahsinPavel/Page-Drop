@@ -64,7 +64,7 @@ function FloatingStack({ products, activeIndex, onChange, onInteract }) {
       />
 
       {/* Stack container */}
-      <div className="relative mx-auto h-[340px] w-[280px] sm:h-[400px] sm:w-[320px] lg:h-[440px] lg:w-[360px]"
+      <div className="relative mx-auto h-[290px] w-[240px] sm:h-[400px] sm:w-[320px] lg:h-[440px] lg:w-[360px]"
         style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
       >
         {products.map((p, i) => {
@@ -224,7 +224,7 @@ export default function DemoLandingPage6({ config } = {}) {
         </div>
 
         {/* Stack + CTA centered */}
-        <div className="mx-auto mt-10 flex w-full max-w-6xl flex-1 flex-col items-center justify-center gap-10 lg:mt-8">
+        <div className="mx-auto mt-6 flex w-full max-w-6xl flex-1 flex-col items-center justify-center gap-6 lg:mt-8 lg:gap-10">
           <FloatingStack products={products} activeIndex={activeIdx} onChange={change} onInteract={pause} />
 
           {/* Reveal CTA Block */}

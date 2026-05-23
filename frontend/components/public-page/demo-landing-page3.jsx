@@ -165,10 +165,10 @@ function PokerFan({ images, isActive, accentHue, isMobile }) {
 
   const isExpanded = hovered || tapped;
 
-  const cardW = isMobile ? 176 : 314;
-  const cardH = isMobile ? 248 : 446;
-  const containerW = cardW + (isMobile ? 194 : 358);
-  const containerH = cardH + (isMobile ? 82 : 104);
+  const cardW = isMobile ? 125 : 314;
+  const cardH = isMobile ? 180 : 446;
+  const containerW = cardW + (isMobile ? 115 : 358);
+  const containerH = cardH + (isMobile ? 45 : 104);
 
   return (
     <div
@@ -198,10 +198,10 @@ function PokerFan({ images, isActive, accentHue, isMobile }) {
         const rotationAngle = isMobile ? 22 : 27;
         const rotation = offset * rotationAngle * (isExpanded ? 1.08 : 1);
 
-        const spreadX = isMobile ? 82 : 146;
+        const spreadX = isMobile ? 55 : 146;
         const tx = offset * spreadX * (isExpanded ? 1.12 : 1);
 
-        const ty = absOff * (isMobile ? 24 : 32);
+        const ty = absOff * (isMobile ? 14 : 32);
 
         const scale = isCenter ? 1 : 0.9;
         const zIdx = 10 - absOff;
@@ -375,7 +375,7 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }) {
 
     const isActive = offset === 0;
     const absOff = Math.abs(offset);
-    const gap = isMobile ? 300 : 454;
+    const gap = isMobile ? 220 : 454;
     const x = offset * gap + (isDragging ? dragDelta * 0.55 : 0);
     const scale = isActive ? 1 : 0.88;
     const opacity = isActive ? 1 : isDragging ? 0.2 : 0;
@@ -397,7 +397,7 @@ function ProductCarousel({ products, activeIndex, onChangeIndex, isMobile }) {
       style={{
         position: "relative",
         width: "100%",
-        height: isMobile ? "390px" : "560px",
+        height: isMobile ? "240px" : "560px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1005,15 +1005,15 @@ export default function DemoLandingPage3({ config } = {}) {
               position: "relative",
             }}
           >
-            <div style={{ position: "relative", minHeight: isMobile ? "468px" : "626px" }}>
+            <div style={{ position: "relative", minHeight: isMobile ? "320px" : "626px" }}>
               <div
                 style={{
                   position: "absolute",
                   top: isMobile ? "50%" : "50%",
                   left: isMobile ? "50%" : "43%",
                   transform: "translate(-50%, -50%)",
-                  width: isMobile ? "330px" : "730px",
-                  height: isMobile ? "300px" : "590px",
+                  width: isMobile ? "280px" : "730px",
+                  height: isMobile ? "220px" : "590px",
                   borderRadius: "50%",
                   background: `radial-gradient(circle, hsla(${product.accentHue}, 70%, 55%, .16) 0%, hsla(${product.accentHue}, 58%, 44%, .08) 30%, transparent 72%)`,
                   filter: "blur(40px)",
@@ -1028,8 +1028,8 @@ export default function DemoLandingPage3({ config } = {}) {
                   top: isMobile ? "52%" : "54%",
                   left: isMobile ? "50%" : "38%",
                   transform: "translate(-50%, -50%)",
-                  width: isMobile ? "300px" : "620px",
-                  height: isMobile ? "260px" : "360px",
+                  width: isMobile ? "260px" : "620px",
+                  height: isMobile ? "180px" : "360px",
                   borderRadius: "42px",
                   background:
                     "linear-gradient(160deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 58%)",

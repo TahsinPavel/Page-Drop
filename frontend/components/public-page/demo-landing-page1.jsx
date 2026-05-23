@@ -836,6 +836,41 @@ function useGlobalStyles() {
           display: none;
         }
       }
+
+      @media (max-width: 640px) {
+        .lp1-root {
+          --lp1-step: 125px;
+          --lp1-card-size: 180px;
+        }
+
+        .lp1-hero {
+          padding: 8px 8px 30px;
+        }
+
+        .lp1-spotlight-wrap {
+          padding: 12px 8px 8px;
+          min-height: 300px;
+          border-radius: 16px;
+        }
+
+        .lp1-stage {
+          height: 220px;
+        }
+
+        .lp1-spot-glow {
+          width: 200px;
+          height: 120px;
+        }
+
+        .lp1-shadow-pad {
+          width: 120px;
+          bottom: 22px;
+        }
+
+        .lp1-hero-grid {
+          gap: 16px;
+        }
+      }
     `;
 
     document.head.appendChild(styleTag);

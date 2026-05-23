@@ -141,12 +141,20 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
   const N = products.length;
   const theta = 360 / N; // 72° per face for 5 products
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   /* Calculate prism radius (apothem) based on viewport */
   const [radius, setRadius] = useState(234);
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      const faceW = w < 640 ? 240 : w < 1024 ? 290 : 340;
+      const faceW = w < 640 ? 180 : w < 1024 ? 290 : 340;
       setRadius(Math.round(faceW / (2 * Math.tan(Math.PI / N))));
     };
     update();
@@ -188,7 +196,7 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
 
       {/* Carousel viewport */}
       <div
-        className="relative mx-auto h-[340px] sm:h-[400px] lg:h-[480px]"
+        className="relative mx-auto h-[260px] sm:h-[400px] lg:h-[480px]"
         onTouchStart={(event) => {
           touchX.current = event.touches[0].clientX;
         }}
@@ -218,8 +226,8 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
                 key={product.id}
                 className="absolute left-1/2 top-1/2 cursor-pointer"
                 style={{
-                  width: "clamp(240px, 48vw, 340px)",
-                  height: "clamp(300px, 62vw, 430px)",
+                  width: isMobile ? "180px" : "clamp(240px, 48vw, 340px)",
+                  height: isMobile ? "220px" : "clamp(300px, 62vw, 430px)",
                   transform: `translate(-50%, -50%) rotateY(${faceAngle}deg) translateZ(${radius}px)`,
                   backfaceVisibility: "hidden",
                   filter: `blur(${blur}px) brightness(${brightness})`,
@@ -503,7 +511,7 @@ export default function DemoLandingPage8({ config } = {}) {
           </motion.p>
         </div>
 
-        <div className="mx-auto mt-10 flex w-full max-w-6xl flex-col gap-8 lg:mt-12 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+        <div className="mx-auto mt-6 flex w-full max-w-6xl flex-col gap-5 lg:mt-12 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
           <div className="w-full lg:w-[58%]">
             <Coverflow
               products={products}

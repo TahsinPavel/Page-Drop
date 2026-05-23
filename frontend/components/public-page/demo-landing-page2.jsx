@@ -132,6 +132,14 @@ function WatchCarousel({ watches, activeIndex, onChangeIndex }) {
   const touchX = useRef(0);
   const mouseX = useRef(null);
   const total = watches.length;
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const onSwipe = useCallback(
     (diff) => {
@@ -149,7 +157,8 @@ function WatchCarousel({ watches, activeIndex, onChangeIndex }) {
 
     const isActive = offset === 0;
     const absOff = Math.abs(offset);
-    const x = offset * 280;
+    const xSpace = isMobile ? 120 : 280;
+    const x = offset * xSpace;
     const z = isActive ? 80 : -190 * absOff;
     const scale = isActive ? 1.1 : absOff === 1 ? 0.74 : 0.62;
     const opacity = isActive ? 1 : absOff === 1 ? 0.44 : 0.14;
@@ -158,6 +167,8 @@ function WatchCarousel({ watches, activeIndex, onChangeIndex }) {
 
     return { x, z, scale, opacity, isActive, brightness, blur };
   };
+
+  const cardSize = isMobile ? 170 : 280;
 
   return (
     <div
@@ -202,7 +213,7 @@ function WatchCarousel({ watches, activeIndex, onChangeIndex }) {
             key={w.id}
             onClick={() => onChangeIndex(i)}
             style={{
-              position: "absolute", width: "280px", height: "280px",
+              position: "absolute", width: `${cardSize}px`, height: `${cardSize}px`,
               transform: `translateX(${t.x}px) translateZ(${t.z}px) scale(${t.scale})`,
               opacity: t.opacity,
               transition: "all 0.85s cubic-bezier(.22,.61,.36,1)",
@@ -272,7 +283,15 @@ export default function DemoLandingPage2({ config } = {}) {
 
   const [activeWatch, setActiveWatch] = useState(1); // Start with Nebula Blue
   const [autoplay, setAutoplay] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const total = watches.length;
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     if (!autoplay) return;
@@ -443,8 +462,8 @@ export default function DemoLandingPage2({ config } = {}) {
             className="lp2-hero-main"
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr) 380px",
-              gap: "28px",
+              gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) 380px",
+              gap: isMobile ? "16px" : "28px",
               alignItems: "center",
             }}
           >
@@ -455,11 +474,11 @@ export default function DemoLandingPage2({ config } = {}) {
                   background: "linear-gradient(180deg, rgba(22,24,36,0.5) 0%, rgba(10,12,19,0.45) 100%)",
                   border: "1px solid rgba(255,255,255,0.09)",
                   backdropFilter: "blur(20px)",
-                  padding: "26px 12px 18px",
+                  padding: isMobile ? "18px 8px 12px" : "26px 12px 18px",
                   boxShadow: "0 44px 90px rgba(0,0,0,0.52)",
                 }}
               >
-                <div style={{ height: "460px", maxWidth: "820px", margin: "0 auto" }}>
+                <div style={{ height: isMobile ? "280px" : "460px", maxWidth: "820px", margin: "0 auto" }}>
                   <WatchCarousel watches={watches} activeIndex={activeWatch} onChangeIndex={goTo} />
                 </div>
 
