@@ -168,7 +168,7 @@ function Coverflow({ products, activeIndex, onChange, onInteract }) {
     compute();
     window.addEventListener("resize", compute);
     return () => window.removeEventListener("resize", compute);
-  }, [N, theta]);
+  }, [N, theta, CARD_W]);
 
   useEffect(() => {
     if (isDragging.current) return;
