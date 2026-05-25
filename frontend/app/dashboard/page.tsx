@@ -19,9 +19,6 @@ import {
     MousePointerClick,
     TrendingUp,
     PlusCircle,
-    Box,
-    Layout,
-    ExternalLink,
     Inbox,
 } from "lucide-react";
 import type { DashboardSummary } from "@/types";
@@ -148,24 +145,8 @@ export default function DashboardPage() {
                     href="/dashboard/build"
                     delay={3}
                 />
-                <QuickActionCard
-                    icon={Box}
-                    label="Customize Carousel"
-                    onClick={() => toast("Carousel editor coming soon!", { icon: "🎠" })}
-                    delay={4}
-                />
-                <QuickActionCard
-                    icon={Layout}
-                    label="Edit Landing Page"
-                    href={pages?.[0] ? `/dashboard/build?pageId=${pages[0].id}` : "/dashboard/build"}
-                    delay={5}
-                />
-                <QuickActionCard
-                    icon={ExternalLink}
-                    label="View Live Page"
-                    href={primarySlug ? `/${primarySlug}` : "#"}
-                    delay={6}
-                />
+
+
             </div>
 
             {/* Main content grid — Recent Pages + Carousel Control */}

@@ -82,4 +82,10 @@ build/
 # ──────────────── Agents ───────────────────────────────
 .agent/
 
+# ----------------------------- Tools ------------------------
+node_modules
+.aibrain.json
+brain-bridge.js
+package.json
+package-lock.json
 Suggestions.txt
