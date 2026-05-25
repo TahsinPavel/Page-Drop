@@ -70,7 +70,6 @@ export default function DashboardPage() {
             <DashboardHeader
                 breadcrumb="PageDrop"
                 pageTitle="Dashboard"
-                primarySlug={primarySlug}
             />
 
             {/* Welcome */}
