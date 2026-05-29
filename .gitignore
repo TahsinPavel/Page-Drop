@@ -89,3 +89,9 @@ brain-bridge.js
 package.json
 package-lock.json
 Suggestions.txt
+
+# ----------------------------- aibrain-engine -------------------------
+aibrain-engine/node_modules/
+aibrain-engine/dist/
+aibrain-engine/node_modules/
+
