@@ -98,7 +98,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "get_workspace_graph",
-        description: "Returns a high-density static interdependency map of workspace file imports. Run this immediately upon model switching to regain instant architecture context.",
+        description: "Returns a high-density static interdependency map of workspace file imports.",
         inputSchema: {
           type: "object",
           properties: {
@@ -107,6 +107,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Optional relative path to a single component file to slice down context payload."
             }
           }
+        }
+      },
+      {
+        name: "get_handoff_prompt",
+        description: "Generates an ultra-dense, token-optimized context restoration string for an incoming model based on the current file focus path.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            currentFocusFile: {
+              type: "string",
+              description: "The relative path to the file you are currently editing (e.g., 'frontend/app/dashboard/page.tsx')."
+            }
+          },
+          required: ["currentFocusFile"]
         }
       }
     ]
@@ -136,6 +150,73 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     } catch (err: any) {
       return {
         content: [{ type: "text", text: `Failure mapping: ${err.message}` }],
+        isError: true
+      };
+    }
+  }
+
+  // Add this inside your CallToolRequestSchema handler block right next to your first tool check
+  if (request.params.name === "get_handoff_prompt") {
+    try {
+      const projectWorkspaceRoot = path.resolve(process.cwd(), '..');
+      const networkGraph = processProjectGraph(projectWorkspaceRoot);
+      const args = (request.params.arguments || {}) as { currentFocusFile: string };
+
+      if (!args.currentFocusFile) {
+        return {
+          content: [{ type: "text", text: "Error: Missing required argument 'currentFocusFile'." }],
+          isError: true
+        };
+      }
+
+      const target = args.currentFocusFile.replace(/\\/g, '/');
+      const targetNode = networkGraph.find(node => node.id === target);
+      
+      // Locate files that depend on this file, or files this file depends on
+      const connectedNodes = networkGraph.filter(node => 
+        node.id === target || node.dependencies.some(dep => dep.includes(target.split('/').pop() || ''))
+      );
+
+      const dependenciesList = targetNode && targetNode.dependencies.length > 0 
+        ? targetNode.dependencies.map(d => `- ${d}`).join('\n') 
+        : '- Direct node execution (No dependencies tracked).';
+        
+      const downstreamList = connectedNodes.filter(n => n.id !== target).length > 0
+        ? connectedNodes.filter(n => n.id !== target).map(n => `- ${n.id}`).join('\n')
+        : '- Isolated component layout node.';
+
+      const promptPayload = `
+    ======================================================================
+    🤖 STATE RESTORATION HANDOFF (TOKEN OPTIMIZED KNOWLEDGE SUB-GRAPH)
+    ======================================================================
+    You are taking over an active code modification task in this workspace.
+    To protect token limits, DO NOT perform a generic tree search across the repository.
+    Your situational awareness is anchored to this specific sub-graph slice:
+
+    ### 1. ACTIVE NODE FOCUS:
+    - ${target}
+
+    ### 2. DECLARED DIRECT MODULE DEPENDENCIES:
+    ${dependenciesList}
+
+    ### 3. AFFECTED DOWNSTREAM FILES (BLAST RADIUS):
+    ${downstreamList}
+
+    ### 4. CRITICAL FRAMEWORK GUARDRAILS:
+    - Frontend layout elements inside /frontend use TypeScript path aliases (@/*).
+    - All heavy 3D canvases must load dynamically ({ ssr: false }) to prevent hydration mismatch.
+    - Backend schemas inside /backend must map exactly to pydantic constraints.
+
+    ### YOUR INSTRUCTION:
+    Acknowledge the target node and its blast radius in exactly one concise sentence. Await the next specific implementation instruction.
+    ======================================================================`.trim();
+
+      return {
+        content: [{ type: "text", text: promptPayload }]
+      };
+    } catch (err: any) {
+      return {
+        content: [{ type: "text", text: `Failure compiling handoff payload: ${err.message}` }],
         isError: true
       };
     }
