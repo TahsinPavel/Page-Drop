@@ -51,7 +51,6 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
             <DashboardHeader
                 breadcrumb="PageDrop"
                 pageTitle={`Edit: ${page.business_name}`}
-                primarySlug={page.slug}
             />
 
             <div className="db-animate-in" style={{ marginBottom: 28 }}>
