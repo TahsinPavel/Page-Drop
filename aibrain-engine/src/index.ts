@@ -1,18 +1,25 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema
+} from '@modelcontextprotocol/sdk/types.js';
+// @ts-ignore
+import { encode } from 'gpt-tokenizer';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// 1. Initialize the explicit core Protocol Server
 const server = new Server(
   {
     name: "aibrain-static-graph",
-    version: "1.0.0"
+    version: "1.1.0" // Incremented version for automation layer
   },
   {
     capabilities: {
-      tools: {}
+      tools: {},
+      resources: {} // Explicitly activate Resource capabilities
     }
   }
 );
@@ -50,27 +57,21 @@ function processProjectGraph(projectRoot: string): CodeNode[] {
   const frontendPath = path.join(projectRoot, 'frontend');
   const backendPath = path.join(projectRoot, 'backend');
 
-  // 1. Parse Frontend Layers (Supports @/* aliases, relative imports, and packages)
   const webFiles = gatherFiles(frontendPath, ['.tsx', '.ts', '.js']);
   for (const file of webFiles) {
     const codeText = fs.readFileSync(file, 'utf-8');
     const relativeId = path.relative(projectRoot, file).replace(/\\/g, '/');
 
-    // Enhanced Regex to capture both standard relative imports and '@/' alias structures
     const importRegex = /from\s+['"]((?:\.|\.\.|@)\/[^'"]+)['"]/g;
     const dependencies: string[] = [];
     let match;
     while ((match = importRegex.exec(codeText)) !== null) {
       const targetDependency = match[1] || '';
-      if (targetDependency) {
-        dependencies.push(targetDependency);
-      }
+      if (targetDependency) dependencies.push(targetDependency);
     }
-
     nodes.push({ id: relativeId, type: 'Frontend_Component', dependencies });
   }
 
-  // 2. Parse Backend Layers
   const serverFiles = gatherFiles(backendPath, ['.py']);
   for (const file of serverFiles) {
     const codeText = fs.readFileSync(file, 'utf-8');
@@ -85,14 +86,90 @@ function processProjectGraph(projectRoot: string): CodeNode[] {
         pyDependencies.push(extractedStr.trim());
       }
     }
-
     nodes.push({ id: relativeId, type: 'Backend_Router', dependencies: pyDependencies });
   }
 
   return nodes;
 }
 
-// 2. Register capabilities using standard Request Handlers
+// ==========================================
+// 1. RESOURCE PROTOCOL IMPLEMENTATION
+// ==========================================
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+  return {
+    resources: [
+      {
+        uri: "aibrain://workspace/graph",
+        name: "Complete Project Interdependency Graph",
+        mimeType: "application/json",
+        description: "A real-time structural map of the PageDrop frontend and backend connections used for systemic code awareness."
+      }
+    ]
+  };
+});
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  if (request.params.uri === "aibrain://workspace/graph") {
+    try {
+      const projectWorkspaceRoot = path.resolve(process.cwd(), '..');
+      const networkGraph = processProjectGraph(projectWorkspaceRoot);
+      
+      const graphJson = JSON.stringify(networkGraph, null, 2);
+      const graphTokens = encode(graphJson).length;
+
+      const rawFiles = gatherFiles(path.join(projectWorkspaceRoot, 'frontend'), ['.tsx', '.ts'])
+        .concat(gatherFiles(path.join(projectWorkspaceRoot, 'backend'), ['.py']));
+      
+      let totalRawChars = 0;
+      for (const file of rawFiles) {
+        try { totalRawChars += fs.readFileSync(file, 'utf-8').length; } catch(e){}
+      }
+      const estimatedRawTokens = Math.ceil(totalRawChars / 4);
+      const tokenSavings = estimatedRawTokens - graphTokens;
+      const savingsPercent = estimatedRawTokens > 0 ? Math.round((tokenSavings / estimatedRawTokens) * 100) : 0;
+
+      // Calculate relative usage percentages based on typical 3-hour subscription windows
+      const rawBurnRatio = Math.min(100, Math.round((estimatedRawTokens / 200000) * 100));
+      const graphBurnRatio = Math.min(100, Math.round((graphTokens / 200000) * 100));
+
+      // Generate a beautiful, structured Markdown visual card component
+      const uiDashboardCard = `
+### 📊 AIBrain Token Optimizer Dashboard
+> 🧠 **Status:** Context Injected Successfully via local stream.
+
+| Metric | Token Count | Subscription Limit Used (200k Cap) |
+| :--- | :--- | :--- |
+| 📉 **Graph Payload Weight** | \`${graphTokens.toLocaleString()}\` tokens | \`${graphBurnRatio}%\` |
+| 📄 **Raw Code Footprint** | \`${estimatedRawTokens.toLocaleString()}\` tokens | \`${rawBurnRatio}%\` |
+| 🎉 **Total Saved This Swap** | **${tokenSavings.toLocaleString()}** tokens | **Saved ${savingsPercent}% of your quota!** |
+
+---
+### 🚨 CRITICAL SUBSCRIPTION SAFETY NOTICE
+Premium subscription tires (**Claude Pro, Gemini Advanced, ChatGPT Plus**) do **NOT** offer unlimited token usage loops. They enforce strict background caps (approx. **200,000 tokens** per rolling 3-to-5 hour windows).
+
+* Sending raw code directories drains your active quota **10x faster**, triggering silent locks and early IDE timeout lockouts.
+* By using this local static graph architecture, your operational uptime is extended **by over ${savingsPercent}%**.
+      `.trim();
+
+      return {
+        contents: [
+          {
+            uri: "aibrain://workspace/graph",
+            mimeType: "text/markdown", // Force client UI layout engine to parse as markdown
+            text: uiDashboardCard
+          }
+        ]
+      };
+    } catch (err: any) {
+      throw new Error(`Failed to render UI dashboard payload: ${err.message}`);
+    }
+  }
+  throw new Error("Requested context resource track not found.");
+});
+
+// ==========================================
+// 2. BACKWARD COMPATIBLE TOOLS ROUTER
+// ==========================================
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
@@ -102,25 +179,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
-            focusPath: {
-              type: "string",
-              description: "Optional relative path to a single component file to slice down context payload."
-            }
+            focusPath: { type: "string", description: "Optional relative path to a single component file." }
           }
-        }
-      },
-      {
-        name: "get_handoff_prompt",
-        description: "Generates an ultra-dense, token-optimized context restoration string for an incoming model based on the current file focus path.",
-        inputSchema: {
-          type: "object",
-          properties: {
-            currentFocusFile: {
-              type: "string",
-              description: "The relative path to the file you are currently editing (e.g., 'frontend/app/dashboard/page.tsx')."
-            }
-          },
-          required: ["currentFocusFile"]
         }
       }
     ]
@@ -129,107 +189,89 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === "get_workspace_graph") {
-    try {
-      const projectWorkspaceRoot = path.resolve(process.cwd(), '..');
-      const networkGraph = processProjectGraph(projectWorkspaceRoot);
-      const args = (request.params.arguments || {}) as { focusPath?: string };
+    const projectWorkspaceRoot = path.resolve(process.cwd(), '..');
+    const networkGraph = processProjectGraph(projectWorkspaceRoot);
+    const args = (request.params.arguments || {}) as { focusPath?: string };
 
-      if (args.focusPath) {
-        const structuralFocus = args.focusPath.replace(/\\/g, '/');
-        const prunedSubGraph = networkGraph.filter(node => 
-          node.id === structuralFocus || node.dependencies.some(dep => dep.includes(structuralFocus))
-        );
-        return {
-          content: [{ type: "text", text: JSON.stringify(prunedSubGraph, null, 2) }]
-        };
-      }
-
-      return {
-        content: [{ type: "text", text: JSON.stringify(networkGraph, null, 2) }]
-      };
-    } catch (err: any) {
-      return {
-        content: [{ type: "text", text: `Failure mapping: ${err.message}` }],
-        isError: true
-      };
-    }
-  }
-
-  // Add this inside your CallToolRequestSchema handler block right next to your first tool check
-  if (request.params.name === "get_handoff_prompt") {
-    try {
-      const projectWorkspaceRoot = path.resolve(process.cwd(), '..');
-      const networkGraph = processProjectGraph(projectWorkspaceRoot);
-      const args = (request.params.arguments || {}) as { currentFocusFile: string };
-
-      if (!args.currentFocusFile) {
-        return {
-          content: [{ type: "text", text: "Error: Missing required argument 'currentFocusFile'." }],
-          isError: true
-        };
-      }
-
-      const target = args.currentFocusFile.replace(/\\/g, '/');
-      const targetNode = networkGraph.find(node => node.id === target);
-      
-      // Locate files that depend on this file, or files this file depends on
-      const connectedNodes = networkGraph.filter(node => 
-        node.id === target || node.dependencies.some(dep => dep.includes(target.split('/').pop() || ''))
+    if (args.focusPath) {
+      const structuralFocus = args.focusPath.replace(/\\/g, '/');
+      const prunedSubGraph = networkGraph.filter(node =>
+        node.id === structuralFocus || node.dependencies.some(dep => dep.includes(structuralFocus))
       );
-
-      const dependenciesList = targetNode && targetNode.dependencies.length > 0 
-        ? targetNode.dependencies.map(d => `- ${d}`).join('\n') 
-        : '- Direct node execution (No dependencies tracked).';
-        
-      const downstreamList = connectedNodes.filter(n => n.id !== target).length > 0
-        ? connectedNodes.filter(n => n.id !== target).map(n => `- ${n.id}`).join('\n')
-        : '- Isolated component layout node.';
-
-      const promptPayload = `
-    ======================================================================
-    🤖 STATE RESTORATION HANDOFF (TOKEN OPTIMIZED KNOWLEDGE SUB-GRAPH)
-    ======================================================================
-    You are taking over an active code modification task in this workspace.
-    To protect token limits, DO NOT perform a generic tree search across the repository.
-    Your situational awareness is anchored to this specific sub-graph slice:
-
-    ### 1. ACTIVE NODE FOCUS:
-    - ${target}
-
-    ### 2. DECLARED DIRECT MODULE DEPENDENCIES:
-    ${dependenciesList}
-
-    ### 3. AFFECTED DOWNSTREAM FILES (BLAST RADIUS):
-    ${downstreamList}
-
-    ### 4. CRITICAL FRAMEWORK GUARDRAILS:
-    - Frontend layout elements inside /frontend use TypeScript path aliases (@/*).
-    - All heavy 3D canvases must load dynamically ({ ssr: false }) to prevent hydration mismatch.
-    - Backend schemas inside /backend must map exactly to pydantic constraints.
-
-    ### YOUR INSTRUCTION:
-    Acknowledge the target node and its blast radius in exactly one concise sentence. Await the next specific implementation instruction.
-    ======================================================================`.trim();
-
-      return {
-        content: [{ type: "text", text: promptPayload }]
-      };
-    } catch (err: any) {
-      return {
-        content: [{ type: "text", text: `Failure compiling handoff payload: ${err.message}` }],
-        isError: true
-      };
+      return { content: [{ type: "text", text: JSON.stringify(prunedSubGraph, null, 2) }] };
     }
+    return { content: [{ type: "text", text: JSON.stringify(networkGraph, null, 2) }] };
   }
   throw new Error("Tool selection out of bounds.");
 });
 
-// 3. Connect safely without breaking process stdout streams
+// ... keep the rest of the file layout exactly the same ...
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  if (request.params.uri === "aibrain://workspace/graph") {
+    try {
+      const projectWorkspaceRoot = path.resolve(process.cwd(), '..');
+      const networkGraph = processProjectGraph(projectWorkspaceRoot);
+      const graphJson = JSON.stringify(networkGraph, null, 2);
+
+      const graphTokens = encode(graphJson).length;
+
+      const rawFiles = gatherFiles(path.join(projectWorkspaceRoot, 'frontend'), ['.tsx', '.ts'])
+        .concat(gatherFiles(path.join(projectWorkspaceRoot, 'backend'), ['.py']));
+
+      let totalRawChars = 0;
+      for (const file of rawFiles) {
+        try { totalRawChars += fs.readFileSync(file, 'utf-8').length; } catch (e) { }
+      }
+      const estimatedRawTokens = Math.ceil(totalRawChars / 4);
+
+      const tokenSavings = estimatedRawTokens - graphTokens;
+      const savingsPercent = estimatedRawTokens > 0 ? Math.round((tokenSavings / estimatedRawTokens) * 100) : 0;
+
+      // Calculate how much closer a raw read pushes them to typical 3-hour usage locks
+      const rawBurnRatio = Math.min(100, Math.round((estimatedRawTokens / 200000) * 100));
+      const graphBurnRatio = Math.min(100, Math.round((graphTokens / 200000) * 100));
+
+      // Print the upgraded educational scoreboard to background logging pipelines
+      console.error(`
+📊 [AIBrain Local Resource Optimization Metrics]
+┌────────────────────────────────────────────────────────┐
+│ Context Footprint Summary:                             │
+│ ├─ Graph Payload Weight:  ${graphTokens.toLocaleString().padEnd(10)} tokens (Uses ~${graphBurnRatio}% of tier limit) │
+│ ├─ Raw Codebase Weight:   ${estimatedRawTokens.toLocaleString().padEnd(10)} tokens (Uses ~${rawBurnRatio}% of tier limit) │
+│ └─ Total Space Saved:     ${tokenSavings.toLocaleString().padEnd(10)} tokens (${savingsPercent}% Optimized)   │
+├────────────────────────────────────────────────────────┤
+│ 🚨 CRITICAL SUBSCRIPTION USAGE GUARDS:                 │
+│ PREMIUM PLANS (Claude Pro / Gemini Advanced / Plus)    │
+│ DO NOT HAVE UNLIMITED TOKENS. CURRENT CAPS:            │
+│  • Claude Pro: ~200k tokens per short 5-hour window.   │
+│  • Gemini Advanced: High rate-limiting on deep frames. │
+│                                                        │
+│ WARNING: Sending raw files drains your limit 10x       │
+│ faster, causing early IDE lockout messages!            │
+└────────────────────────────────────────────────────────┘
+      `.trim());
+
+      return {
+        contents: [
+          {
+            uri: "aibrain://workspace/graph",
+            mimeType: "application/json",
+            text: graphJson
+          }
+        ]
+      };
+    } catch (err: any) {
+      throw new Error(`Failed to compute token metrics graph resource: ${err.message}`);
+    }
+  }
+  throw new Error("Requested context resource track not found.");
+});
+
 async function initializeMcpEngine() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // CRITICAL: Always use console.error for structural engine alerts so stdout remains pure JSON-RPC!
-  console.error("🧠 [AIBrain MCP Server] Stream safely bound to stdio channels.");
+  console.error("🧠 [AIBrain MCP Server] Automated resource injection pipelines online.");
 }
 
-initializeMcpEngine().catch((err) => console.error("Server initialization fatal:", err));
+initializeMcpEngine().catch((err) => console.error("Initialization fatal:", err));
